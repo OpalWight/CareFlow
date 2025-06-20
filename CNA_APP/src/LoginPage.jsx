@@ -1,6 +1,10 @@
 import React from 'react';
 
 function LoginPage() {
+    function handleGoogleLogin() {
+        window.location.href = "http://localhost:3001/request";
+    }
+
     return (
         <div>
             <h1>Login Page</h1>
@@ -13,9 +17,7 @@ function LoginPage() {
                 <button>Sign Up</button>
             </div>
             <div style={{ marginTop: '20px' }}>
-                <button style={{ backgroundColor: '#4285F4', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '4px' }}>
-                    Sign in with Google
-                </button>
+                <button onClick={handleGoogleLogin}>Sign in with Google</button>
             </div>
         </div>
     );
