@@ -6,6 +6,8 @@ dotenv.config();
 const { OAuth2Client } = require('google-auth-library');
 
 router.get('/', (req, res) => {
+  console.log('🔄 Starting Google OAuth flow...');
+  
   const redirectURL = 'http://localhost:3001/oauth';
   const oAuth2Client = new OAuth2Client(
     process.env.CLIENT_ID,
@@ -13,12 +15,18 @@ router.get('/', (req, res) => {
     redirectURL
   );
 
+  // ✅ FIXED: Add email scope and improve scopes
   const authorizeUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
-    scope: 'https://www.googleapis.com/auth/userinfo.profile openid',
+    scope: [
+      'https://www.googleapis.com/auth/userinfo.profile',
+      'https://www.googleapis.com/auth/userinfo.email',
+      'openid'
+    ].join(' '),
     prompt: 'consent'
   });
 
+  console.log('📤 Redirecting to Google:', authorizeUrl);
   res.redirect(authorizeUrl);
 });
 
