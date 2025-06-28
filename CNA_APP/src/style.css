@@ -1,0 +1,36 @@
+/* Basic reset or global styles */
+:root {
+  /* Define some CSS variables if you like */
+  --primary-font: 'Inter', sans-serif;
+  --text-color: #333;
+}
+
+body {
+  margin: 0;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased; /* For smoother font rendering on macOS */
+  -moz-osx-font-smoothing: grayscale; /* For smoother font rendering on macOS */
+
+  /* Apply Inter as the default font for the entire body */
+  font-family: var(--primary-font); /* Using a CSS variable, or directly 'Inter', sans-serif; */
+  color: var(--text-color);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  /* Headings often inherit the body font or have specific styles */
+  font-family: var(--primary-font);
+  font-weight: 700; /* Example: make headings bold Inter */
+  color: #1a202c;
+}
+
+/* Example of specific styles using Inter */
+.my-custom-component-text {
+  font-family: var(--primary-font);
+  font-weight: 300; /* Light Inter */
+  font-size: 1.2em;
+}
+
+.button {
+  font-family: var(--primary-font);
+  font-weight: 500; /* Medium Inter */
+}

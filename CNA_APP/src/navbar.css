@@ -1,0 +1,72 @@
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter.woff2') format('woff2'),
+       url('/fonts/inter.woff') format('woff'),
+       url('/fonts/inter.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+.navHeader {
+    color: #000000;
+    font-family: Inter;
+    font-size: 16.262px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    padding: 50px 6.944vw;
+    /* Remove flex-wrap unless you want items to wrap */
+}
+
+.rightHeader {
+    display: flex;           /* Make it a flex container */
+    align-items: center;     /* Vertically center all items */
+    gap: 3vw;               /* Space between children */
+}
+
+.leftHeader {
+    display: flex;           /* Make it a flex container */
+    align-items: center;     /* Vertically center all items */
+    gap: 3vw;               /* Space between children */
+}
+
+.get-started-button {
+  /* Basic Button Styling (mostly same as before) */
+  display: inline-block;
+  padding: 12px 30px;
+  border-radius: 30px;
+  text-decoration: none;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+  border-radius: 27.371px;
+  border: 2.649px solid #6D99FF;
+  background: #FFF;
+  width: 145px;
+  height: 50px;
+  flex-shrink: 0;
+  background: linear-gradient(#ffffff, #FFF) padding-box, linear-gradient(45deg, #7CDAFF, #6D99FF) border-box;
+  border: 2.649px solid transparent;
+}
+
+/* Hover Effect for Hollow Button */
+.get-started-button:hover {
+  color: #ffffff; 
+  background: linear-gradient(86deg, #8FDFFF, #6D99FF) padding-box;
+  border: 2.649px solid transparent;
+  transform: translateY(-2px); /* Slight lift */
+
+}
+
+.homeLogo {
+  width: 196px;
+  height: 50px;
+  flex-shrink: 0;
+}
+

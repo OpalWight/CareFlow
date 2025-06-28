@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import NavBar from './NavBar';
 
 function LoginPage() {
     const [error, setError] = useState(null);
@@ -64,6 +65,8 @@ function LoginPage() {
     }
 
     return (
+        <>
+        <NavBar />
         <div style={{ padding: '2rem', maxWidth: '400px', margin: '0 auto' }}>
             <h1>Login Page</h1>
             
@@ -198,6 +201,8 @@ function LoginPage() {
                 </button>
             </div>
         </div>
+        </>
+        
     );
 }
 

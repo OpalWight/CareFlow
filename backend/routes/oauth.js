@@ -14,7 +14,7 @@ const { OAuth2Client } = require('google-auth-library');
 // In production, process.env.JWT_SECRET MUST be a very long, random, and truly secret string.
 // DO NOT use 'your-secret-key-change-this-in-production' in production environments.
 // It should be stored securely (e.g., environment variable, secret management service).
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Environment check
 console.log('🔍 Environment check:', {
