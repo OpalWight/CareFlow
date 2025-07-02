@@ -1,59 +1,80 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from './api/AuthContext'; // ✅ ADDED: Import useAuth hook
 import NavBar from './NavBar';
+import './LoginPage.css';
 
 function LoginPage() {
+    // ✅ ADDED: Get authentication state from AuthContext
+    const { user, loading: authLoading, login, error: authError } = useAuth();
+    
+    // Local state for UI
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState(null);
 
     useEffect(() => {
+        // ✅ CHANGED: If user is already authenticated, redirect to dashboard
+        if (user) {
+            console.log('✅ User already authenticated, redirecting to dashboard');
+            window.location.href = '/dashboard';
+            return;
+        }
+
+        // ✅ SIMPLIFIED: Only handle OAuth error parameters (no token parsing needed)
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
         const errorParam = urlParams.get('error');
         const newUser = urlParams.get('newUser');
         const accountLinked = urlParams.get('accountLinked');
 
-        if (token) {
-            console.log('✅ Authentication successful! Token received.');
-            localStorage.setItem('authToken', token);
-            
-            if (newUser === 'true') {
-                setSuccessMessage('Welcome! Your Google account has been registered successfully.');
-            } else if (accountLinked === 'true') {
-                setSuccessMessage('Great! Your Google account has been linked to your existing account.');
-            } else {
-                setSuccessMessage('Welcome back! You have been logged in successfully.');
-            }
-            
+        // ✅ ADDED: Handle success messages from OAuth redirect
+        if (newUser === 'true') {
+            setSuccessMessage('Welcome! Your Google account has been registered successfully.');
+            // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
-            
+            // Redirect to dashboard after showing message
             setTimeout(() => {
                 window.location.href = '/dashboard';
             }, 2000);
-            
-        } else if (errorParam) {
+        } else if (accountLinked === 'true') {
+            setSuccessMessage('Great! Your Google account has been linked to your existing account.');
+            window.history.replaceState({}, document.title, window.location.pathname);
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 2000);
+        }
+
+        // Handle OAuth errors
+        if (errorParam) {
             const errorMessages = {
                 'access_denied': 'You denied access to your Google account.',
                 'auth_failed': 'Authentication failed. Please try again.',
                 'no_code': 'No authorization code received from Google.',
-                'email_exists': 'An account with this email already exists.',
+                'email_exists_or_google_id_exists': 'An account with this email already exists.',
                 'invalid_data': 'Invalid user data received from Google.',
+                'google_api_error': 'Failed to get user data from Google. Please try again.'
             };
             
             setError(errorMessages[errorParam] || 'An authentication error occurred.');
-            setLoading(false);
             
+            // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
         }
-    }, []);
 
+        // ✅ ADDED: Show auth errors from AuthContext
+        if (authError) {
+            setError(authError);
+        }
+    }, [user, authError]); // ✅ CHANGED: Dependencies updated
+
+    // ✅ SIMPLIFIED: Use AuthContext login function
     function handleGoogleLogin() {
         console.log('🔄 Starting Google OAuth...');
         setLoading(true);
         setError(null);
         setSuccessMessage(null);
         
-        window.location.href = "http://localhost:3001/request";
+        // ✅ CHANGED: Use AuthContext login function instead of manual redirect
+        login(); // This will redirect to http://localhost:3001/oauth
     }
 
     function clearError() {
@@ -64,32 +85,32 @@ function LoginPage() {
         setSuccessMessage(null);
     }
 
+    // ✅ ADDED: Show loading state while checking authentication
+    if (authLoading) {
+        return (
+            <>
+                <NavBar />
+                <div className="login-container">
+                    <div className="login-loading-message">
+                        Checking authentication status...
+                    </div>
+                </div>
+            </>
+        );
+    }
+
     return (
         <>
         <NavBar />
-        <div style={{ padding: '2rem', maxWidth: '400px', margin: '0 auto' }}>
+        <div className="login-container">
             <h1>Login Page</h1>
             
             {successMessage && (
-                <div style={{ 
-                    backgroundColor: '#e8f5e8', 
-                    color: '#2e7d32', 
-                    padding: '1rem', 
-                    marginBottom: '1rem',
-                    borderRadius: '4px',
-                    border: '1px solid #81c784'
-                }}>
+                <div className="login-success-message">
                     <strong>Success!</strong> {successMessage}
                     <button 
                         onClick={clearSuccess}
-                        style={{ 
-                            marginLeft: '1rem', 
-                            background: 'none', 
-                            border: 'none', 
-                            color: '#2e7d32',
-                            cursor: 'pointer',
-                            textDecoration: 'underline'
-                        }}
+                        className="login-dismiss-success"
                     >
                         Dismiss
                     </button>
@@ -97,97 +118,55 @@ function LoginPage() {
             )}
             
             {error && (
-                <div style={{ 
-                    backgroundColor: '#ffebee', 
-                    color: '#c62828', 
-                    padding: '1rem', 
-                    marginBottom: '1rem',
-                    borderRadius: '4px',
-                    border: '1px solid #ef9a9a'
-                }}>
+                <div className="login-error-message">
                     <strong>Error:</strong> {error}
                     <button 
                         onClick={clearError}
-                        style={{ 
-                            marginLeft: '1rem', 
-                            background: 'none', 
-                            border: 'none', 
-                            color: '#c62828',
-                            cursor: 'pointer',
-                            textDecoration: 'underline'
-                        }}
+                        className="login-dismiss-error"
                     >
                         Dismiss
                     </button>
                 </div>
             )}
 
-            {loading && (
-                <div style={{ 
-                    backgroundColor: '#e3f2fd', 
-                    color: '#1976d2', 
-                    padding: '1rem', 
-                    marginBottom: '1rem',
-                    borderRadius: '4px',
-                    textAlign: 'center'
-                }}>
+            {(loading || authLoading) && (
+                <div className="login-loading-message">
                     Redirecting to Google for authentication...
                 </div>
             )}
 
-            <form style={{ marginBottom: '2rem' }}>
-                <div style={{ marginBottom: '1rem' }}>
+            <form className="login-form">
+                <div className="login-form-group">
                     <input 
                         type="text" 
                         placeholder="Username" 
-                        style={{ 
-                            width: '100%', 
-                            padding: '0.5rem', 
-                            marginBottom: '0.5rem' 
-                        }} 
+                        className="login-input login-input-username"
                     />
                 </div>
-                <div style={{ marginBottom: '1rem' }}>
+                <div className="login-form-group">
                     <input 
                         type="password" 
                         placeholder="Password" 
-                        style={{ 
-                            width: '100%', 
-                            padding: '0.5rem' 
-                        }} 
+                        className="login-input login-input-password"
                     />
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button type="button" style={{ flex: 1, padding: '0.5rem' }}>
+                <div className="login-form-actions">
+                    <button type="button" className="login-btn login-btn-login">
                         Login
                     </button>
-                    <button type="button" style={{ flex: 1, padding: '0.5rem' }}>
+                    <button type="button" className="login-btn login-btn-signup">
                         Sign Up
                     </button>
                 </div>
             </form>
 
-            <div style={{ borderTop: '1px solid #ccc', paddingTop: '1rem' }}>
+            <div className="login-divider">
                 <button 
                     onClick={handleGoogleLogin}
-                    disabled={loading}
-                    style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        backgroundColor: '#4285f4',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: loading ? 'not-allowed' : 'pointer',
-                        fontSize: '1rem',
-                        opacity: loading ? 0.7 : 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem'
-                    }}
+                    disabled={loading || authLoading} 
+                    className={`login-google-btn${(loading || authLoading) ? ' login-google-btn-loading' : ''}`}
                 >
-                    {loading ? 'Redirecting...' : (
+                    {(loading || authLoading) ? 'Redirecting...' : (
                         <>
                             <svg width="18" height="18" viewBox="0 0 24 24">
                                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

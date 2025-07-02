@@ -1,42 +1,56 @@
-import React, { useState } from 'react';
-import { useAuth } from './api/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from './api/AuthContext'; // ← Import useAuth hook
+import './Dashboard.css';
 
 function Dashboard() {
-    const { user, loading, logout } = useAuth();
-    const [editing, setEditing] = useState(false);
-    const [editForm, setEditForm] = useState({ name: user?.name || '' });
-    const [error, setError] = useState(null);
+    const {
+        user,
+        loading,
+        logout,
+        updateProfile,
+        deleteAccount, // ✅ ADDED: Destructure deleteAccount function
+        isAuthenticated
+    } = useAuth(); // ← Get authentication data
 
-    // Populate edit form when editing starts
-    const handleEditToggle = () => {
-        if (!editing && user) {
+    const [editing, setEditing] = useState(false);
+    const [editForm, setEditForm] = useState({ name: '' });
+    const [successMessage, setSuccessMessage] = useState(null); // ✅ ADDED: Success messages
+    const [error, setError] = useState(null); // ✅ ADDED: Error handling
+
+    // ✅ ADDED: Handle OAuth success messages and initialize edit form
+    useEffect(() => {
+        // Handle OAuth success messages from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const newUser = urlParams.get('newUser');
+        const accountLinked = urlParams.get('accountLinked');
+
+        if (newUser === 'true') {
+            setSuccessMessage('Welcome! Your Google account has been registered successfully.');
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (accountLinked === 'true') {
+            setSuccessMessage('Great! Your Google account has been linked to your existing account.');
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // Initialize edit form when user data is available
+        if (user) {
             setEditForm({ name: user.name || '' });
         }
-        setEditing(!editing);
-    };
+    }, [user]); // ✅ CHANGED: Depend on user data
 
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
+        setError(null); // ✅ ADDED: Clear previous errors
+        
         try {
-            const response = await fetch('http://localhost:3001/oauth/profile', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                },
-                body: JSON.stringify(editForm)
-            });
-            if (response.ok) {
-                // Optionally, you could update the user in AuthContext here
-                setEditing(false);
-                alert('Profile updated successfully!');
-            } else {
-                const errorText = await response.text();
-                throw new Error(`Update failed: ${errorText}`);
-            }
+            await updateProfile(editForm); // ← Use the updateProfile function
+            setEditing(false);
+            setSuccessMessage('Profile updated successfully!'); // ✅ CHANGED: Use state instead of alert
         } catch (error) {
-            setError(error.message);
-            alert(`Failed to update profile: ${error.message}`);
+            console.error('Profile update error:', error);
+            setError(`Failed to update profile: ${error.message}`); // ✅ CHANGED: Use state instead of alert
         }
     };
 
@@ -44,104 +58,158 @@ function Dashboard() {
         if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
             return;
         }
+        
+        setError(null); // ✅ ADDED: Clear previous errors
+        
         try {
-            const response = await fetch('http://localhost:3001/oauth/account', {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
-            if (response.ok) {
-                logout();
-                alert('Account deleted successfully');
-                window.location.href = '/login';
-            } else {
-                const errorText = await response.text();
-                throw new Error(`Deletion failed: ${errorText}`);
-            }
+            await deleteAccount(); // ✅ FIXED: Now properly destructured from useAuth
+            // User will be redirected automatically by deleteAccount function
         } catch (error) {
-            setError(error.message);
-            alert(`Failed to delete account: ${error.message}`);
+            console.error('Account deletion error:', error);
+            setError(`Failed to delete account: ${error.message}`); // ✅ CHANGED: Use state instead of alert
         }
     };
 
+    // ✅ ADDED: Function to clear success messages
+    const clearSuccessMessage = () => {
+        setSuccessMessage(null);
+    };
+
+    // ✅ ADDED: Function to clear error messages
+    const clearError = () => {
+        setError(null);
+    };
+
+    // Show loading state
     if (loading) {
         return (
-            <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <div className="dashboard-loading">
                 <div>Loading...</div>
-                <div style={{ fontSize: '0.9em', color: '#666', marginTop: '1rem' }}>
+                <div className="dashboard-loading-subtext">
                     Verifying authentication...
                 </div>
             </div>
         );
     }
 
-    if (error) {
+    // Show login prompt if not authenticated
+    if (!isAuthenticated) {
         return (
-            <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>
-                <div>Error: {error}</div>
-                <div style={{ fontSize: '0.9em', marginTop: '1rem' }}>
-                    Redirecting to login page...
-                </div>
-            </div>
-        );
-    }
-
-    if (!user) {
-        return (
-            <div style={{ padding: '2rem', textAlign: 'center' }}>
-                <div>No user data available</div>
-                <button onClick={logout} style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>
+            <div className="dashboard-no-user">
+                <div>Please log in to access this page</div>
+                <button onClick={() => window.location.href = '/login'}>
                     Go to Login
                 </button>
             </div>
         );
     }
 
+    // Show dashboard for authenticated users
     return (
-        <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-            <h1>Dashboard</h1>
-            <div style={{ backgroundColor: '#f5f5f5', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div className="dashboard-container">
+            {/* ✅ ADDED: Success message display */}
+            {successMessage && (
+                <div className="dashboard-success-message">
+                    <strong>Success!</strong> {successMessage}
+                    <button 
+                        onClick={clearSuccessMessage}
+                        className="dashboard-dismiss-success"
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
+
+            {/* ✅ ADDED: Error message display */}
+            {error && (
+                <div className="dashboard-error-message">
+                    <strong>Error:</strong> {error}
+                    <button 
+                        onClick={clearError}
+                        className="dashboard-dismiss-error"
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
+
+            <h1>Welcome, {user.name}!</h1>
+           
+            {/* Profile information */}
+            <div className="dashboard-profile-card">
+                <div className="dashboard-profile-header">
                     <h2>Profile Information</h2>
-                    <button onClick={handleEditToggle} style={{ padding: '0.5rem 1rem', backgroundColor: '#2196f3', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                    <button 
+                        onClick={() => setEditing(!editing)} 
+                        className="dashboard-edit-btn"
+                    >
                         {editing ? 'Cancel' : 'Edit Profile'}
                     </button>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1rem' }}>
+                
+                <div className="dashboard-profile-details">
+                    {/* ✅ ADDED: Profile picture display */}
                     {user.picture && (
-                        <img src={user.picture} alt="Profile" style={{ width: '80px', height: '80px', borderRadius: '50%', border: '3px solid #ddd' }} />
+                        <img 
+                            src={user.picture} 
+                            alt="Profile" 
+                            className="dashboard-profile-img" 
+                        />
                     )}
-                    <div style={{ flex: 1 }}>
-                        {editing ? (
-                            <form onSubmit={handleUpdateProfile}>
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label>Name:</label>
-                                    <input type="text" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} style={{ width: '100%', padding: '0.5rem', marginTop: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }} required />
-                                </div>
-                                <button type="submit" style={{ padding: '0.5rem 1rem', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginRight: '0.5rem' }}>
+                    
+                    {editing ? (
+                        <form onSubmit={handleUpdateProfile} className="dashboard-edit-form">
+                            <div className="dashboard-form-group">
+                                <label>Name:</label>
+                                <input
+                                    type="text"
+                                    value={editForm.name}
+                                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                    className="dashboard-input"
+                                    required
+                                />
+                            </div>
+                            <div className="dashboard-form-actions">
+                                <button type="submit" className="dashboard-save-btn">
                                     Save Changes
                                 </button>
-                            </form>
-                        ) : (
-                            <div>
-                                <p><strong>Name:</strong> {user.name}</p>
-                                <p><strong>Email:</strong> {user.email}</p>
-                                <p><strong>User ID:</strong> {user._id}</p>
-                                <p><strong>Auth Method:</strong> {user.authMethod}</p>
-                                <p><strong>Role:</strong> {user.role}</p>
-                                <p><strong>Member Since:</strong> {new Date(user.createdAt).toLocaleDateString()}</p>
-                                <p><strong>Last Login:</strong> {new Date(user.lastLogin).toLocaleString()}</p>
+                                <button 
+                                    type="button" 
+                                    onClick={() => {
+                                        setEditing(false);
+                                        setEditForm({ name: user.name || '' }); // Reset form
+                                    }}
+                                    className="dashboard-cancel-btn"
+                                >
+                                    Cancel
+                                </button>
                             </div>
-                        )}
-                    </div>
+                        </form>
+                    ) : (
+                        <div className="dashboard-user-info">
+                            <p><strong>Name:</strong> {user.name}</p>
+                            <p><strong>Email:</strong> {user.email}</p>
+                            <p><strong>User ID:</strong> {user._id || user.userId}</p>
+                            <p><strong>Auth Method:</strong> {user.authMethod}</p>
+                            <p><strong>Role:</strong> {user.role}</p>
+                            {/* ✅ ADDED: Additional user info */}
+                            {user.createdAt && (
+                                <p><strong>Member Since:</strong> {new Date(user.createdAt).toLocaleDateString()}</p>
+                            )}
+                            {user.lastLogin && (
+                                <p><strong>Last Login:</strong> {new Date(user.lastLogin).toLocaleString()}</p>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <button onClick={logout} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#ff9800', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+
+            {/* Action buttons */}
+            <div className="dashboard-actions">
+                <button onClick={logout} className="dashboard-logout-btn">
                     Logout
                 </button>
-                <button onClick={handleDeleteAccount} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                <button onClick={handleDeleteAccount} className="dashboard-delete-btn">
                     Delete Account
                 </button>
             </div>

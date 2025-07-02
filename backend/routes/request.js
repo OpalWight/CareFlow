@@ -18,7 +18,7 @@ router.get('/', (req, res) => {
   // ✅ FIXED: Add email scope and improve scopes
   const authorizeUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
-    scope: [
+    scope: [ 
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/userinfo.email',
       'openid'

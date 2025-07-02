@@ -2,10 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+
+// ✅ Load environment variables immediately
+dotenv.config();
+
 const connectDB = require('./config/database');
 const chatRoutes = require('./routes/chat');
-
-dotenv.config();
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = 3001;
@@ -16,6 +19,8 @@ connectDB();
 const requestRoutes = require('./routes/request');
 const oauthRoutes = require('./routes/oauth');
 
+// ✅ IMPORTANT: Add this before your routes
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

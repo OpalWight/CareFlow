@@ -34,3 +34,6 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--primary-font);
   font-weight: 500; /* Medium Inter */
 }
+.button:hover{
+  cursor: pointer;
+}

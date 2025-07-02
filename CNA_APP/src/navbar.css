@@ -70,3 +70,11 @@
   flex-shrink: 0;
 }
 
+.dottedSep
+{
+  width: 100%;
+  height: 2px;
+  border-top: 3px dotted #799ACA;; 
+  margin-top: 5px; 
+}
+

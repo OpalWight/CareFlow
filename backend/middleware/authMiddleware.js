@@ -2,9 +2,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User'); // Adjust path based on your project structure
 
-// IMPORTANT: This should be the same secret key used to sign your JWTs!
-// In production, ensure this comes from process.env and is a very strong, random key.
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 /**
  * Middleware to authenticate requests using a JWT from the Authorization header.
@@ -13,12 +11,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-pro
  * authenticated user object (fetched from DB) to the `req` object.
  */
 const authMiddleware = async (req, res, next) => {
-    // 1. Extract the token from the Authorization header
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Expected format: "Bearer <TOKEN>"
+    // 1. Extract the token from the HTTP-only cookie
+    const token = req.cookies.authToken;
 
     if (!token) {
-        return res.status(401).json({ error: 'No authentication token provided.' });
+        return res.status(401).json({ error: 'No authentication token provided. Please log in.' });
     }
 
     try {
