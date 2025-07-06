@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from './api/AuthContext'; // ✅ ADDED: Import useAuth hook
-import NavBar from './NavBar';
-import './LoginPage.css';
+import { useAuth } from '../api/AuthContext'; // ✅ ADDED: Import useAuth hook
+import NavBar from '../components/NavBar';
+import '../styles/LoginPage.css';
 
 function LoginPage() {
     // ✅ ADDED: Get authentication state from AuthContext

@@ -187,7 +187,7 @@ router.get('/', async (req, res) => {
     // Consider a shorter lifespan (e.g., 15-60 minutes) for access tokens
     // and rely on a separate refresh token flow for long-lived sessions if applicable.
     // For simplicity in this example, we keep 7d as per your original code.
-    const jwtToken = jwt.sign(jwtPayload, JWT_SECRET, { expiresIn: '7d' });
+    const jwtToken = jwt.sign(jwtPayload, JWT_SECRET, { expiresIn: '30m' });
 
     console.log('🎫 Application JWT token created for user:', user.email);
 

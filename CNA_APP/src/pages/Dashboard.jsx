@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from './api/AuthContext'; // ← Import useAuth hook
-import './Dashboard.css';
+import { useAuth } from '../api/AuthContext'; // ← Import useAuth hook
+import '../styles/Dashboard.css';
+import NavBar from '../components/NavBar';
 
 function Dashboard() {
     const {
@@ -106,6 +107,8 @@ function Dashboard() {
 
     // Show dashboard for authenticated users
     return (
+        <>
+        <NavBar />
         <div className="dashboard-container">
             {/* ✅ ADDED: Success message display */}
             {successMessage && (
@@ -214,6 +217,7 @@ function Dashboard() {
                 </button>
             </div>
         </div>
+        </>
     );
 }
 

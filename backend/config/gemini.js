@@ -36,7 +36,7 @@ const modelConfig = {
 
 // Function to get a configured GenerativeModel instance
 const getGenerativeModel = () => {
-    return genAI.getGenerativeModel({ model: "gemini-pro", ...modelConfig });
+    return genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest", ...modelConfig });
 };
 
 module.exports = {

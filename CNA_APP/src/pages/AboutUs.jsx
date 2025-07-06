@@ -1,10 +1,11 @@
 import React from "react";
-import NavBar from "./NavBar";  
+import NavBar from "../components/NavBar";  
 function AboutUs() {
     return (
         <div>
             <NavBar />
             <h1>About Us</h1>
+            <p>This is a placeholder for the About Us page.</p>
         </div>
     );
 }
