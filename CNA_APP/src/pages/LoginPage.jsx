@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../api/AuthContext'; // ✅ ADDED: Import useAuth hook
-import NavBar from '../components/NavBar';
+import Layout from '../components/Layout';
 import '../styles/LoginPage.css';
 
 function LoginPage() {
@@ -88,20 +88,18 @@ function LoginPage() {
     // ✅ ADDED: Show loading state while checking authentication
     if (authLoading) {
         return (
-            <>
-                <NavBar />
+            <Layout>
                 <div className="login-container">
                     <div className="login-loading-message">
                         Checking authentication status...
                     </div>
                 </div>
-            </>
+            </Layout>
         );
     }
 
     return (
-        <>
-        <NavBar />
+        <Layout>
         <div className="login-container">
             <h1>Login Page</h1>
             
@@ -180,7 +178,7 @@ function LoginPage() {
                 </button>
             </div>
         </div>
-        </>
+        </Layout>
         
     );
 }

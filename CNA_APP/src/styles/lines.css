@@ -1,0 +1,11 @@
+  .vert{
+    width: 1.5px; /* Thickness of the individual lines */
+  height: 100vh; /* Height of the vertical line */
+  background-image: linear-gradient(to bottom, #799ACA 50%, transparent 50%); /* Color of the lines and spacing */
+  background-size: 2px 10px; /* Length of each line and height (same as height) */
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  top: 0;
+  z-index: 1000;
+  }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../api/AuthContext'; // ← Import useAuth hook
 import '../styles/Dashboard.css';
-import NavBar from '../components/NavBar';
+import Layout from '../components/Layout';
 
 function Dashboard() {
     const {
@@ -107,9 +107,7 @@ function Dashboard() {
 
     // Show dashboard for authenticated users
     return (
-        <>
-        <NavBar />
-        <div className="dashboard-container">
+        <Layout className="dashboard-container">
             {/* ✅ ADDED: Success message display */}
             {successMessage && (
                 <div className="dashboard-success-message">
@@ -136,9 +134,10 @@ function Dashboard() {
                 </div>
             )}
 
-            <h1>Welcome, {user.name}!</h1>
+            <h1 className='dashboard-welcome'>Welcome, {user.name}!</h1>
            
             {/* Profile information */}
+            <div className='dashboard-profile-box'>
             <div className="dashboard-profile-card">
                 <div className="dashboard-profile-header">
                     <h2>Profile Information</h2>
@@ -205,9 +204,9 @@ function Dashboard() {
                         </div>
                     )}
                 </div>
+                {/* Action buttons */}
+            
             </div>
-
-            {/* Action buttons */}
             <div className="dashboard-actions">
                 <button onClick={logout} className="dashboard-logout-btn">
                     Logout
@@ -216,8 +215,11 @@ function Dashboard() {
                     Delete Account
                 </button>
             </div>
-        </div>
-        </>
+            </div>
+
+
+            
+        </Layout>
     );
 }
 

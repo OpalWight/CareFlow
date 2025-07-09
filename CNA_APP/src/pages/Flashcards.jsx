@@ -1,13 +1,12 @@
 import React from 'react';
-import NavBar from '../components/NavBar';
+import Layout from '../components/Layout';
 
 function Flashcards() {
   return (
-    <div>
-      <NavBar />
+    <Layout>
       <h1>Flashcards</h1>
       <p>This is a placeholder for the Flashcards page.</p>
-    </div>
+    </Layout>
   );
 }
 

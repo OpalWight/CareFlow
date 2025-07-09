@@ -1,12 +1,17 @@
 import React from "react";
 import CloudLegs from "../assets/svg/cloudLegs.svg"
-import NavBar from "../components/NavBar";
+import Study4CNA from "../assets/svg/study4CNA.svg"
+import Lines from "../components/lines";
+import vert from "../assets/svg/vert.svg"
+import Layout from "../components/Layout";
+import "../styles/LandingPage.css";
+
 function LandingPage() {
     return (
-        <div> 
-            <header>
-                <NavBar />
-            </header>            
+        <Layout>
+            <div className="line-container">
+                <div className="vert-line"></div>
+            </div>
             <main> 
                 <div>
                   
@@ -16,9 +21,7 @@ function LandingPage() {
                
                 <section>
                   <h1>
-                    study for your
-                    <span>CNA certification</span>
-                  </h1>
+                    study for your</h1>
                   <p>
                     Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do 
                     eiusmod tempor incididunt.
@@ -27,7 +30,7 @@ function LandingPage() {
                   </div>
                 </section>
             </main>
-        </div> // or </React.Fragment>
+        </Layout>
     );
 }
 export default LandingPage;

@@ -1,11 +1,12 @@
 import React from 'react';
+import Layout from '../components/Layout';
 
 function Help() {
   return (
-    <div>
+    <Layout>
       <h1>Help Page</h1>
       <p>This is a placeholder for the Help page.</p>
-    </div>
+    </Layout>
   );
 }
 

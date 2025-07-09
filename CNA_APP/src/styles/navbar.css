@@ -16,7 +16,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 3vh 6.944vw;
+    padding: 4vh 9vw 4vh 6.944vw;
     width: 100%; /* Ensure the nav bar takes the full width */
     box-sizing: border-box; /* Include padding in the width calculation */
 }
@@ -35,8 +35,8 @@
 
 .profile-button {
   border-radius: 50%;
-  width: 50px; /* Match the height of the logo */
-  height: 50px; /* Match the height of the logo */
+  width: 40x; /* Match the height of the logo */
+  height: 40px; /* Match the height of the logo */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -53,25 +53,24 @@
 }
 
 .get-started-button {
-  /* Basic Button Styling (mostly same as before) */
-  display: inline-block;
-  padding: 12px 30px;
-  border-radius: 30px;
-  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 12px 20px;
+  border-radius: 27.371px;
+  border: 2.649px solid transparent;
+  background: linear-gradient(#ffffff, #FFF) padding-box, linear-gradient(45deg, #7CDAFF, #6D99FF) border-box;
   font-family: Arial, sans-serif;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 550;
+  text-decoration: none;
   cursor: pointer;
   outline: none;
   transition: all 0.3s ease;
-  border-radius: 27.371px;
-  border: 2.649px solid #6D99FF;
-  background: #FFF;
-  width: 145px;
-  height: 50px;
-  flex-shrink: 0;
-  background: linear-gradient(#ffffff, #FFF) padding-box, linear-gradient(45deg, #7CDAFF, #6D99FF) border-box;
-  border: 2.649px solid transparent;
+  color: #000;
+
 }
 
 /* Hover Effect for Hollow Button */
@@ -85,14 +84,40 @@
 
 .homeLogo {
   width: 196px;
-  height: 50px;
+  height: 40px;
   flex-shrink: 0;
 }
 
-.dottedSep
-{
-  width: 100%;
-  height: 0px;
-  border-top: 2px dotted #799ACA; 
+.horizontalLine {
+    width: 100%;
+    height: 1.5px; /* Thickness of the individual lines */
+    background-image: linear-gradient(to right, #799ACA 50%, transparent 50%); /* Color of the lines and spacing */
+    background-size: 10px 2px; /* Length of each line and height (same as height) */
+    margin: 0;
+    padding: 0;
 }
 
+
+
+
+.button {
+    cursor: pointer;
+    position: relative;
+    text-decoration: none;
+    color: #000000;
+}
+
+.button::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: #6D99FF;
+    transition: width 0.3s ease;
+}
+
+.button:hover::after {
+    width: 100%;
+}

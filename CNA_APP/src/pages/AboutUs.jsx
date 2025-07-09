@@ -1,12 +1,11 @@
 import React from "react";
-import NavBar from "../components/NavBar";  
+import Layout from "../components/Layout";  
 function AboutUs() {
     return (
-        <div>
-            <NavBar />
+        <Layout>
             <h1>About Us</h1>
             <p>This is a placeholder for the About Us page.</p>
-        </div>
+        </Layout>
     );
 }
 export default AboutUs;

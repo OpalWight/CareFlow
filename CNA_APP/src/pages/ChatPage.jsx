@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../api/AuthContext'; // Import the useAuth hook
 import { startChatSession, sendChatMessage } from '../api/chatApi';
 import '../styles/ChatPage.css';
-import NavBar from '../components/NavBar';
+import Layout from '../components/Layout';
 
 const ChatPage = () => {
     const { user } = useAuth(); // Get the authenticated user
@@ -58,8 +58,7 @@ const ChatPage = () => {
     };
 
     return (
-        <div className="chat-page">
-            <NavBar />
+        <Layout className="chat-page">
             <div className="chat-container" ref={chatContainerRef}>
                 {messages.map((msg, index) => (
                     <div key={index} className={`chat-message ${msg.role}`}>
@@ -78,7 +77,7 @@ const ChatPage = () => {
                 />
                 <button type="submit" disabled={isLoading || !sessionId}>Send</button>
             </form>
-        </div>
+        </Layout>
     );
 };
 

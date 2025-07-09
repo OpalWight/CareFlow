@@ -1,0 +1,15 @@
+/* Basic CSS Reset */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scrollbar */
+}
+
+/* Optional: Box-sizing for easier layout */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
