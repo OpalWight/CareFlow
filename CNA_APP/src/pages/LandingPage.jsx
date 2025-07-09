@@ -1,7 +1,7 @@
 import React from "react";
 import CloudLegs from "../assets/svg/cloudLegs.svg"
 import Study4CNA from "../assets/svg/study4CNA.svg"
-import Lines from "../components/lines";
+
 import vert from "../assets/svg/vert.svg"
 import Layout from "../components/Layout";
 import "../styles/LandingPage.css";
@@ -9,9 +9,7 @@ import "../styles/LandingPage.css";
 function LandingPage() {
     return (
         <Layout>
-            <div className="line-container">
-                <div className="vert-line"></div>
-            </div>
+            
             <main> 
                 <div>
                   

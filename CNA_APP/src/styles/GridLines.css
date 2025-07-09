@@ -1,0 +1,34 @@
+.grid-lines-container {
+  position: fixed; /* Use fixed to cover the entire viewport */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  pointer-events: none; /* Allows clicks to pass through */
+  z-index: -1; /* Ensures lines are in the background */
+}
+
+.grid-line {
+  position: absolute;
+}
+
+.grid-line.vert {
+  top: 0;
+  height: 100%;
+  width: 1.5px; /* Thickness of vertical lines */
+  background-image: linear-gradient(to bottom, #799ACA 50%, transparent 50%); /* Color of the lines and spacing */
+  background-size: 1.5px 10px; /* Increased size for visibility */
+  margin: 0;
+  padding: 0;
+}
+
+.grid-line.horiz {
+  left: 0;
+  width: 100%;
+  height: 1.5px; /* Thickness of horizontal lines */
+  background-image: linear-gradient(to right, #799ACA 50%, transparent 50%); /* Color of the lines and spacing */
+  background-size: 10px 1.5px; /* Increased size for visibility */
+  margin: 0;
+  padding: 0;
+}
