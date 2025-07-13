@@ -23,3 +23,14 @@
   left: 6.944vw; /* Position on the left */
   z-index: 1000;
 }
+
+.horizontalLine {
+    width: 100%;
+    height: 1.5px; /* Thickness of the individual lines */
+    background-image: linear-gradient(to right, #799ACA 50%, transparent 50%); /* Color of the lines and spacing */
+    background-size: 10px 2px; /* Length of each line and height (same as height) */
+    margin: 0;
+    padding: 0;
+    position: relative;
+    z-index: 9998; /* Just below the footer's z-index */
+}

@@ -4,6 +4,7 @@ import '../styles/navbar.css';
 import logo from '../assets/svg/logo.svg';
 import { useAuth } from '../api/AuthContext';
 import redBalloonPfp from '../assets/svg/redBalloonPfp.svg';
+import GetStartedButton from './GetStartedButton';
 
 import '../styles/Layout.css';
 
@@ -32,7 +33,7 @@ function NavBar() {
         ) : (
           <>
             <span className="button" onClick={() => navigate('/login')}>log in</span>
-            <button className="get-started-button" onClick={() => navigate('/signup')}>get started</button>
+            <GetStartedButton />
           </>
         )}
       </div>
