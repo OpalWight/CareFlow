@@ -1,28 +1,69 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Scenario = require('../models/Scenario');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-//hardcoded for now, will be replaced with a database later
-const mvpScenarioDetails = {
-    id: "martha-cough-mvp",
-    name: "Martha",
-    age: 78,
-    condition: "mild cough and tiredness",
-    personality: "generally cooperative but sometimes confused",
-    specificSymptoms: "A persistent, dry cough that started yesterday. You feel a bit more tired than usual and have a slight headache. You sometimes forget what you just said."
+// Function to get scenario from database by skillId
+const getScenarioBySkillId = async (skillId) => {
+    try {
+        const scenario = await Scenario.findOne({ skillId: skillId, isActive: true });
+        if (!scenario) {
+            // Fallback to default scenario if specific one not found
+            console.warn(`Scenario not found for skillId: ${skillId}, using default`);
+            return await Scenario.findOne({ skillId: "hand-hygiene", isActive: true });
+        }
+        return scenario;
+    } catch (error) {
+        console.error('Error fetching scenario:', error);
+        // Return a basic fallback scenario
+        return {
+            skillId: "default",
+            skillName: "General Care",
+            patientName: "Mrs. Smith",
+            patientAge: 75,
+            patientCondition: "general care needs",
+            patientPersonality: "cooperative and friendly",
+            specificSymptoms: "You are a patient who needs general care assistance. You are cooperative and appreciate when caregivers are gentle and professional.",
+            scenarioContext: "You are receiving general nursing care and appreciate professional, compassionate assistance.",
+            learningObjectives: ["Provide compassionate care", "Maintain professionalism", "Follow proper procedures"]
+        };
+    }
+};
+
+// Function to get all available scenarios
+const getAllScenarios = async () => {
+    try {
+        return await Scenario.find({ isActive: true }).sort({ skillName: 1 });
+    } catch (error) {
+        console.error('Error fetching all scenarios:', error);
+        return [];
+    }
 };
 
 // Function to generate the initial patient persona instruction based on scenario details
 // This is the "system instruction" that tells Gemini how to act.
 const generatePatientInstruction = (scenario) => {
     return `
-    You are a patient named ${scenario.name}, ${scenario.age} years old.
-    You have a ${scenario.condition}.
-    Your personality is ${scenario.personality}.
-    Specifically, you are experiencing: ${scenario.specificSymptoms}.
-    Respond concisely and stay in character. Do not break character under any circumstances.
-    Do not provide medical advice or act as a medical professional or healthcare provider.
-    Focus on your symptoms and emotional state. Avoid self-diagnosing or offering solutions.
+    You are a patient named ${scenario.patientName}, ${scenario.patientAge} years old.
+    You have ${scenario.patientCondition}.
+    Your personality is: ${scenario.patientPersonality}.
+    
+    Current situation: ${scenario.scenarioContext}
+    
+    Specifically, you are experiencing: ${scenario.specificSymptoms}
+    
+    IMPORTANT INSTRUCTIONS:
+    - Respond concisely and stay in character. Do not break character under any circumstances.
+    - Do not provide medical advice or act as a medical professional or healthcare provider.
+    - Focus on your symptoms, feelings, and emotional state as a patient would.
+    - Avoid self-diagnosing or offering medical solutions.
+    - React naturally to what the CNA student is doing - you may ask questions, express concerns, or show appreciation.
+    - If the student makes mistakes or forgets steps, react as a real patient would (confusion, discomfort, etc.).
+    - Keep responses brief (1-3 sentences) to maintain realistic conversation flow.
+    - Show human emotions: gratitude for good care, anxiety about procedures, embarrassment when appropriate.
+    
+    Skill being practiced: ${scenario.skillName}
+    Your role is to help the student practice this skill realistically while staying in character as a patient.
     `;
 };
 
@@ -42,5 +83,8 @@ const getGenerativeModel = () => {
 module.exports = {
     getGenerativeModel,
     generatePatientInstruction,
-    mvpScenarioDetails, // Export for use in your chat controller
+    getScenarioBySkillId,
+    getAllScenarios,
+    // Deprecated: keeping for backward compatibility
+    mvpScenarioDetails: null, // Will be removed in future version
 };

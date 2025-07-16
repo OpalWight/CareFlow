@@ -7,11 +7,43 @@ function SkillsHub() {
         window.location.href = '/learner-home';
     };
 
+    // Mapping from skill names to skill IDs in the database
+    const skillNameToId = {
+        "Hand Hygiene (Hand Washing)": "hand-hygiene",
+        "Donning and Removing PPE (Gown and Gloves)": "ppe-gown-gloves",
+        "Applies One Knee-High Elastic Stocking": "elastic-stocking",
+        "Assists with Use of Bedpan": "bedpan-use",
+        "Cleans Upper or Lower Denture": "denture-cleaning",
+        "Dresses Client with Affected (Weak) Right Arm": "dressing-affected-arm",
+        "Feeds Client Who Cannot Feed Self": "feeding-client",
+        "Gives Modified Bed Bath (Face and One Arm, Hand, and Underarm/Armpit)": "modified-bed-bath",
+        "Provides Catheter Care for Female": "catheter-care-female",
+        "Provides Foot Care on One Foot": "foot-care",
+        "Provides Mouth Care": "mouth-care",
+        "Provides Perineal Care for Female": "perineal-care-female",
+        "Assists to Ambulate Using Transfer Belt": "ambulate-transfer-belt",
+        "Positions Resident on One Side": "position-on-side",
+        "Transfers from Bed to Wheelchair Using Transfer Belt": "transfer-bed-wheelchair",
+        "Counts and Records Radial Pulse": "radial-pulse",
+        "Counts and Records Respirations": "respirations",
+        "Measures and Records Electronic Blood Pressure": "electronic-blood-pressure",
+        "Measures and Records Urinary Output": "urinary-output",
+        "Measures and Records Weight of Ambulatory Client": "weight-measurement",
+        "Measures and Records Manual Blood Pressure": "manual-blood-pressure",
+        "Performs Modified Passive Range of Motion (PROM) for One Knee and One Ankle": "prom-knee-ankle",
+        "Performs Modified Passive Range of Motion (PROM) for One Shoulder": "prom-shoulder"
+    };
+
     const handleLessonClick = (lessonName) => {
-        // For now, all lessons lead to the same chat interface
-        // Later you can add different endpoints for different lessons
-        console.log(`Starting lesson: ${lessonName}`);
-        window.location.href = '/chat';
+        const skillId = skillNameToId[lessonName];
+        if (skillId) {
+            console.log(`Starting lesson: ${lessonName} with skillId: ${skillId}`);
+            window.location.href = `/chat?skillId=${skillId}`;
+        } else {
+            console.error(`No skill ID found for lesson: ${lessonName}`);
+            // Fallback to default
+            window.location.href = '/chat';
+        }
     };
 
     const infectionControlLessons = [

@@ -10,7 +10,12 @@ const ChatPage = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [scenarioInfo, setScenarioInfo] = useState(null);
     const chatContainerRef = useRef(null);
+
+    // Get skillId from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const skillId = urlParams.get('skillId') || 'hand-hygiene';
 
     useEffect(() => {
         const startSession = async () => {
@@ -18,8 +23,9 @@ const ChatPage = () => {
 
             setIsLoading(true);
             try {
-                const { sessionId, patientInitialResponse } = await startChatSession(user._id);
+                const { sessionId, patientInitialResponse, scenario } = await startChatSession(user._id, skillId);
                 setSessionId(sessionId);
+                setScenarioInfo(scenario);
                 setMessages([{ role: 'model', content: patientInitialResponse }]);
             } catch (error) {
                 console.error("Failed to start chat session:", error);
@@ -28,7 +34,7 @@ const ChatPage = () => {
             setIsLoading(false);
         };
         startSession();
-    }, [user]); // Re-run when the user object is available
+    }, [user, skillId]); // Re-run when the user object is available or skillId changes
 
     useEffect(() => {
         if (chatContainerRef.current) {
@@ -59,6 +65,22 @@ const ChatPage = () => {
 
     return (
         <Layout className="chat-page">
+            {scenarioInfo && (
+                <div className="scenario-info">
+                    <h2>{scenarioInfo.skillName}</h2>
+                    <p><strong>Patient:</strong> {scenarioInfo.patientName}, {scenarioInfo.patientAge} years old</p>
+                    {scenarioInfo.learningObjectives && (
+                        <div className="learning-objectives">
+                            <strong>Learning Objectives:</strong>
+                            <ul>
+                                {scenarioInfo.learningObjectives.map((objective, index) => (
+                                    <li key={index}>{objective}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+            )}
             <div className="chat-container" ref={chatContainerRef}>
                 {messages.map((msg, index) => (
                     <div key={index} className={`chat-message ${msg.role}`}>

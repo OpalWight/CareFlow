@@ -1,24 +1,32 @@
 // backend/controllers/chatController.js
 const ChatSession = require('../models/ChatSession'); // Adjust path if models are deeper
-const { getGenerativeModel, generatePatientInstruction, mvpScenarioDetails } = require('../config/gemini'); // Adjust path if config is deeper
+const { getGenerativeModel, generatePatientInstruction, getScenarioBySkillId } = require('../config/gemini'); // Adjust path if config is deeper
 
 // Handles starting a new patient simulation session
 exports.startChatSession = async (req, res) => {
     const userId = req.user.id; // User ID from the authenticated request (via JWT middleware)
+    const { skillId } = req.body; // Get skillId from request body
 
     try {
+        // Get the scenario from database based on skillId
+        const scenario = await getScenarioBySkillId(skillId || 'hand-hygiene'); // Default to hand-hygiene if no skillId provided
+        
+        if (!scenario) {
+            return res.status(404).json({ message: "Scenario not found for the specified skill." });
+        }
+
         const model = getGenerativeModel();
-        const systemInstruction = generatePatientInstruction(mvpScenarioDetails);
+        const systemInstruction = generatePatientInstruction(scenario);
         const initialGeminiHistory = [{ role: "user", parts: [{ text: systemInstruction }] }];
         const chat = model.startChat({ history: initialGeminiHistory });
 
-        const initialPatientTurnPrompt = "You enter Martha's room and greet her. What is her initial response or complaint?";
+        const initialPatientTurnPrompt = `You enter ${scenario.patientName}'s room and greet them. What is their initial response or reaction?`;
         const result = await chat.sendMessage(initialPatientTurnPrompt);
         const patientFirstResponse = result.response.text();
 
         const newChatSession = new ChatSession({
             userId: userId,
-            scenarioId: mvpScenarioDetails.id,
+            scenarioId: scenario.skillId,
             messages: [
                 { role: "user", content: systemInstruction },
                 { role: "user", content: initialPatientTurnPrompt },
@@ -30,6 +38,12 @@ exports.startChatSession = async (req, res) => {
         res.status(201).json({
             sessionId: newChatSession._id,
             patientInitialResponse: patientFirstResponse,
+            scenario: {
+                skillName: scenario.skillName,
+                patientName: scenario.patientName,
+                patientAge: scenario.patientAge,
+                learningObjectives: scenario.learningObjectives
+            },
             message: "Chat session started successfully.",
         });
 
