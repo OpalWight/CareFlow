@@ -8,6 +8,8 @@ import LandingPage from './pages/LandingPage';
 import AboutUs from './pages/AboutUs';
 import SignUp from './pages/SignUp';
 import ChatPage from './pages/ChatPage';
+import LearnerHome from './pages/LearnerHome';
+import SkillsHub from './pages/SkillsHub';
 import { AuthProvider } from './api/AuthContext';
 import Help from './pages/Help';
 import Settings from './pages/Settings';
@@ -25,6 +27,8 @@ function App() {
         <Route path = "/about-us" element={<AboutUs />} />
         <Route path = "/signup" element={<SignUp />} />
         <Route path = "/chat" element={<ChatPage />} />
+        <Route path = "/learner-home" element={<LearnerHome />} />
+        <Route path = "/skills-hub" element={<SkillsHub />} />
         <Route path = "/help" element={<Help />} />
         <Route path = "/settings" element={<Settings />} />
       </Routes>
