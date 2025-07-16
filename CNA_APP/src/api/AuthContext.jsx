@@ -65,8 +65,82 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // ✅ Login: Redirect to Google OAuth (backend handles cookie setting)
-    const login = () => {
+    // ✅ Login with email and password
+    const loginWithEmail = async (email, password) => {
+        try {
+            setLoading(true);
+            setError(null);
+            console.log('🔐 Attempting email/password login...');
+
+            const response = await fetch('http://localhost:3001/auth/login', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setUser(data.user);
+                console.log('✅ Email login successful:', data.user.email);
+                return { success: true, user: data.user };
+            } else {
+                const errorMessage = data.message || 'Login failed';
+                setError(errorMessage);
+                return { success: false, error: errorMessage };
+            }
+        } catch (err) {
+            console.error('❌ Email login error:', err);
+            const errorMessage = `Network error: ${err.message}`;
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ✅ Register with email and password
+    const registerWithEmail = async (name, email, password) => {
+        try {
+            setLoading(true);
+            setError(null);
+            console.log('📝 Attempting email registration...');
+
+            const response = await fetch('http://localhost:3001/auth/register', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setUser(data.user);
+                console.log('✅ Registration successful:', data.user.email);
+                return { success: true, user: data.user };
+            } else {
+                const errorMessage = data.message || 'Registration failed';
+                setError(errorMessage);
+                return { success: false, error: errorMessage };
+            }
+        } catch (err) {
+            console.error('❌ Registration error:', err);
+            const errorMessage = `Network error: ${err.message}`;
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ✅ Login with Google OAuth: Redirect to Google OAuth (backend handles cookie setting)
+    const loginWithGoogle = () => {
         console.log('🚀 Initiating Google OAuth login...');
         // Redirect to your backend OAuth endpoint
         // After successful OAuth, backend will:
@@ -75,12 +149,16 @@ export const AuthProvider = ({ children }) => {
         window.location.href = 'http://localhost:3001/request';
     };
 
+    // ✅ Backward compatibility alias
+    const login = loginWithGoogle;
+
     // ✅ Logout: Call backend to clear cookie, then redirect
     const logout = async () => {
         try {
             console.log('🚪 Logging out user...');
             
-            const response = await fetch('http://localhost:3001/oauth/logout', {
+            // First, try the auth logout endpoint
+            let response = await fetch('http://localhost:3001/auth/logout', {
                 method: 'POST',
                 credentials: 'include', // ✅ Send cookies so backend can clear them
                 headers: {
@@ -88,12 +166,23 @@ export const AuthProvider = ({ children }) => {
                 }
             });
 
+            if (!response.ok) {
+                console.warn('⚠️ Auth logout failed, trying OAuth logout as fallback...');
+                // Fallback to OAuth logout endpoint
+                response = await fetch('http://localhost:3001/oauth/logout', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+            }
+
             if (response.ok) {
-                setUser(null);
-                setError(null);
-                console.log('✅ Logged out successfully - cookie cleared by backend');
+                const data = await response.json();
+                console.log('✅ Logged out successfully - cookie cleared by backend:', data.message);
             } else {
-                console.warn('⚠️ Logout request failed, but proceeding with local cleanup');
+                console.warn('⚠️ Both logout endpoints failed, but proceeding with local cleanup');
             }
         } catch (err) {
             console.error('❌ Logout error:', err);
@@ -102,6 +191,7 @@ export const AuthProvider = ({ children }) => {
             // Always clear local state and redirect
             setUser(null);
             setError(null);
+            console.log('🔄 Redirecting to login page...');
             window.location.href = '/login';
         }
     };
@@ -187,8 +277,20 @@ export const AuthProvider = ({ children }) => {
                 window.location.href = '/login';
                 return true;
             } else {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Account deletion failed');
+                // Handle potential non-JSON error responses
+                const errorText = await response.text();
+                let errorMessage = 'Account deletion failed';
+                try {
+                    // Try to parse it as JSON, but don't fail if it's not
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    // If parsing fails, use the raw text if it's not empty
+                    if (errorText) {
+                        errorMessage = errorText;
+                    }
+                }
+                throw new Error(errorMessage);
             }
         } catch (err) {
             console.error('❌ Account deletion failed:', err);
@@ -212,6 +314,9 @@ export const AuthProvider = ({ children }) => {
         
         // Actions
         login,
+        loginWithEmail,
+        loginWithGoogle,
+        registerWithEmail,
         logout,
         checkAuth,
         refreshUser,

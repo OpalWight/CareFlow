@@ -18,6 +18,7 @@ connectDB();
 
 const requestRoutes = require('./routes/request');
 const oauthRoutes = require('./routes/oauth');
+const authRoutes = require('./routes/auth');
 
 // ✅ IMPORTANT: Add this before your routes
 app.use(cookieParser());
@@ -31,6 +32,7 @@ app.use(cors({
 
 app.use('/request', requestRoutes);
 app.use('/oauth', oauthRoutes);
+app.use('/auth', authRoutes);
 app.use('/chat', chatRoutes);
 
 app.get('/', (req, res) => {

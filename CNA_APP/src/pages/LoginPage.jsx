@@ -5,12 +5,16 @@ import '../styles/LoginPage.css';
 
 function LoginPage() {
     // ✅ ADDED: Get authentication state from AuthContext
-    const { user, loading: authLoading, login, error: authError } = useAuth();
+    const { user, loading: authLoading, loginWithEmail, loginWithGoogle, error: authError } = useAuth();
     
     // Local state for UI
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState(null);
+    
+    // Form state
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
     useEffect(() => {
         // ✅ CHANGED: If user is already authenticated, redirect to dashboard
@@ -66,6 +70,37 @@ function LoginPage() {
         }
     }, [user, authError]); // ✅ CHANGED: Dependencies updated
 
+    // Handle email/password login
+    const handleEmailLogin = async (e) => {
+        e.preventDefault();
+        
+        if (!email || !password) {
+            setError('Please enter both email and password');
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+        setSuccessMessage(null);
+
+        try {
+            const result = await loginWithEmail(email, password);
+            
+            if (result.success) {
+                setSuccessMessage('Login successful! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1000);
+            } else {
+                setError(result.error);
+            }
+        } catch (err) {
+            setError('Login failed. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // ✅ SIMPLIFIED: Use AuthContext login function
     function handleGoogleLogin() {
         console.log('🔄 Starting Google OAuth...');
@@ -74,7 +109,7 @@ function LoginPage() {
         setSuccessMessage(null);
         
         // ✅ CHANGED: Use AuthContext login function instead of manual redirect
-        login(); // This will redirect to http://localhost:3001/oauth
+        loginWithGoogle(); // This will redirect to http://localhost:3001/request
     }
 
     function clearError() {
@@ -133,12 +168,16 @@ function LoginPage() {
                 </div>
             )}
 
-            <form className="login-form">
+            <form className="login-form" onSubmit={handleEmailLogin}>
                 <div className="login-form-group">
                     <input 
-                        type="text" 
-                        placeholder="Username" 
-                        className="login-input login-input-username"
+                        type="email" 
+                        placeholder="Email" 
+                        className="login-input login-input-email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        disabled={loading || authLoading}
                     />
                 </div>
                 <div className="login-form-group">
@@ -146,13 +185,26 @@ function LoginPage() {
                         type="password" 
                         placeholder="Password" 
                         className="login-input login-input-password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        disabled={loading || authLoading}
                     />
                 </div>
                 <div className="login-form-actions">
-                    <button type="button" className="login-btn login-btn-login">
-                        Login
+                    <button 
+                        type="submit" 
+                        className="login-btn login-btn-login"
+                        disabled={loading || authLoading}
+                    >
+                        {loading ? 'Logging in...' : 'Login'}
                     </button>
-                    <button type="button" className="login-btn login-btn-signup">
+                    <button 
+                        type="button" 
+                        className="login-btn login-btn-signup"
+                        onClick={() => window.location.href = '/signup'}
+                        disabled={loading || authLoading}
+                    >
                         Sign Up
                     </button>
                 </div>

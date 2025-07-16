@@ -2,9 +2,11 @@
 const express = require('express');
 const router = express.Router();
 const dotenv = require('dotenv');
-const jwt = require('jsonwebtoken');
+
 const fetch = require('node-fetch'); // Ensure node-fetch is installed (npm install node-fetch@2) for older Node versions or if you're not using Node 18+ native fetch
 const User = require('../models/User'); // Adjust path based on your project structure
+const createToken = require('../utils/createToken');
+const cookieUtils = require('../utils/cookieUtils');
 const authMiddleware = require('../middleware/authMiddleware.js'); // Adjust path to your new middleware file
 
 dotenv.config();
@@ -40,6 +42,16 @@ async function getUserData(access_token) {
     }
 
     const data = await response.json();
+    
+    // 🔍 DETAILED LOGGING: Log the complete raw data from Google
+    console.log('🔍 RAW Google user data received:');
+    console.log('📧 Email:', data.email);
+    console.log('👤 Name:', data.name);
+    console.log('🖼️ Picture:', data.picture);
+    console.log('🆔 Google ID (sub):', data.sub);
+    console.log('✅ Email verified:', data.email_verified);
+    console.log('🔍 FULL RAW DATA OBJECT:', JSON.stringify(data, null, 2));
+    
     console.log('✅ User data received:', {
       email: data.email,
       name: data.name,
@@ -113,7 +125,14 @@ router.get('/', async (req, res) => {
 
       // Update last login and potentially changed info (name, picture)
       user.lastLogin = new Date();
-      user.name = googleUserData.name;
+      
+      // 🔍 DEFENSIVE: Only update name if Google provides one
+      if (googleUserData.name) {
+        user.name = googleUserData.name;
+      } else {
+        console.log('⚠️ Google did not provide name for existing user, keeping current name:', user.name);
+      }
+      
       user.picture = googleUserData.picture;
 
       // Only update refresh token if a new one is provided by Google (they are not always)
@@ -133,6 +152,21 @@ router.get('/', async (req, res) => {
 
         // Link Google account to existing user by adding googleId
         user.googleId = googleUserData.sub;
+        
+        // 🔍 DEFENSIVE: Ensure user has a name (might be missing if they signed up with email/password)
+        if (!user.name && googleUserData.name) {
+          console.log('🔧 Setting name for existing user from Google data:', googleUserData.name);
+          user.name = googleUserData.name;
+        } else if (!user.name) {
+          // Fallback name generation if Google doesn't provide one either
+          const fallbackName = googleUserData.given_name || 
+                              googleUserData.family_name || 
+                              googleUserData.email?.split('@')[0] || 
+                              'User';
+          console.log('🔧 Setting fallback name for existing user:', fallbackName);
+          user.name = fallbackName;
+        }
+        
         user.picture = user.picture || googleUserData.picture; // Keep existing picture if available, otherwise use Google's
         // Update auth method to reflect it's now linked or purely Google
         user.authMethod = user.authMethod === 'email' ? 'both' : 'google';
@@ -149,10 +183,19 @@ router.get('/', async (req, res) => {
         console.log('➕ Creating new user:', googleUserData.email);
         isNewUser = true;
 
+        // 🔍 DEFENSIVE: Handle missing name from Google
+        const userName = googleUserData.name || 
+                        googleUserData.given_name || 
+                        googleUserData.family_name || 
+                        googleUserData.email?.split('@')[0] || 
+                        'Google User';
+        
+        console.log('🔧 Using name for new user:', userName, '(original was:', googleUserData.name, ')');
+
         user = new User({
           googleId: googleUserData.sub,
           email: googleUserData.email,
-          name: googleUserData.name,
+          name: userName,
           picture: googleUserData.picture,
           authMethod: 'google',
           isVerified: googleUserData.email_verified, // Use Google's email verification status
@@ -172,22 +215,7 @@ router.get('/', async (req, res) => {
       isAccountLinking
     });
 
-    // GENERATE YOUR APPLICATION'S JWT TOKEN
-    // This token contains claims (user info) that your frontend will use for authentication.
-    const jwtPayload = {
-      userId: user._id,
-      email: user.email,
-      name: user.name,
-      picture: user.picture,
-      role: user.role || 'user', // Default role if not set
-      authMethod: user.authMethod
-    };
-
-    // IMPORTANT: A 7-day expiration is relatively long for a standard access token.
-    // Consider a shorter lifespan (e.g., 15-60 minutes) for access tokens
-    // and rely on a separate refresh token flow for long-lived sessions if applicable.
-    // For simplicity in this example, we keep 7d as per your original code.
-    const jwtToken = jwt.sign(jwtPayload, JWT_SECRET, { expiresIn: '30m' });
+    const jwtToken = createToken(user);
 
     console.log('🎫 Application JWT token created for user:', user.email);
 
@@ -251,17 +279,12 @@ router.get('/', async (req, res) => {
  * @route POST /oauth/logout
  */
 router.post('/logout', (req, res) => {
-  // Clear the authentication cookie
-  res.clearCookie('authToken', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/'
-  });
+  // Clear the authentication cookie using the utility function
+  cookieUtils.clearAuthCookie(res);
 
-  console.log('🚪 User logged out, authentication cookie cleared');
+  console.log('🚪 User logged out via OAuth route, authentication cookie cleared');
   
-  res.json({ message: 'Logged out successfully' });
+  res.json({ success: true, message: 'Logged out successfully' });
 });
 
 /**
@@ -338,29 +361,45 @@ router.put('/profile', authMiddleware, async (req, res) => {
  * @route DELETE /oauth/account
  */
 router.delete('/account', authMiddleware, async (req, res) => {
+  // Store user info before deletion for logging
+  const userEmail = req.user.email;
+  const userId = req.user._id;
+
   try {
-    // Delete the user found by the middleware (req.user._id)
-    const result = await User.findByIdAndDelete(req.user._id);
+    console.log('🗑️ Attempting to delete account for user:', userEmail);
+    
+    // Delete the user found by the middleware
+    const result = await User.findByIdAndDelete(userId);
 
     if (!result) {
-      // This might happen if the user was deleted between middleware and this handler
+      console.log('❌ User not found in database:', userId);
       return res.status(404).json({ error: 'User account not found for deletion.' });
     }
 
-    // Clear the authentication cookie after successful account deletion
-    res.clearCookie('authToken', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/'
+    console.log('✅ User deleted from database successfully:', userEmail);
+
+    // Clear the authentication cookie
+    try {
+      cookieUtils.clearAuthCookie(res);
+      console.log('✅ Authentication cookie cleared for deleted user');
+    } catch (cookieError) {
+      console.error('⚠️ Cookie clearing failed, but user was deleted:', cookieError);
+      // Continue anyway since user is deleted
+    }
+
+    console.log('✅ Account deletion completed for user:', userEmail);
+    res.json({ 
+      success: true, 
+      message: 'Account deleted successfully.' 
     });
 
-    console.log('✅ Account deleted for user:', req.user.email);
-    res.json({ message: 'Account deleted successfully.' });
-
   } catch (error) {
-    console.error('❌ Account deletion failed for user:', req.user.email, error);
-    res.status(500).json({ error: 'Failed to delete account.' });
+    console.error('❌ Account deletion failed for user:', userEmail, 'Error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to delete account.',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
