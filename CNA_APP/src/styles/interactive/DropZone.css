@@ -1,0 +1,47 @@
+.drop-zone {
+  min-height: 80px;
+  padding: 1rem;
+  border: 2px dashed #007bff;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  cursor: pointer;
+  position: relative;
+}
+
+.drop-zone.active {
+  border-color: #28a745;
+  background-color: #d4edda;
+}
+
+.drop-zone.over {
+  border-color: #28a745;
+  border-style: solid;
+  background-color: #e3f2fd;
+  transform: scale(1.02);
+}
+
+.drop-zone-label {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.drop-zone-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.9rem;
+  color: #28a745;
+  font-weight: bold;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}

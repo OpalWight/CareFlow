@@ -1,0 +1,85 @@
+.interactive-scenario-container {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.scenario-main-content {
+  flex: 2;
+}
+
+.scenario-sidebar {
+  flex: 1;
+}
+
+.scenario-step-info {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.scenario-complete-container {
+  text-align: center;
+  padding: 2rem;
+  background-color: #e8f5e8;
+  border-radius: 8px;
+  margin: 2rem 0;
+}
+
+.scenario-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.scenario-button:hover {
+  background-color: #0056b3;
+}
+
+.scenario-button.success {
+  background-color: #28a745;
+}
+
+.scenario-button.success:hover {
+  background-color: #1e7e34;
+}
+
+.collected-supplies-container {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: #e3f2fd;
+  border-radius: 8px;
+}
+
+.collected-supplies-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+
+.scenario-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.back-button {
+  background-color: #6c757d;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+}
+
+.back-button:hover {
+  background-color: #5a6268;
+}

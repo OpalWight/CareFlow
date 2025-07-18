@@ -30,6 +30,14 @@ function LearnerHome() {
         window.location.href = '/dashboard';
     };
 
+    const handleScenarioSimulation = () => {
+        window.location.href = '/combined-learning-hub';
+    };
+
+    const handleCombinedLearningHub = () => {
+        window.location.href = '/combined-learning-hub';
+    };
+
     return (
         <Layout>
             <div className="learner-home-container">
@@ -75,6 +83,21 @@ function LearnerHome() {
 
                 <div className="learner-home-grid">
                     <div className="learner-home-card">
+                        <span className="learner-home-card-icon">🚀</span>
+                        <h3 className="learner-home-card-title">Integrated Learning Hub</h3>
+                        <p className="learner-home-card-description">
+                            Complete learning experience with both chat practice and scenario simulations 
+                            organized by skill categories. Your one-stop destination for CNA training.
+                        </p>
+                        <button 
+                            className="learner-home-card-button"
+                            onClick={handleCombinedLearningHub}
+                        >
+                            Start Learning
+                        </button>
+                    </div>
+
+                    <div className="learner-home-card">
                         <span className="learner-home-card-icon">💬</span>
                         <h3 className="learner-home-card-title">Skills Practice Hub</h3>
                         <p className="learner-home-card-description">
@@ -116,6 +139,21 @@ function LearnerHome() {
                             onClick={handleResources}
                         >
                             Browse Resources
+                        </button>
+                    </div>
+
+                    <div className="learner-home-card">
+                        <span className="learner-home-card-icon">🎭</span>
+                        <h3 className="learner-home-card-title">Scenario Simulation</h3>
+                        <p className="learner-home-card-description">
+                            Practice real-world CNA scenarios in a safe simulated environment 
+                            to build confidence and skills before clinical practice.
+                        </p>
+                        <button 
+                            className="learner-home-card-button"
+                            onClick={handleScenarioSimulation}
+                        >
+                            Start Simulation
                         </button>
                     </div>
 
