@@ -344,29 +344,29 @@ export const withAuth = (WrappedComponent) => {
 
         if (loading) {
             return (
-                <div style={{ 
+                <div id="with-auth-loading-div" style={{ 
                     display: 'flex', 
                     justifyContent: 'center', 
                     alignItems: 'center', 
                     height: '100vh' 
                 }}>
-                    <div>Loading...</div>
+                    <div id="with-auth-loading-text">Loading...</div>
                 </div>
             );
         }
 
         if (!user) {
             return (
-                <div style={{ 
+                <div id="with-auth-auth-required-div" style={{ 
                     display: 'flex', 
                     flexDirection: 'column',
                     justifyContent: 'center', 
                     alignItems: 'center', 
                     height: '100vh' 
                 }}>
-                    <h2>Authentication Required</h2>
-                    <p>Please log in to access this page.</p>
-                    <button onClick={login} style={{ 
+                    <h2 id="with-auth-auth-required-h2">Authentication Required</h2>
+                    <p id="with-auth-auth-required-p">Please log in to access this page.</p>
+                    <button onClick={login} id="with-auth-login-button" style={{ 
                         padding: '10px 20px', 
                         fontSize: '16px',
                         cursor: 'pointer' 

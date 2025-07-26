@@ -2,9 +2,12 @@ import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import '../../styles/interactive/DropZone.css';
 
-function DropZone({ id, children, label, isActive = false, style = {} }) {
+function DropZone({ id, children, label, isActive = false, style = {}, onDropSuccess }) {
   const { isOver, setNodeRef } = useDroppable({
     id: id,
+    data: {
+      onDropSuccess: onDropSuccess
+    }
   });
 
   const className = `drop-zone ${isActive ? 'active' : ''} ${isOver ? 'over' : ''}`;

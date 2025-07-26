@@ -1,6 +1,7 @@
 import React from 'react';
 import NavBar from './NavBar';
 import Footer from './Footer';
+import HorizontalLine from './HorizontalLine';
 
 import GridLines from './GridLines';
 import logo from '../assets/svg/logo.svg';
@@ -17,7 +18,7 @@ const Layout = ({ children, className, showVerticalLines = [], showHorizontalLin
         showHorizontalLines={showHorizontalLines} 
       />
       {children}
-      <div className="horizontalLine"></div>
+      <HorizontalLine />
       <Footer />
     </div>
   );

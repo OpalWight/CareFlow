@@ -43,24 +43,24 @@ function LearnerHome() {
             <div className="learner-home-container">
                 {isAuthenticated && user && (
                     <div className="learner-home-welcome">
-                        <h1 className="learner-home-welcome-title">
+                        <h1 id="learner-home-welcome-h1" className="learner-home-welcome-title">
                             Welcome back, {user.name}! 👋
                         </h1>
-                        <p className="learner-home-welcome-message">
+                        <p id="learner-home-welcome-p" className="learner-home-welcome-message">
                             Ready to continue your CNA learning journey?
                         </p>
                     </div>
                 )}
 
                 <div className="learner-home-header">
-                    <h1 className="learner-home-title">Learner Home</h1>
-                    <p className="learner-home-subtitle">
+                    <h1 id="learner-home-h1" className="learner-home-title">Learner Home</h1>
+                    <p id="learner-home-p" className="learner-home-subtitle">
                         Your central hub for CNA certification preparation and learning resources
                     </p>
                 </div>
 
                 <div className="learner-home-quick-actions">
-                    <h2 className="learner-home-quick-actions-title">Quick Actions</h2>
+                    <h2 id="learner-home-quick-actions-h2" className="learner-home-quick-actions-title">Quick Actions</h2>
                     <div className="learner-home-quick-actions-grid">
                         <div className="learner-home-quick-action" onClick={handleDashboard}>
                             <span className="learner-home-quick-action-icon">📊</span>

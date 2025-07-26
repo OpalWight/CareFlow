@@ -3,8 +3,8 @@ import Layout from "../components/Layout";
 function AboutUs() {
     return (
         <Layout>
-            <h1>About Us</h1>
-            <p>This is a placeholder for the About Us page.</p>
+            <h1 id="about-us-h1">About Us</h1>
+            <p id="about-us-p">This is a placeholder for the About Us page.</p>
         </Layout>
     );
 }

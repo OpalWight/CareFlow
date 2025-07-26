@@ -183,8 +183,8 @@ function SkillsHub() {
                 </button>
 
                 <div className="skills-hub-header">
-                    <h1 className="skills-hub-title">CNA Skills Practice Hub</h1>
-                    <p className="skills-hub-subtitle">
+                    <h1 id="skills-hub-h1" className="skills-hub-title">CNA Skills Practice Hub</h1>
+                    <p id="skills-hub-p" className="skills-hub-subtitle">
                         Select a skill category below to begin your interactive practice session
                     </p>
                 </div>

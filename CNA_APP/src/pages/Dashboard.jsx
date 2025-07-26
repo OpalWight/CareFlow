@@ -85,7 +85,7 @@ function Dashboard() {
     if (loading) {
         return (
             <div className="dashboard-loading">
-                <div>Loading...</div>
+                <div id="dashboard-loading-div">Loading...</div>
                 <div className="dashboard-loading-subtext">
                     Verifying authentication...
                 </div>
@@ -97,7 +97,7 @@ function Dashboard() {
     if (!isAuthenticated) {
         return (
             <div className="dashboard-no-user">
-                <div>Please log in to access this page</div>
+                <div id="dashboard-no-user-div">Please log in to access this page</div>
                 <button onClick={() => window.location.href = '/login'}>
                     Go to Login
                 </button>
@@ -111,7 +111,7 @@ function Dashboard() {
             {/* ✅ ADDED: Success message display */}
             {successMessage && (
                 <div className="dashboard-success-message">
-                    <strong>Success!</strong> {successMessage}
+                    <strong id="dashboard-success-strong">Success!</strong> {successMessage}
                     <button 
                         onClick={clearSuccessMessage}
                         className="dashboard-dismiss-success"
@@ -124,7 +124,7 @@ function Dashboard() {
             {/* ✅ ADDED: Error message display */}
             {error && (
                 <div className="dashboard-error-message">
-                    <strong>Error:</strong> {error}
+                    <strong id="dashboard-error-strong">Error:</strong> {error}
                     <button 
                         onClick={clearError}
                         className="dashboard-dismiss-error"
@@ -140,7 +140,7 @@ function Dashboard() {
             <div className='dashboard-profile-box'>
             <div className="dashboard-profile-card">
                 <div className="dashboard-profile-header">
-                    <h2>Profile Information</h2>
+                    <h2 id="dashboard-profile-h2">Profile Information</h2>
                     <button 
                         onClick={() => setEditing(!editing)} 
                         className="dashboard-edit-btn"
@@ -162,8 +162,9 @@ function Dashboard() {
                     {editing ? (
                         <form onSubmit={handleUpdateProfile} className="dashboard-edit-form">
                             <div className="dashboard-form-group">
-                                <label>Name:</label>
+                                <label id="dashboard-name-label">Name:</label>
                                 <input
+                                    id="dashboard-name-input"
                                     type="text"
                                     value={editForm.name}
                                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
@@ -189,17 +190,17 @@ function Dashboard() {
                         </form>
                     ) : (
                         <div className="dashboard-user-info">
-                            <p><strong>Name:</strong> {user.name}</p>
-                            <p><strong>Email:</strong> {user.email}</p>
-                            <p><strong>User ID:</strong> {user._id || user.userId}</p>
-                            <p><strong>Auth Method:</strong> {user.authMethod}</p>
-                            <p><strong>Role:</strong> {user.role}</p>
+                            <p><strong id="dashboard-name-strong">Name:</strong> {user.name}</p>
+                            <p><strong id="dashboard-email-strong">Email:</strong> {user.email}</p>
+                            <p><strong id="dashboard-user-id-strong">User ID:</strong> {user._id || user.userId}</p>
+                            <p><strong id="dashboard-auth-method-strong">Auth Method:</strong> {user.authMethod}</p>
+                            <p><strong id="dashboard-role-strong">Role:</strong> {user.role}</p>
                             {/* ✅ ADDED: Additional user info */}
                             {user.createdAt && (
-                                <p><strong>Member Since:</strong> {new Date(user.createdAt).toLocaleDateString()}</p>
+                                <p><strong id="dashboard-member-since-strong">Member Since:</strong> {new Date(user.createdAt).toLocaleDateString()}</p>
                             )}
                             {user.lastLogin && (
-                                <p><strong>Last Login:</strong> {new Date(user.lastLogin).toLocaleString()}</p>
+                                <p><strong id="dashboard-last-login-strong">Last Login:</strong> {new Date(user.lastLogin).toLocaleString()}</p>
                             )}
                         </div>
                     )}

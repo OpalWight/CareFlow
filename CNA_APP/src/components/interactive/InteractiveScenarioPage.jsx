@@ -4,6 +4,7 @@ import SupplyRoom from './SupplyRoom';
 import PatientRoom from './PatientRoom';
 import TaskList from './TaskList';
 import DraggableItem from './DraggableItem';
+import CNA_SKILL_SCENARIOS from '../../data/cnaSkillScenarios';
 import '../../styles/interactive/InteractiveScenarioPage.css';
 
 const SCENARIO_STEPS = {
@@ -147,8 +148,13 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
   const [tasks, setTasks] = useState([]);
   const [collectedSupplies, setCollectedSupplies] = useState([]);
   const [activeId, setActiveId] = useState(null);
+  const [skillScenario, setSkillScenario] = useState(null);
+  const [completedSkillSteps, setCompletedSkillSteps] = useState([]);
 
   useEffect(() => {
+    // Initialize skill scenario
+    setSkillScenario(CNA_SKILL_SCENARIOS[skillId] || CNA_SKILL_SCENARIOS[DEFAULT_SKILL]);
+    
     const handleSinkUsed = (event) => {
       const supplyId = event.detail.supplyId;
       if (supplyId === 'sink') {
@@ -167,7 +173,7 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
 
     window.addEventListener('sinkUsed', handleSinkUsed);
     return () => window.removeEventListener('sinkUsed', handleSinkUsed);
-  }, [supplies]);
+  }, [supplies, skillId]);
 
   const handleDragStart = (event) => {
     setActiveId(event.active.id);
@@ -193,9 +199,34 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
         }
       }
     } else if (currentStep === SCENARIO_STEPS.PERFORMING_SKILL) {
-      // Handle skill performance - simplified for now
-      // In a full implementation, each skill would have specific drop zones and requirements
-      console.log(`Performing skill step with ${active.id} on ${over.id}`);
+      // Handle skill performance with validation
+      const supplyId = active.id;
+      const dropZoneId = over.id;
+      
+      // Check if this is a valid drop for the current skill
+      if (skillScenario) {
+        const validStep = skillScenario.steps.find(step => 
+          step.dropZone === dropZoneId && 
+          (!step.requiredSupply || step.requiredSupply === supplyId)
+        );
+        
+        if (validStep && !completedSkillSteps.includes(validStep.id)) {
+          setCompletedSkillSteps(prev => [...prev, validStep.id]);
+          console.log(`Step completed: ${validStep.name}`);
+          
+          // Update task completion if needed
+          setTasks(prev => prev.map(task => 
+            task.id === validStep.id ? { ...task, completed: true } : task
+          ));
+          
+          // Call the drop zone's onDropSuccess callback if it exists
+          if (over.data?.current?.onDropSuccess) {
+            over.data.current.onDropSuccess(supplyId);
+          }
+        } else {
+          console.log(`Invalid drop: ${supplyId} on ${dropZoneId}`);
+        }
+      }
     }
   };
 
@@ -210,7 +241,16 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
   };
 
   const getTasksForSkill = (skill) => {
-    // Return basic tasks for now - each skill would have specific task sequences
+    // Return skill-specific tasks based on scenario steps
+    if (skillScenario && skillScenario.steps) {
+      return skillScenario.steps.map(step => ({
+        id: step.id,
+        name: step.name,
+        completed: completedSkillSteps.includes(step.id)
+      }));
+    }
+    
+    // Fallback to basic tasks
     const basicTasks = [
       { id: 'sanitize', name: 'Sanitize hands/knock', completed: false },
       { id: 'explain', name: 'Explain procedure to client', completed: false },
@@ -280,12 +320,24 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
       case SCENARIO_STEPS.GATHERING_SUPPLIES:
         return <SupplyRoom supplies={supplies} selectedSkill={skillId} />;
       case SCENARIO_STEPS.PERFORMING_SKILL:
-        return <PatientRoom collectedSupplies={collectedSupplies} />;
+        return <PatientRoom 
+          collectedSupplies={collectedSupplies} 
+          skillId={skillId}
+          onStepComplete={(stepId) => {
+            if (!completedSkillSteps.includes(stepId)) {
+              setCompletedSkillSteps(prev => [...prev, stepId]);
+              // Update tasks to reflect completion
+              setTasks(prev => prev.map(task => 
+                task.id === stepId ? { ...task, completed: true } : task
+              ));
+            }
+          }}
+        />;
       case SCENARIO_STEPS.SCENARIO_COMPLETE:
         return (
           <div className="scenario-complete-container">
-            <h2>🎉 Scenario Complete!</h2>
-            <p>Congratulations! You have successfully completed the {getSkillTitle(skillId)} scenario.</p>
+            <h2 id="interactive-scenario-complete-h2">🎉 Scenario Complete!</h2>
+            <p id="interactive-scenario-complete-p">Congratulations! You have successfully completed the {getSkillTitle(skillId)} scenario.</p>
             <button 
               onClick={handleBackToHub}
               className="scenario-button"
@@ -314,15 +366,15 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
             >
               ← Back to Learning Hub
             </button>
-            <h1>CNA Skill: {getSkillTitle(skillId)}</h1>
+            <h1 id="interactive-scenario-h1">CNA Skill: {getSkillTitle(skillId)}</h1>
           </div>
           <div className="scenario-step-info">
-            <h3>Current Step: {currentStep.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}</h3>
+            <h3 id="interactive-scenario-h3">Current Step: {currentStep.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}</h3>
             {currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES && (
-              <p>Find all required supplies in the supply room before proceeding to perform the skill.</p>
+              <p id="interactive-scenario-gathering-supplies-p">Find all required supplies in the supply room before proceeding to perform the skill.</p>
             )}
             {currentStep === SCENARIO_STEPS.PERFORMING_SKILL && (
-              <p>Follow the proper sequence to perform the {getSkillTitle(skillId)} skill.</p>
+              <p id="interactive-scenario-performing-skill-p">Follow the proper sequence to perform the {getSkillTitle(skillId)} skill.</p>
             )}
           </div>
           
@@ -352,7 +404,7 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
           
           {collectedSupplies.length > 0 && (
             <div className="collected-supplies-container">
-              <h3>Collected Supplies</h3>
+              <h3 id="interactive-scenario-collected-supplies-h3">Collected Supplies</h3>
               <div className="collected-supplies-grid">
                 {collectedSupplies.map(supply => (
                   <DraggableItem 

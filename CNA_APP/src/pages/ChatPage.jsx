@@ -67,14 +67,14 @@ const ChatPage = () => {
         <Layout className="chat-page">
             {scenarioInfo && (
                 <div className="scenario-info">
-                    <h2>{scenarioInfo.skillName}</h2>
-                    <p><strong>Patient:</strong> {scenarioInfo.patientName}, {scenarioInfo.patientAge} years old</p>
+                    <h2 id="chat-page-h2">{scenarioInfo.skillName}</h2>
+                    <p id="chat-page-p"><strong id="chat-page-patient-strong">Patient:</strong> {scenarioInfo.patientName}, {scenarioInfo.patientAge} years old</p>
                     {scenarioInfo.learningObjectives && (
                         <div className="learning-objectives">
-                            <strong>Learning Objectives:</strong>
-                            <ul>
+                            <strong id="chat-page-learning-objectives-strong">Learning Objectives:</strong>
+                            <ul id="chat-page-ul">
                                 {scenarioInfo.learningObjectives.map((objective, index) => (
-                                    <li key={index}>{objective}</li>
+                                    <li key={index} id={`chat-page-li-${index}`}>{objective}</li>
                                 ))}
                             </ul>
                         </div>
@@ -84,20 +84,21 @@ const ChatPage = () => {
             <div className="chat-container" ref={chatContainerRef}>
                 {messages.map((msg, index) => (
                     <div key={index} className={`chat-message ${msg.role}`}>
-                        <p><strong>{msg.role === 'model' ? 'Patient' : 'You'}:</strong> {msg.content}</p>
+                        <p id={`chat-page-message-p-${index}`}><strong id={`chat-page-message-strong-${index}`}>{msg.role === 'model' ? 'Patient' : 'You'}:</strong> {msg.content}</p>
                     </div>
                 ))}
-                {isLoading && <div className="chat-message system"><p><i>Typing...</i></p></div>}
+                {isLoading && <div className="chat-message system"><p id="chat-page-loading-p"><i id="chat-page-loading-i">Typing...</i></p></div>}
             </div>
             <form onSubmit={handleSendMessage} className="chat-input-form">
                 <input
+                    id="chat-page-input"
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Type your message..."
                     disabled={isLoading || !sessionId}
                 />
-                <button type="submit" disabled={isLoading || !sessionId}>Send</button>
+                <button id="chat-page-send-button" type="submit" disabled={isLoading || !sessionId}>Send</button>
             </form>
         </Layout>
     );

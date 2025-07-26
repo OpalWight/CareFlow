@@ -16,7 +16,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 4vh 9vw 4vh 6.944vw;
+    padding: 4vh 9vw 4vh 0;
     width: 100%; /* Ensure the nav bar takes the full width */
     box-sizing: border-box; /* Include padding in the width calculation */
 }
@@ -86,6 +86,7 @@
   width: 196px;
   height: 40px;
   flex-shrink: 0;
+  margin-left: 4vw;
 }
 
 

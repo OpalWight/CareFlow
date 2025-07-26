@@ -5,6 +5,7 @@ import logo from '../assets/svg/logo.svg';
 import { useAuth } from '../api/AuthContext';
 import redBalloonPfp from '../assets/svg/redBalloonPfp.svg';
 import GetStartedButton from './GetStartedButton';
+import HorizontalLine from './HorizontalLine';
 
 import '../styles/Layout.css';
 
@@ -38,7 +39,7 @@ function NavBar() {
         )}
       </div>
     </nav>
-    <div className="horizontalLine"></div>
+    <HorizontalLine />
     </>
   );
 }

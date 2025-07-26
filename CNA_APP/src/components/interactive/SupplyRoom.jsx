@@ -176,7 +176,7 @@ function SupplyRoom({ supplies, selectedSkill }) {
         </div>
         
         <div className="cabinet-instructions">
-          <p>💡 Drag the supplies you need to the collection area below</p>
+          <p id="cabinet-instructions-p">💡 Drag the supplies you need to the collection area below</p>
         </div>
         
         {/* Collection area in cabinet view */}
@@ -202,8 +202,8 @@ function SupplyRoom({ supplies, selectedSkill }) {
 
   return (
     <div>
-      <h2>Supply Room</h2>
-      <p>Click on cabinets and shelves to explore their contents. Find and collect all required supplies.</p>
+      <h2 id="supply-room-h2">Supply Room</h2>
+      <p id="supply-room-p">Click on cabinets and shelves to explore their contents. Find and collect all required supplies.</p>
       
       <div className="supply-room-container">
         {/* Clickable Cabinets */}

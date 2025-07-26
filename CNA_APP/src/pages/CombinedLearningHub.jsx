@@ -281,7 +281,7 @@ function CombinedLearningHub() {
     if (currentMode === 'simulation') {
         return (
             <Layout>
-                <div style={{ padding: '1rem' }}>
+                <div id="combined-learning-hub-simulation-div" style={{ padding: '1rem' }}>
                     <InteractiveScenarioPage 
                         skillId={selectedSkillId} 
                         onBackToHub={handleBackToSkills}
