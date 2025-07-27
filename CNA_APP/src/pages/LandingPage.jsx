@@ -19,7 +19,7 @@ function LandingPage() {
       <main>
         <div className="mascotPitchContianer">
           <div className="cloudMascotContainer">
-            <img src={CloudLegs} alt="Cloud mascot character"/>
+            <img src={CloudLegs} alt="Cloud mascot character" />
           </div>
           <div className="PitchContainer">
             <img src={Study4CNA}></img>
@@ -29,19 +29,21 @@ function LandingPage() {
               eiusmod tempor incididunt.
             </p>
             <div className="authenticationBTNContainer">
-          <GetStartedButton />
-          <span className="smallLoginBtn" onClick={() => navigate("/login")}>
-            Log In
-          </span>
-        </div>
+              <GetStartedButton />
+              <span
+                className="smallLoginBtn"
+                onClick={() => navigate("/login")}
+              >
+                Log In
+              </span>
+            </div>
           </div>
         </div>
-        
 
+        <HorizontalLine className="landing-page-horizontal-line" />
         <div>
           <img className="whyCareFlow" src={WhyCareFlow}></img>
         </div>
-        <HorizontalLine className="landing-page-horizontal-line" />
         <div className="pillContainer">
           <div className="pillGradBg"></div>
           <img src={sun} alt="sun" className="sunImage" />

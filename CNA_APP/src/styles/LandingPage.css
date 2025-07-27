@@ -4,6 +4,7 @@
     align-items: center;
     padding: 15vh 10vw;
     gap: 100px;
+    margin-bottom: 40px;
 }
 .cloudMascotContainer img {
     width: 250px;
@@ -63,9 +64,10 @@
     width: 100vw;
     height: auto;
     min-width: 100vw;
-    object-fit: none;
+    object-fit: cover;
     object-position: center;
     display: block;
+    margin-left: calc(-50vw + 50%);
 }
 
 .bottomCloudImage{
@@ -73,10 +75,10 @@
 }
 
 .landing-page-horizontal-line {
-    position: absolute;
-    top: 90vh;
+    position: relative;
     left: 0;
     width: 100vw;
     z-index: 10;
+    margin: 20px 0;
 }
 

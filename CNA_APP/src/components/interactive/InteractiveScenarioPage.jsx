@@ -5,6 +5,7 @@ import PatientRoom from './PatientRoom';
 import TaskList from './TaskList';
 import DraggableItem from './DraggableItem';
 import CNA_SKILL_SCENARIOS from '../../data/cnaSkillScenarios';
+import progressService from '../../api/progressService';
 import '../../styles/interactive/InteractiveScenarioPage.css';
 
 const SCENARIO_STEPS = {
@@ -150,10 +151,30 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
   const [activeId, setActiveId] = useState(null);
   const [skillScenario, setSkillScenario] = useState(null);
   const [completedSkillSteps, setCompletedSkillSteps] = useState([]);
+  const [startTime, setStartTime] = useState(null);
+  const [sessionDuration, setSessionDuration] = useState(0);
+  const [userProgress, setUserProgress] = useState(null);
 
   useEffect(() => {
-    // Initialize skill scenario
-    setSkillScenario(CNA_SKILL_SCENARIOS[skillId] || CNA_SKILL_SCENARIOS[DEFAULT_SKILL]);
+    // Initialize skill scenario and progress tracking
+    const scenario = CNA_SKILL_SCENARIOS[skillId] || CNA_SKILL_SCENARIOS[DEFAULT_SKILL];
+    setSkillScenario(scenario);
+    setStartTime(Date.now());
+    
+    // Initialize progress tracking
+    const initializeProgress = async () => {
+      try {
+        if (scenario && scenario.steps) {
+          await progressService.initializeSkillProgress(skillId, scenario.steps.length);
+          const progress = await progressService.getSkillProgress(skillId);
+          setUserProgress(progress);
+        }
+      } catch (error) {
+        console.error('Error initializing progress:', error);
+      }
+    };
+    
+    initializeProgress();
     
     const handleSinkUsed = (event) => {
       const supplyId = event.detail.supplyId;
@@ -230,13 +251,51 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
     }
   };
 
-  const proceedToNextStep = () => {
+  const proceedToNextStep = async () => {
     if (currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES) {
       setCurrentStep(SCENARIO_STEPS.PERFORMING_SKILL);
       // Set tasks based on the skill
       setTasks(getTasksForSkill(skillId));
     } else if (currentStep === SCENARIO_STEPS.PERFORMING_SKILL) {
       setCurrentStep(SCENARIO_STEPS.SCENARIO_COMPLETE);
+      
+      // Save progress when scenario is completed
+      const endTime = Date.now();
+      const duration = startTime ? Math.floor((endTime - startTime) / 1000) : 0;
+      setSessionDuration(duration);
+      
+      // Calculate score based on completed steps
+      const totalSteps = skillScenario?.steps?.length || 1;
+      const score = Math.min(100, Math.round((completedSkillSteps.length / totalSteps) * 100));
+      
+      // Update patient simulation progress
+      const completedStepsData = completedSkillSteps.map(stepId => ({
+        stepId,
+        completedAt: new Date()
+      }));
+      
+      try {
+        
+        await progressService.updatePatientSimProgress(skillId, totalSteps, completedStepsData, score, duration);
+        console.log('Progress saved successfully', {
+          skillId,
+          totalSteps,
+          completedSteps: completedStepsData.length,
+          score,
+          duration
+        });
+      } catch (error) {
+        console.error('Error saving progress:', error);
+        console.error('Progress save error details:', {
+          skillId,
+          totalSteps,
+          completedSteps: completedStepsData,
+          score,
+          duration,
+          errorMessage: error.message,
+          errorResponse: error.response?.data
+        });
+      }
     }
   };
 
@@ -323,21 +382,37 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
         return <PatientRoom 
           collectedSupplies={collectedSupplies} 
           skillId={skillId}
-          onStepComplete={(stepId) => {
-            if (!completedSkillSteps.includes(stepId)) {
-              setCompletedSkillSteps(prev => [...prev, stepId]);
-              // Update tasks to reflect completion
-              setTasks(prev => prev.map(task => 
-                task.id === stepId ? { ...task, completed: true } : task
-              ));
-            }
-          }}
         />;
       case SCENARIO_STEPS.SCENARIO_COMPLETE:
+        const totalSteps = skillScenario?.steps?.length || 1;
+        const score = Math.round((completedSkillSteps.length / totalSteps) * 100);
+        const formattedDuration = sessionDuration > 0 ? 
+          `${Math.floor(sessionDuration / 60)}:${String(sessionDuration % 60).padStart(2, '0')}` : 
+          '0:00';
+        
         return (
           <div className="scenario-complete-container">
             <h2 id="interactive-scenario-complete-h2">🎉 Scenario Complete!</h2>
             <p id="interactive-scenario-complete-p">Congratulations! You have successfully completed the {getSkillTitle(skillId)} scenario.</p>
+            
+            <div className="progress-summary">
+              <h3>Your Performance:</h3>
+              <div className="progress-stats">
+                <div className="stat-item">
+                  <span className="stat-label">Score:</span>
+                  <span className="stat-value">{score}%</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">Steps Completed:</span>
+                  <span className="stat-value">{completedSkillSteps.length}/{totalSteps}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">Time:</span>
+                  <span className="stat-value">{formattedDuration}</span>
+                </div>
+              </div>
+            </div>
+            
             <button 
               onClick={handleBackToHub}
               className="scenario-button"

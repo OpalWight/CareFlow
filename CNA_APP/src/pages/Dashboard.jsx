@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../api/AuthContext'; // ← Import useAuth hook
 import '../styles/Dashboard.css';
 import Layout from '../components/Layout';
+import ProgressDashboard from '../components/ProgressDashboard';
 
 function Dashboard() {
     const {
@@ -218,7 +219,10 @@ function Dashboard() {
             </div>
             </div>
 
-
+            {/* Progress Dashboard Section */}
+            <div className="dashboard-progress-section">
+                <ProgressDashboard />
+            </div>
             
         </Layout>
     );

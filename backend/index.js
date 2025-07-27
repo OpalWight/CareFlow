@@ -19,6 +19,7 @@ connectDB();
 const requestRoutes = require('./routes/request');
 const oauthRoutes = require('./routes/oauth');
 const authRoutes = require('./routes/auth');
+const progressRoutes = require('./routes/progress');
 
 // ✅ IMPORTANT: Add this before your routes
 app.use(cookieParser());
@@ -34,6 +35,7 @@ app.use('/request', requestRoutes);
 app.use('/oauth', oauthRoutes);
 app.use('/auth', authRoutes);
 app.use('/chat', chatRoutes);
+app.use('/progress', progressRoutes);
 
 app.get('/', (req, res) => {
   res.json({ 

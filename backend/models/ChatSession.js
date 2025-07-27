@@ -11,6 +11,13 @@ const ChatSessionSchema = new mongoose.Schema({
       timestamp: { type: Date, default: Date.now },
     },
   ],
+  completedObjectives: [
+    {
+      objective: { type: String, required: true },
+      completedAt: { type: Date, default: Date.now },
+      evidence: { type: String }
+    }
+  ],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
