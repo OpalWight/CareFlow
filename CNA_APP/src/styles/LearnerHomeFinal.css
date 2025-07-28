@@ -1,0 +1,309 @@
+.learner-home-final-container {
+    display: flex;
+    min-height: calc(100vh - 120px);
+    width: 100%;
+    padding-bottom: 60px;
+}
+
+.left-sidebar {
+    position: fixed;
+    left: 0;
+    top: 120px;
+    width: 20%;
+    height: calc(100vh - 180px);
+    background-color: white;
+    border-right: 2px solid #e9ecef;
+    padding: 20px;
+    box-sizing: border-box;
+    z-index: 100;
+    overflow-y: auto;
+}
+
+.all-lessons-dropdown {
+    position: relative;
+}
+
+.all-lessons-button {
+    width: 100%;
+    padding: 15px;
+    background-color: transparent;
+    color: #C0C5C7;
+    border: none;
+    border-radius: 0;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: color 0.3s ease;
+}
+
+.all-lessons-button:hover {
+    color: #a8aeb1;
+}
+
+.dropdown-arrow-left {
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.all-lessons-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    z-index: 200;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.all-lessons-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s ease;
+    border-bottom: none;
+    background-color: transparent;
+}
+
+.all-lessons-item:hover {
+    background-color: rgba(192, 197, 199, 0.1);
+}
+
+.skill-name-left {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.3;
+    color: #C0C5C7;
+}
+
+.main-content {
+    margin-left: 20%;
+    width: 80%;
+    padding: 20px;
+    box-sizing: border-box;
+    margin-bottom: 80px;
+}
+
+.learner-home-final-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 20px;
+}
+
+.learner-home-final-header h1 {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.learner-home-final-header p {
+    font-size: 1.2rem;
+    color: #6c757d;
+}
+
+.progress-section {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.progress-bar-container {
+    flex: 1;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.progress-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.progress-percentage {
+    font-size: 14px;
+    font-weight: 600;
+    color: #28a745;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 12px;
+    background-color: #e9ecef;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #28a745;
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+.stars-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background-color: white;
+    border-radius: 8px;
+    border: 2px solid #ffc107;
+}
+
+.stars-icon {
+    font-size: 20px;
+}
+
+.stars-count {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.vertical-dropdowns {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.skill-individual-dropdown {
+    width: 100%;
+}
+
+.skill-dropdown-button {
+    width: 100%;
+    padding: 15px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.skill-dropdown-button:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.skill-title {
+    flex: 1;
+    text-align: left;
+}
+
+.dropdown-arrow {
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 400;
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.skill-dropdown-content {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-top: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.skill-options {
+    display: flex;
+    gap: 12px;
+    padding: 15px;
+}
+
+.skill-option-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.skill-option-button.chat-practice {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.skill-option-button.chat-practice:hover {
+    background-color: #138496;
+    transform: translateY(-1px);
+}
+
+.skill-option-button.skill-simulation {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.skill-option-button.skill-simulation:hover {
+    background-color: #e0a800;
+    transform: translateY(-1px);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .learner-home-final-container {
+        flex-direction: column;
+    }
+    
+    .left-sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .skill-options {
+        flex-direction: column;
+    }
+    
+    .learner-home-final-header h1 {
+        font-size: 2rem;
+    }
+    
+    .progress-section {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .stars-display {
+        align-self: center;
+    }
+}

@@ -1,5 +1,6 @@
 // backend/controllers/chatController.js
 const ChatSession = require('../models/ChatSession'); // Adjust path if models are deeper
+const UserProgress = require('../models/UserProgress'); // Import UserProgress model
 const { getGenerativeModel, generatePatientInstruction, getScenarioBySkillId } = require('../config/gemini'); // Adjust path if config is deeper
 
 // Handles starting a new patient simulation session

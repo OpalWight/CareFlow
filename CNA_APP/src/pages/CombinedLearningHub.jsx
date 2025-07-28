@@ -9,7 +9,7 @@ function CombinedLearningHub() {
     const [selectedSkillId, setSelectedSkillId] = useState(null);
 
     const handleBackToLearnerHome = () => {
-        window.location.href = '/learner-home';
+        window.location.href = '/learner-home-final';
     };
 
     const handleBackToSkills = () => {

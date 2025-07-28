@@ -20,7 +20,7 @@ function NavBar() {
         <img className="homeLogo" src={logo} alt="logo" onClick={() => navigate('/')} style={{cursor: 'pointer'}}/>
         <span className="button" onClick={() => navigate('/about-us')}>about us</span>
         <span className="button" onClick={() => navigate('/resources')}>resources</span>
-        <span className="button" onClick={() => navigate('/learner-home')}>learner home</span>
+        <span className="button" onClick={() => navigate('/learner-home-final')}>learner home</span>
       </div>
       <div className="leftHeader">
         {isAuthenticated ? (

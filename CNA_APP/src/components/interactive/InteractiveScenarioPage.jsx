@@ -275,8 +275,11 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
       }));
       
       try {
-        
         await progressService.updatePatientSimProgress(skillId, totalSteps, completedStepsData, score, duration);
+        
+        // Award star for completing simulation
+        await progressService.awardStar(skillId, 'simulation');
+        
         console.log('Progress saved successfully', {
           skillId,
           totalSteps,

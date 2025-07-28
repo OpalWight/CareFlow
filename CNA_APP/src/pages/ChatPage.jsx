@@ -124,6 +124,14 @@ const ChatPage = () => {
             
             await progressService.updateChatSimProgress(skillId, sessionId, sessionRating, duration);
             
+            // Award star for completing chat session
+            try {
+                await progressService.awardStar(skillId, 'chat');
+                console.log('Star awarded for chat completion');
+            } catch (starError) {
+                console.log('Star may already exist for this skill/mode combination');
+            }
+            
             setIsSessionComplete(true);
             setShowRatingModal(false);
             console.log('Chat session progress saved successfully');

@@ -69,6 +69,48 @@ const progressService = {
     }
   },
 
+  // Award star for lesson completion
+  awardStar: async (skillId, lessonType) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/progress/stars/award`, {
+        skillId,
+        lessonType // 'chat' or 'simulation'
+      }, {
+        withCredentials: true
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error awarding star:', error);
+      throw error;
+    }
+  },
+
+  // Get user's star count
+  getStarCount: async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/progress/stars`, {
+        withCredentials: true
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching star count:', error);
+      throw error;
+    }
+  },
+
+  // Sync stars with existing progress
+  syncStarsWithProgress: async () => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/progress/stars/sync`, {}, {
+        withCredentials: true
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error syncing stars with progress:', error);
+      throw error;
+    }
+  },
+
   // Update chat simulation progress
   updateChatSimProgress: async (skillId, sessionId, rating, duration) => {
     try {

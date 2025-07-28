@@ -8,12 +8,12 @@ import LandingPage from './pages/LandingPage';
 import AboutUs from './pages/AboutUs';
 import SignUp from './pages/SignUp';
 import ChatPage from './pages/ChatPage';
-import LearnerHome from './pages/LearnerHome';
-import SkillsHub from './pages/SkillsHub';
 import CombinedLearningHub from './pages/CombinedLearningHub';
 import { AuthProvider } from './api/AuthContext';
 import Help from './pages/Help';
 import Settings from './pages/Settings';
+import LearnerHomeFinal from './pages/LearnerHomeFinal';
+
 
 function App() {
   return (
@@ -28,11 +28,11 @@ function App() {
         <Route path = "/about-us" element={<AboutUs />} />
         <Route path = "/signup" element={<SignUp />} />
         <Route path = "/chat" element={<ChatPage />} />
-        <Route path = "/learner-home" element={<LearnerHome />} />
-        <Route path = "/skills-hub" element={<SkillsHub />} />
+        <Route path = "/learner-home" element={<LearnerHomeFinal />} />
         <Route path = "/combined-learning-hub" element={<CombinedLearningHub />} />
         <Route path = "/help" element={<Help />} />
         <Route path = "/settings" element={<Settings />} />
+        <Route path = "/learner-home-final" element={<LearnerHomeFinal />} />
       </Routes>
     </Router>
     </AuthProvider>

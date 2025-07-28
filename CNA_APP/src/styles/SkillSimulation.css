@@ -1,0 +1,242 @@
+.skill-simulation-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.back-button {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 20px;
+    transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+    background-color: #5a6268;
+}
+
+.skill-simulation-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.skill-simulation-header h1 {
+    font-size: 2.5rem;
+    color: #ffc107;
+    margin-bottom: 10px;
+}
+
+.skill-simulation-header p {
+    font-size: 1.2rem;
+    color: #6c757d;
+}
+
+.skill-info-card {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.skill-info-card h2 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+}
+
+.skill-name-display {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    border-left: 4px solid #ffc107;
+}
+
+.skill-category-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+
+.category-icon {
+    font-size: 16px;
+}
+
+.skill-description {
+    background-color: #fff3cd;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+}
+
+.skill-description p {
+    margin: 0;
+    color: #856404;
+    line-height: 1.6;
+}
+
+.simulation-features {
+    margin-bottom: 40px;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.feature-item {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #dee2e6;
+    transition: transform 0.3s ease;
+}
+
+.feature-item:hover {
+    transform: translateY(-5px);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.feature-item h4 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.feature-item p {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.practice-actions {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.start-simulation-button {
+    background-color: #ffc107;
+    color: #212529;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.start-simulation-button:hover {
+    background-color: #e0a800;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.no-skill-message {
+    text-align: center;
+    padding: 20px;
+}
+
+.no-skill-message p {
+    color: #6c757d;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+.select-skill-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.select-skill-button:hover {
+    background-color: #218838;
+}
+
+.simulation-info {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.simulation-info h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+}
+
+.simulation-info ul {
+    list-style: none;
+    padding: 0;
+}
+
+.simulation-info li {
+    padding: 10px 0;
+    border-bottom: 1px solid #f8f9fa;
+    position: relative;
+    padding-left: 25px;
+}
+
+.simulation-info li:last-child {
+    border-bottom: none;
+}
+
+.simulation-info li::before {
+    content: "🎯";
+    position: absolute;
+    left: 0;
+    font-size: 16px;
+}
+
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .skill-simulation-container {
+        padding: 15px;
+    }
+    
+    .skill-simulation-header h1 {
+        font-size: 2rem;
+    }
+    
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .skill-info-card,
+    .simulation-info {
+        padding: 20px;
+    }
+}
