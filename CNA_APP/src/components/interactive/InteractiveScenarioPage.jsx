@@ -146,7 +146,6 @@ const DEFAULT_SKILL = 'hand-hygiene';
 function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
   const [currentStep, setCurrentStep] = useState(SCENARIO_STEPS.GATHERING_SUPPLIES);
   const [supplies, setSupplies] = useState(SKILL_SUPPLIES[skillId] || SKILL_SUPPLIES[DEFAULT_SKILL]);
-  const [tasks, setTasks] = useState([]);
   const [collectedSupplies, setCollectedSupplies] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [skillScenario, setSkillScenario] = useState(null);
@@ -235,11 +234,6 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
           setCompletedSkillSteps(prev => [...prev, validStep.id]);
           console.log(`Step completed: ${validStep.name}`);
           
-          // Update task completion if needed
-          setTasks(prev => prev.map(task => 
-            task.id === validStep.id ? { ...task, completed: true } : task
-          ));
-          
           // Call the drop zone's onDropSuccess callback if it exists
           if (over.data?.current?.onDropSuccess) {
             over.data.current.onDropSuccess(supplyId);
@@ -254,8 +248,7 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
   const proceedToNextStep = async () => {
     if (currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES) {
       setCurrentStep(SCENARIO_STEPS.PERFORMING_SKILL);
-      // Set tasks based on the skill
-      setTasks(getTasksForSkill(skillId));
+      // Tasks are now generated dynamically via getCurrentTasks()
     } else if (currentStep === SCENARIO_STEPS.PERFORMING_SKILL) {
       setCurrentStep(SCENARIO_STEPS.SCENARIO_COMPLETE);
       
@@ -324,9 +317,6 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
     return basicTasks;
   };
 
-  const allSuppliesFound = supplies.every(supply => supply.found);
-  const allTasksCompleted = tasks.every(task => task.completed);
-
   const getCurrentTasks = () => {
     switch (currentStep) {
       case SCENARIO_STEPS.GATHERING_SUPPLIES:
@@ -336,11 +326,15 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
           completed: supply.found
         }));
       case SCENARIO_STEPS.PERFORMING_SKILL:
-        return tasks;
+        // Always return dynamically updated tasks based on completed steps
+        return getTasksForSkill(skillId);
       default:
         return [];
     }
   };
+
+  const allSuppliesFound = supplies.every(supply => supply.found);
+  const allTasksCompleted = getCurrentTasks().every(task => task.completed);
 
   const getSkillTitle = (skill) => {
     const skillTitles = {
@@ -385,6 +379,12 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
         return <PatientRoom 
           collectedSupplies={collectedSupplies} 
           skillId={skillId}
+          completedSkillSteps={completedSkillSteps}
+          onStepComplete={(stepId) => {
+            if (!completedSkillSteps.includes(stepId)) {
+              setCompletedSkillSteps(prev => [...prev, stepId]);
+            }
+          }}
         />;
       case SCENARIO_STEPS.SCENARIO_COMPLETE:
         const totalSteps = skillScenario?.steps?.length || 1;

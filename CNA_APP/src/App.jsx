@@ -13,6 +13,7 @@ import { AuthProvider } from './api/AuthContext';
 import Help from './pages/Help';
 import Settings from './pages/Settings';
 import LearnerHomeFinal from './pages/LearnerHomeFinal';
+import SkillSimulationPage from './pages/SkillSimulationPage';
 
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
         <Route path = "/help" element={<Help />} />
         <Route path = "/settings" element={<Settings />} />
         <Route path = "/learner-home-final" element={<LearnerHomeFinal />} />
+        <Route path = "/skill-simulation" element={<SkillSimulationPage />} />
       </Routes>
     </Router>
     </AuthProvider>

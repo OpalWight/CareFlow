@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../api/AuthContext';
 import Layout from '../components/Layout';
-import InteractiveScenarioPage from '../components/interactive/InteractiveScenarioPage';
 import progressService from '../api/progressService';
 import '../styles/LearnerHomeFinal.css';
 
@@ -9,7 +8,6 @@ function LearnerHomeFinal(){
     const {user, isAuthenticated} = useAuth();
     const [openDropdowns, setOpenDropdowns] = useState({});
     const [allLessonsOpen, setAllLessonsOpen] = useState(false);
-    const [currentSimulation, setCurrentSimulation] = useState(null);
     const [progressSummary, setProgressSummary] = useState(null);
     const [starCount, setStarCount] = useState(0);
 
@@ -73,27 +71,12 @@ function LearnerHomeFinal(){
         try {
             if (!summary) return;
             
-            // Calculate expected stars based on completed lessons
-            const completedChatSessions = summary.completedChatSessions || 0;
-            const completedSimulations = summary.completedSimulations || 0;
-            const expectedStars = completedChatSessions + completedSimulations;
+            console.log('Starting star sync process...', { summary, currentStars });
             
-            // If current stars don't match expected, sync with backend
-            if (currentStars < expectedStars) {
-                console.log(`Syncing stars: Current ${currentStars}, Expected ${expectedStars}`);
-                
-                // Try the backend sync first
-                try {
-                    await progressService.syncStarsWithProgress();
-                    // Refetch star count after sync
-                    const updatedStars = await progressService.getStarCount();
-                    setStarCount(updatedStars.totalStars || 0);
-                } catch (syncError) {
-                    console.log('Backend sync not available, performing client-side sync');
-                    // Fallback: Award missing stars for each completed skill
-                    await performClientSideSync(summary, currentStars);
-                }
-            }
+            // Always perform client-side sync to ensure accuracy
+            // This will calculate stars based on actual skill completion data
+            await performClientSideSync(summary, currentStars);
+            
         } catch (error) {
             console.error('Error syncing stars with existing progress:', error);
         }
@@ -103,6 +86,8 @@ function LearnerHomeFinal(){
         try {
             let starsAwarded = 0;
             
+            console.log('Starting client-side sync for', allSkills.length, 'skills');
+            
             // Get all skills that have been completed
             for (const skill of allSkills) {
                 const skillId = getSkillId(skill);
@@ -110,32 +95,43 @@ function LearnerHomeFinal(){
                 
                 try {
                     const skillProgress = await progressService.getSkillProgress(skillId);
+                    console.log(`Checking progress for ${skill} (${skillId}):`, {
+                        chatCompleted: skillProgress.chatSimProgress?.isCompleted,
+                        chatSessions: skillProgress.chatSimProgress?.sessionsCompleted,
+                        patientSimCompleted: skillProgress.patientSimProgress?.isCompleted
+                    });
                     
                     // Award star for completed chat sessions
-                    if (skillProgress.completedChatSessions > 0) {
+                    if (skillProgress.chatSimProgress?.isCompleted || skillProgress.chatSimProgress?.sessionsCompleted > 0) {
                         try {
+                            console.log(`Awarding chat star for ${skillId}`);
                             await progressService.awardStar(skillId, 'chat');
                             starsAwarded++;
                         } catch (error) {
                             // Star might already exist, continue
+                            console.log(`Chat star for ${skillId} might already exist`);
                         }
                     }
                     
                     // Award star for completed simulations
-                    if (skillProgress.completedSimulations > 0) {
+                    if (skillProgress.patientSimProgress?.isCompleted) {
                         try {
+                            console.log(`Awarding simulation star for ${skillId}`);
                             await progressService.awardStar(skillId, 'simulation');
                             starsAwarded++;
                         } catch (error) {
                             // Star might already exist, continue
+                            console.log(`Simulation star for ${skillId} might already exist`);
                         }
                     }
                 } catch (error) {
                     // Skill progress might not exist, continue
+                    console.log(`No progress found for ${skillId}:`, error.message);
                     continue;
                 }
             }
             
+            console.log(`Sync complete. Attempted to award ${starsAwarded} stars`);
             if (starsAwarded > 0) {
                 console.log(`Awarded ${starsAwarded} missing stars`);
                 // Refetch star count
@@ -206,12 +202,8 @@ function LearnerHomeFinal(){
     const handleSkillSimulation = (skill) => {
         const skillId = getSkillId(skill);
         if (skillId) {
-            setCurrentSimulation(skillId);
+            window.location.href = `/skill-simulation?skill=${encodeURIComponent(skill)}&skillId=${skillId}`;
         }
-    };
-
-    const handleBackToHub = () => {
-        setCurrentSimulation(null);
     };
 
     const scrollToSkill = (skillName) => {
@@ -221,20 +213,6 @@ function LearnerHomeFinal(){
         }
         setAllLessonsOpen(false);
     };
-
-    // If simulation is started, render the InteractiveScenarioPage
-    if (currentSimulation) {
-        return (
-            <Layout showVerticalLines={[20, 92]}>
-                <div style={{ padding: '1rem' }}>
-                    <InteractiveScenarioPage 
-                        skillId={currentSimulation} 
-                        onBackToHub={handleBackToHub}
-                    />
-                </div>
-            </Layout>
-        );
-    }
 
     return (
         <Layout showVerticalLines={[20, 92]}>

@@ -292,3 +292,143 @@
   background-color: #2196f3;
   transition: width 0.3s ease, background-color 0.3s ease;
 }
+
+/* Interactive Actions Panel */
+.interactive-actions-panel {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 0.75rem;
+  border-radius: 8px;
+  max-width: 250px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.interactive-actions-panel h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.8rem;
+  color: #333;
+  text-align: center;
+}
+
+.action-buttons-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.action-button-container {
+  display: flex;
+  justify-content: center;
+}
+
+.action-button {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.action-button:active {
+  transform: translateY(0);
+}
+
+.communication-action {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border: 2px solid #bbdefb;
+}
+
+.communication-action:hover {
+  background-color: #bbdefb;
+  border-color: #90caf9;
+}
+
+.physical-action {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+  border: 2px solid #e1bee7;
+}
+
+.physical-action:hover {
+  background-color: #e1bee7;
+  border-color: #ce93d8;
+}
+
+.action-button.completed {
+  background-color: #e8f5e8;
+  color: #4caf50;
+  border-color: #c8e6c9;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.action-button.completed::before {
+  content: '✅ ';
+}
+
+.action-button.active {
+  animation: actionComplete 1s ease;
+  background-color: #4caf50;
+  color: white;
+  border-color: #4caf50;
+}
+
+@keyframes actionComplete {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.action-button:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Inline action buttons in step list */
+.inline-action-button {
+  margin-top: 0.25rem;
+  margin-left: 1rem;
+}
+
+.inline-action-button .action-button {
+  min-width: 150px;
+  font-size: 0.6rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Adjust room instructions to make space for action panel */
+.room-instructions {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  font-size: 0.7rem;
+  color: #666;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem;
+  border-radius: 4px;
+  max-width: 280px;
+  max-height: 120px;
+  overflow-y: auto;
+}
