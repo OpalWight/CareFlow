@@ -82,8 +82,8 @@ exports.sendMessage = async (req, res) => {
         const result = await chat.sendMessage(studentMessage);
         const patientResponse = result.response.text();
 
-        // Check objectives after receiving the patient response
-        const objectiveResults = await checkLearningObjectives(studentMessage, scenario.learningObjectives, model);
+        // Check objectives and relevance after receiving the patient response
+        const evaluationResults = await evaluateStudentMessage(studentMessage, scenario, model);
 
         chatSession.messages.push({ role: 'model', content: patientResponse });
 
@@ -93,7 +93,7 @@ exports.sendMessage = async (req, res) => {
         }
 
         // Add newly completed objectives
-        objectiveResults.forEach(result => {
+        evaluationResults.objectiveResults.forEach(result => {
             if (result.completed && !chatSession.completedObjectives.some(obj => obj.objective === result.objective)) {
                 chatSession.completedObjectives.push({
                     objective: result.objective,
@@ -103,11 +103,23 @@ exports.sendMessage = async (req, res) => {
             }
         });
 
+        // Store relevance information for analytics/feedback
+        if (!chatSession.messageEvaluations) {
+            chatSession.messageEvaluations = [];
+        }
+        chatSession.messageEvaluations.push({
+            message: studentMessage,
+            timestamp: new Date(),
+            isRelevant: evaluationResults.relevanceCheck.isRelevant,
+            relevanceReason: evaluationResults.relevanceCheck.reason,
+            objectivesAddressed: evaluationResults.objectiveResults.filter(r => r.completed).map(r => r.objective)
+        });
+
         // After checking objectives, update UserProgress
         const userProgress = await UserProgress.findOne({ userId: userId, skillId: chatSession.scenarioId });
 
         if (userProgress) {
-            const completedObjectives = objectiveResults
+            const completedObjectives = evaluationResults.objectiveResults
                 .filter(result => result.completed)
                 .map(result => ({ stepId: result.objective, completedAt: new Date() }));
 
@@ -139,7 +151,8 @@ exports.sendMessage = async (req, res) => {
 
         res.status(200).json({ 
             patientResponse: patientResponse,
-            objectiveResults: objectiveResults,
+            objectiveResults: evaluationResults.objectiveResults,
+            relevanceCheck: evaluationResults.relevanceCheck,
             completedObjectives: chatSession.completedObjectives,
             userProgress: userProgress // Send back updated progress
         });
@@ -150,59 +163,96 @@ exports.sendMessage = async (req, res) => {
     }
 };
 
-// Function to check if learning objectives have been met
-async function checkLearningObjectives(studentMessage, learningObjectives, model) {
-    const objectiveResults = [];
+// Function to evaluate student message for both relevance and learning objectives in a single call
+async function evaluateStudentMessage(studentMessage, scenario, model) {
+    try {
+        // Create a dynamic list of objectives for the prompt
+        const objectivesList = scenario.learningObjectives.map(obj => `- "${obj}"`).join('\n');
 
-    for (const objective of learningObjectives) {
+        // Create a JSON structure for the model to fill out
+        const desiredJsonFormat = {
+            relevance: {
+                isRelevant: "true or false",
+                reason: "brief explanation of why the message is relevant or off-topic"
+            },
+            objectives: scenario.learningObjectives.map(obj => ({
+                objective: obj,
+                completed: "true or false",
+                evidence: "brief explanation of why this objective was or was not met by the student's message"
+            }))
+        };
+
+        const evaluationPrompt = `
+            Analyze the following student message in the context of a CNA practicing the skill "${scenario.skillName}" with a patient named ${scenario.patientName}.
+
+            Student Message: "${studentMessage}"
+
+            Learning Objectives for this skill:
+            ${objectivesList}
+
+            First, determine if the student's message is relevant to practicing this skill.
+            Second, for EACH of the learning objectives listed above, determine if the student's message demonstrates completion of that objective.
+
+            Respond with ONLY a single JSON object in the exact format below. Do not include any other text or markdown formatting.
+
+            JSON Format:
+            ${JSON.stringify(desiredJsonFormat, null, 2)}
+        `;
+
+        const result = await model.generateContent(evaluationPrompt);
+        const responseText = result.response.text();
+        
+        let evaluation;
         try {
-            const checkPrompt = `
-                Analyze this student message: "${studentMessage}"
-                
-                Does this message demonstrate completion of this learning objective: "${objective}"?
-                
-                Respond with ONLY a JSON object in this exact format:
-                {
-                    "completed": true/false,
-                    "objective": "${objective}",
-                    "evidence": "brief explanation of why this objective was or was not met"
-                }
-            `;
-
-            const result = await model.generateContent(checkPrompt);
-            const responseText = result.response.text();
-            
-            try {
-                // Extract JSON from response
-                const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    const parsedResult = JSON.parse(jsonMatch[0]);
-                    objectiveResults.push(parsedResult);
-                } else {
-                    // Fallback if JSON parsing fails
-                    objectiveResults.push({
-                        completed: false,
-                        objective: objective,
-                        evidence: "Could not parse objective assessment"
-                    });
-                }
-            } catch (parseError) {
-                console.error("Error parsing objective result:", parseError);
-                objectiveResults.push({
+            // Extract JSON from the response, which might be wrapped in markdown
+            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                evaluation = JSON.parse(jsonMatch[0]);
+            } else {
+                throw new Error("No JSON object found in the model's response.");
+            }
+        } catch (parseError) {
+            console.error("Error parsing evaluation result:", parseError);
+            // If parsing fails, return a default "error" state
+            return {
+                relevanceCheck: {
+                    isRelevant: true, // Default to true to avoid blocking the user
+                    reason: "Error parsing the evaluation from the AI model."
+                },
+                objectiveResults: scenario.learningObjectives.map(objective => ({
                     completed: false,
                     objective: objective,
-                    evidence: "Error parsing objective assessment"
-                });
-            }
-        } catch (error) {
-            console.error("Error checking objective:", error);
-            objectiveResults.push({
-                completed: false,
-                objective: objective,
-                evidence: "Error checking objective"
+                    evidence: "Could not parse evaluation."
+                }))
+            };
+        }
+
+        // If the message is not relevant, override the objective results
+        if (!evaluation.relevance.isRelevant) {
+            evaluation.objectives.forEach(obj => {
+                obj.completed = false;
+                obj.evidence = "Message was not relevant to the skill being practiced.";
             });
         }
-    }
 
-    return objectiveResults;
+        return {
+            relevanceCheck: evaluation.relevance,
+            objectiveResults: evaluation.objectives
+        };
+
+    } catch (error) {
+        console.error("Error evaluating student message:", error);
+        // Fallback in case of a network error or other issue with the API call itself
+        return {
+            relevanceCheck: {
+                isRelevant: true,
+                reason: "Error during evaluation - defaulting to relevant."
+            },
+            objectiveResults: scenario.learningObjectives.map(objective => ({
+                completed: false,
+                objective: objective,
+                evidence: "An error occurred during the evaluation process."
+            }))
+        };
+    }
 }

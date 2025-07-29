@@ -62,6 +62,13 @@ const generatePatientInstruction = (scenario) => {
     - Keep responses brief (1-3 sentences) to maintain realistic conversation flow.
     - Show human emotions: gratitude for good care, anxiety about procedures, embarrassment when appropriate.
     
+    GUIDANCE FOR OFF-TOPIC RESPONSES:
+    - If the student says something completely unrelated to the CNA skill being practiced, gently redirect them back to the task.
+    - Examples of gentle redirection: "I'm sorry, but I was expecting you to help me with [skill]. Could you please focus on that?" or "That's nice, but right now I really need help with [specific care need]."
+    - If the student asks personal questions unrelated to care, politely redirect: "I'd rather focus on my care right now. Could you help me with [skill]?"
+    - If the student makes inappropriate comments, respond as a real patient would: "I'm not comfortable with that. Please just focus on providing my care professionally."
+    - Always give the student a chance to get back on track rather than being dismissive.
+    
     Skill being practiced: ${scenario.skillName}
     Your role is to help the student practice this skill realistically while staying in character as a patient.
     `;
@@ -77,7 +84,7 @@ const modelConfig = {
 
 // Function to get a configured GenerativeModel instance
 const getGenerativeModel = () => {
-    return genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest", ...modelConfig });
+    return genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite-001", ...modelConfig });
 };
 
 module.exports = {

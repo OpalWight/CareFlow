@@ -241,7 +241,7 @@ function SupplyRoom({ supplies, selectedSkill }) {
           className="supply-room-cabinet clickable-cabinet containers"
           onClick={() => handleCabinetClick('containers')}
           title="Containers & Utensils"
-          style={{ top: '65%', right: '20px', width: '100px', height: '70px' }}
+          style={{ top: '60%', right: '20px', width: '100px', height: '70px' }}
         >
           <div className="cabinet-label">Containers & Utensils</div>
           <div className="cabinet-icon">🍽️</div>
@@ -261,7 +261,7 @@ function SupplyRoom({ supplies, selectedSkill }) {
           className="supply-room-cabinet clickable-cabinet misc"
           onClick={() => handleCabinetClick('misc')}
           title="Miscellaneous"
-          style={{ top: '40%', left: '20px', width: '90px', height: '80px' }}
+          style={{ top: '35%', left: '20px', width: '90px', height: '80px' }}
         >
           <div className="cabinet-label">Miscellaneous</div>
           <div className="cabinet-icon">📋</div>

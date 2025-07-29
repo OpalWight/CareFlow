@@ -18,6 +18,7 @@ const ChatPage = () => {
     const [isSessionComplete, setIsSessionComplete] = useState(false);
     const [completedObjectives, setCompletedObjectives] = useState([]);
     const [allObjectivesComplete, setAllObjectivesComplete] = useState(false);
+    const [lastRelevanceCheck, setLastRelevanceCheck] = useState(null);
     const chatContainerRef = useRef(null);
 
     // Get skillId from URL parameters
@@ -68,9 +69,14 @@ const ChatPage = () => {
 
         try {
             const response = await sendChatMessage(sessionId, input);
-            const { patientResponse, completedObjectives: updatedObjectives } = response;
+            const { patientResponse, completedObjectives: updatedObjectives, relevanceCheck } = response;
             const modelMessage = { role: 'model', content: patientResponse };
             setMessages(prev => [...prev, modelMessage]);
+            
+            // Store relevance check for feedback display
+            if (relevanceCheck) {
+                setLastRelevanceCheck(relevanceCheck);
+            }
             
             // Update completed objectives
             if (updatedObjectives) {
@@ -189,6 +195,22 @@ const ChatPage = () => {
                 </div>
             )}
             
+            {lastRelevanceCheck && !lastRelevanceCheck.isRelevant && (
+                <div className="relevance-feedback-message">
+                    <div className="feedback-banner off-topic">
+                        <h3>⚠️ Stay Focused on the Skill</h3>
+                        <p><strong>Feedback:</strong> {lastRelevanceCheck.reason}</p>
+                        <p>Please focus on practicing <strong>{scenarioInfo?.skillName}</strong> with {scenarioInfo?.patientName}.</p>
+                        <button 
+                            onClick={() => setLastRelevanceCheck(null)} 
+                            className="dismiss-feedback-btn"
+                        >
+                            Got it!
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {allObjectivesComplete && !isSessionComplete && (
                 <div className="objectives-complete-message">
                     <div className="success-banner">

@@ -1,9 +1,19 @@
 .task-list-container {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 300px;
+  max-height: 400px;
+  background-color: rgba(248, 249, 250, 0.95);
+  border: 2px solid #007bff;
+  border-radius: 12px;
   padding: 1rem;
-  margin-top: 1rem;
+  overflow-y: auto;
+  z-index: 10002;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+  cursor: move;
+  user-select: none;
 }
 
 .task-list-title {

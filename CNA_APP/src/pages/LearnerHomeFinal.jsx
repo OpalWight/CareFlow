@@ -144,10 +144,9 @@ function LearnerHomeFinal(){
     };
 
     const calculateCompletionPercentage = () => {
-        if (!progressSummary) return 0;
-        const totalSkills = allSkills.length * 2; // Each skill has 2 modes (chat + simulation)
-        const completedLessons = (progressSummary.completedChatSessions || 0) + (progressSummary.completedSimulations || 0);
-        return Math.round((completedLessons / totalSkills) * 100);
+        const totalPossibleStars = allSkills.length * 2; // Each skill has 2 modes (chat + simulation) = 2 stars per skill
+        const currentStars = starCount || 0;
+        return Math.round((currentStars / totalPossibleStars) * 100);
     };
 
     const getSkillId = (skillName) => {

@@ -436,6 +436,13 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
       onDragEnd={handleDragEnd}
     >
       <div className="interactive-scenario-container">
+        <button 
+          onClick={handleBackToHub}
+          className="exit-button"
+          title="Exit Simulation"
+        >
+          ✕
+        </button>
         <div className="scenario-main-content">
           <div className="scenario-header">
             <button 

@@ -305,3 +305,53 @@
         transform: translateY(0);
     }
 }
+
+/* Relevance feedback banner for off-topic messages */
+.relevance-feedback-message {
+    margin: 20px 0;
+    padding: 0 20px;
+}
+
+.feedback-banner.off-topic {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: #212529;
+    padding: 24px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(255, 193, 7, 0.3);
+    animation: slideIn 0.5s ease-out;
+    border: 2px solid #e68900;
+}
+
+.feedback-banner.off-topic h3 {
+    margin: 0 0 12px 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #856404;
+}
+
+.feedback-banner.off-topic p {
+    margin: 8px 0;
+    line-height: 1.5;
+    color: #212529;
+}
+
+.feedback-banner.off-topic strong {
+    color: #856404;
+}
+
+.dismiss-feedback-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: background 0.2s ease;
+}
+
+.dismiss-feedback-btn:hover {
+    background: #5a6268;
+}

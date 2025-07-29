@@ -18,6 +18,15 @@ const ChatSessionSchema = new mongoose.Schema({
       evidence: { type: String }
     }
   ],
+  messageEvaluations: [
+    {
+      message: { type: String, required: true },
+      timestamp: { type: Date, default: Date.now },
+      isRelevant: { type: Boolean, required: true },
+      relevanceReason: { type: String },
+      objectivesAddressed: [{ type: String }]
+    }
+  ],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
