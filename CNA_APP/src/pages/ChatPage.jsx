@@ -19,6 +19,9 @@ const ChatPage = () => {
     const [completedObjectives, setCompletedObjectives] = useState([]);
     const [allObjectivesComplete, setAllObjectivesComplete] = useState(false);
     const [lastRelevanceCheck, setLastRelevanceCheck] = useState(null);
+    const [showSpecificObjectives, setShowSpecificObjectives] = useState(false);
+    const [showModeSelection, setShowModeSelection] = useState(true);
+    const [selectedEvaluationMode, setSelectedEvaluationMode] = useState(null);
     const chatContainerRef = useRef(null);
 
     // Get skillId from URL parameters
@@ -27,15 +30,27 @@ const ChatPage = () => {
 
     useEffect(() => {
         const startSession = async () => {
-            if (!user) return; // Don't start if there is no user
+            if (!user || !selectedEvaluationMode) return; // Don't start if there is no user or mode not selected
 
             setIsLoading(true);
             try {
-                const { sessionId, patientInitialResponse, scenario } = await startChatSession(user._id, skillId);
+                const { sessionId, patientInitialResponse, scenario, evaluationMode } = await startChatSession(user._id, skillId, selectedEvaluationMode);
                 setSessionId(sessionId);
-                setScenarioInfo(scenario);
+                setScenarioInfo({...scenario, evaluationMode});
                 setSessionStartTime(Date.now());
-                setMessages([{ role: 'model', content: patientInitialResponse }]);
+                
+                // Set objectives view based on evaluation mode
+                setShowSpecificObjectives(evaluationMode === 'specific');
+                
+                // If there's no initial response, show instruction message
+                if (patientInitialResponse) {
+                    setMessages([{ role: 'model', content: patientInitialResponse }]);
+                } else {
+                    setMessages([{ 
+                        role: 'system', 
+                        content: `💬 Introduce yourself and state your purpose to start the scenario${evaluationMode === 'specific' ? ' (Steps must be completed in order)' : ''}` 
+                    }]);
+                }
             } catch (error) {
                 console.error("Failed to start chat session:", error);
                 setMessages([{ role: 'system', content: "Error: Could not start the chat session." }]);
@@ -43,7 +58,7 @@ const ChatPage = () => {
             setIsLoading(false);
         };
         startSession();
-    }, [user, skillId]); // Re-run when the user object is available or skillId changes
+    }, [user, skillId, selectedEvaluationMode]); // Re-run when the user object, skillId, or evaluation mode changes
 
     useEffect(() => {
         const fetchProgress = async () => {
@@ -160,47 +175,122 @@ const ChatPage = () => {
         window.location.href = '/skills';
     };
 
+    const handleModeSelection = (mode) => {
+        setSelectedEvaluationMode(mode);
+        setShowModeSelection(false);
+    };
+
     return (
         <Layout className="chat-page">
-            {scenarioInfo && (
-                <div className="scenario-info">
-                    <h2 id="chat-page-h2">{scenarioInfo.skillName}</h2>
-                    <p id="chat-page-p"><strong id="chat-page-patient-strong">Patient:</strong> {scenarioInfo.patientName}, {scenarioInfo.patientAge} years old</p>
-                    {scenarioInfo.learningObjectives && (
-                        <div className="learning-objectives">
-                            <strong id="chat-page-learning-objectives-strong">Learning Objectives:</strong>
-                            <ul id="chat-page-ul">
-                                {scenarioInfo.learningObjectives.map((objective, index) => {
-                                    const isCompleted = completedObjectives.some(completed => completed.objective === objective);
-                                    return (
-                                        <li 
-                                            key={index} 
-                                            id={`chat-page-li-${index}`}
-                                            className={isCompleted ? 'objective-completed' : 'objective-pending'}
-                                            style={{
-                                                color: isCompleted ? '#4caf50' : '#666',
-                                                textDecoration: isCompleted ? 'line-through' : 'none'
-                                            }}
-                                        >
-                                            {isCompleted ? '✅' : '⏳'} {objective}
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                            <div className="objectives-progress">
-                                <strong>Progress: {completedObjectives.length} / {scenarioInfo.learningObjectives.length} objectives completed</strong>
+            {showModeSelection && (
+                <div className="mode-selection-overlay">
+                    <div className="mode-selection-modal">
+                        <h2>Choose Your Evaluation Mode</h2>
+                        <p>Select how you want to be evaluated during your practice session:</p>
+                        
+                        <div className="mode-options">
+                            <div 
+                                className="mode-option"
+                                onClick={() => handleModeSelection('broad')}
+                            >
+                                <div className="mode-icon">📋</div>
+                                <h3>Broad Objectives</h3>
+                                <p>Evaluate based on general CNA professional standards and skill competency. Complete objectives in any order.</p>
+                                <ul>
+                                    <li>Professional communication</li>
+                                    <li>Safety measures</li>
+                                    <li>Infection control</li>
+                                    <li>Patient dignity and comfort</li>
+                                </ul>
+                                <button className="select-mode-btn">Select Broad Mode</button>
+                            </div>
+
+                            <div 
+                                className="mode-option"
+                                onClick={() => handleModeSelection('specific')}
+                            >
+                                <div className="mode-icon">📝</div>
+                                <h3>Specific Steps</h3>
+                                <p>Evaluate based on specific procedural steps that must be completed in the correct order.</p>
+                                <ul>
+                                    <li>Step-by-step procedure</li>
+                                    <li>Correct sequence required</li>
+                                    <li>Detailed skill demonstration</li>
+                                    <li>Order validation</li>
+                                </ul>
+                                <button className="select-mode-btn">Select Specific Mode</button>
                             </div>
                         </div>
-                    )}
+                    </div>
                 </div>
             )}
             
-            {lastRelevanceCheck && !lastRelevanceCheck.isRelevant && (
+            <div className="chat-main-content">
+                {scenarioInfo && (
+                    <div className="scenario-info">
+                        <h2 id="chat-page-h2">{scenarioInfo.skillName}</h2>
+                        <p id="chat-page-p"><strong id="chat-page-patient-strong">Patient:</strong> {scenarioInfo.patientName}, {scenarioInfo.patientAge} years old</p>
+                    </div>
+                )}
+            
+            {scenarioInfo && scenarioInfo.learningObjectives && (
+                <div className="learning-objectives-tab">
+                    <div className="objectives-header">
+                        <strong id="chat-page-learning-objectives-strong">Learning Objectives</strong>
+                        <div className="objectives-toggle">
+                            <button 
+                                className={`toggle-btn ${!showSpecificObjectives ? 'active' : ''}`}
+                                onClick={() => setShowSpecificObjectives(false)}
+                            >
+                                Broad
+                            </button>
+                            <button 
+                                className={`toggle-btn ${showSpecificObjectives ? 'active' : ''}`}
+                                onClick={() => setShowSpecificObjectives(true)}
+                            >
+                                Specific
+                            </button>
+                        </div>
+                    </div>
+                    <div className="objectives-content">
+                        <ul id="chat-page-ul">
+                            {(showSpecificObjectives && scenarioInfo.specificSteps ? scenarioInfo.specificSteps : scenarioInfo.learningObjectives).map((objective, index) => {
+                                const isCompleted = completedObjectives.some(completed => completed.objective === objective);
+                                return (
+                                    <li 
+                                        key={index} 
+                                        id={`chat-page-li-${index}`}
+                                        className={isCompleted ? 'objective-completed' : 'objective-pending'}
+                                        style={{
+                                            color: isCompleted ? '#4caf50' : '#666',
+                                            textDecoration: isCompleted ? 'line-through' : 'none'
+                                        }}
+                                    >
+                                        {isCompleted ? '✅' : '⏳'} {objective}
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                        <div className="objectives-progress">
+                            <strong>Progress: {completedObjectives.length} / {scenarioInfo.learningObjectives.length} objectives completed</strong>
+                        </div>
+                        {showSpecificObjectives && scenarioInfo.specificSteps && (
+                            <div className="objectives-note">
+                                <small>Showing specific procedural steps for this skill</small>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+            
+                {lastRelevanceCheck && !lastRelevanceCheck.isRelevant && (
                 <div className="relevance-feedback-message">
                     <div className="feedback-banner off-topic">
                         <h3>⚠️ Stay Focused on the Skill</h3>
                         <p><strong>Feedback:</strong> {lastRelevanceCheck.reason}</p>
-                        <p>Please focus on practicing <strong>{scenarioInfo?.skillName}</strong> with {scenarioInfo?.patientName}.</p>
+                        {lastRelevanceCheck.redirection && (
+                            <p><strong>Guidance:</strong> {lastRelevanceCheck.redirection}</p>
+                        )}
                         <button 
                             onClick={() => setLastRelevanceCheck(null)} 
                             className="dismiss-feedback-btn"
@@ -297,6 +387,7 @@ const ChatPage = () => {
                     </div>
                 </div>
             )}
+            </div>
         </Layout>
     );
 };

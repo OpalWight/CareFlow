@@ -153,14 +153,25 @@ userProgressSchema.methods.updateOverallProgress = function() {
 
 // Method to update patient simulation progress
 userProgressSchema.methods.updatePatientSimProgress = function(completedSteps, score, timeSpent) {
+  // Cap score at 100% to prevent validation errors
+  const cappedScore = Math.min(score, 100);
+  
+  // Check if already completed at 100% - if so, don't update progress
+  if (this.patientSimProgress.isCompleted && this.patientSimProgress.score >= 100) {
+    console.log(`Skill already completed at 100% - skipping progress update`);
+    return Promise.resolve(this);
+  }
+  
   this.patientSimProgress.completedSteps = completedSteps;
-  this.patientSimProgress.score = score;
+  this.patientSimProgress.score = cappedScore;
   this.patientSimProgress.timeSpent += timeSpent;
   this.patientSimProgress.attempts += 1;
   this.patientSimProgress.lastAttemptAt = new Date();
   
-  if (score > this.patientSimProgress.bestScore) {
-    this.patientSimProgress.bestScore = score;
+  // Cap best score at 100% as well
+  const cappedBestScore = Math.min(cappedScore, 100);
+  if (cappedBestScore > this.patientSimProgress.bestScore) {
+    this.patientSimProgress.bestScore = cappedBestScore;
   }
   
   this.patientSimProgress.isCompleted = completedSteps.length === this.patientSimProgress.totalSteps;

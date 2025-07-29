@@ -8,12 +8,13 @@ const API_URL = 'http://localhost:3001';
  * Initiates a new patient simulation chat session on the backend.
  * @param {string} userId - The ID of the currently authenticated user.
  * @param {string} skillId - The skill ID to determine which scenario to use.
+ * @param {string} evaluationMode - The evaluation mode ('broad' or 'specific').
  * @returns {Promise<object>} - A promise that resolves to the session ID and initial patient message.
  */
-export const startChatSession = async (userId, skillId = 'hand-hygiene') => {
+export const startChatSession = async (userId, skillId = 'hand-hygiene', evaluationMode = 'broad') => {
   try {
     // Use withCredentials to ensure the browser sends the http-only cookie
-    const response = await axios.post(`${API_URL}/chat/start`, { userId, skillId }, { withCredentials: true });
+    const response = await axios.post(`${API_URL}/chat/start`, { userId, skillId, evaluationMode }, { withCredentials: true });
     return response.data;
   } catch (error) {
     console.error('Error starting chat session:', error.response?.data?.message || error.message);
