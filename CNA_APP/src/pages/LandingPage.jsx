@@ -1,6 +1,6 @@
 import React from "react";
 import CloudLegs from "../assets/svg/cloudLegs.svg";
-import Study4CNA from "../assets/svg/study4CNA.svg";
+import Study4CNA from "../assets/svg/Study4CNA.svg";
 import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
 import WhyCareFlow from "../assets/svg/whyCareFlow.svg";
