@@ -3,8 +3,14 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
-// ✅ Load environment variables immediately
-dotenv.config();
+// ✅ Load environment variables based on NODE_ENV
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
+dotenv.config({ path: envFile });
+
+// Fallback to default .env if specific env file doesn't exist
+if (!process.env.MONGODB_URI) {
+  dotenv.config();
+}
 
 const connectDB = require('./config/database');
 const chatRoutes = require('./routes/chat');
