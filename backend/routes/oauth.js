@@ -80,17 +80,17 @@ router.get('/', async (req, res) => {
   if (error) {
     console.error('❌ OAuth error from Google:', error);
     // Redirect with error, but do NOT include tokens in URL
-    return res.redirect(`http://localhost:5173/login?error=${encodeURIComponent(error)}`);
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=${encodeURIComponent(error)}`);
   }
 
   if (!code) {
     console.error('❌ No authorization code provided');
-    return res.redirect('http://localhost:5173/login?error=no_code');
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=no_code`);
   }
 
   try {
     // IMPORTANT: This redirectURL MUST EXACTLY MATCH the "Authorized redirect URIs" in your Google Cloud Console.
-    const redirectURL = 'http://localhost:3001/oauth';
+    const redirectURL = `${process.env.NODE_ENV === 'production' ? 'https://careflow-ssas.onrender.com' : 'http://localhost:3001'}/oauth`;
     const oAuth2Client = new OAuth2Client(
       process.env.CLIENT_ID,
       process.env.CLIENT_SECRET,
@@ -244,7 +244,7 @@ router.get('/', async (req, res) => {
     }
 
     // ✅ REDIRECT TO FRONTEND INSTEAD OF RETURNING JSON (CHANGED)
-    let redirectUrl = 'http://localhost:5173/dashboard';
+    let redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard`;
     
     // Add query parameters for success messages
     if (isNewUser) {
@@ -269,7 +269,7 @@ router.get('/', async (req, res) => {
     }
 
     // Still redirect for errors as per your original logic, but without tokens
-    return res.redirect(`http://localhost:5173/login?error=${clientErrorMessage}`);
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=${clientErrorMessage}`);
   }
 });
 
