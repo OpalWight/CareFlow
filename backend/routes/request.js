@@ -8,7 +8,7 @@ const { OAuth2Client } = require('google-auth-library');
 router.get('/', (req, res) => {
   console.log('🔄 Starting Google OAuth flow...');
   
-  const redirectURL = 'http://localhost:3001/oauth';
+  const redirectURL = `${process.env.NODE_ENV === 'production' ? 'https://careflow-ssas.onrender.com' : 'http://localhost:3001'}/oauth`;
   const oAuth2Client = new OAuth2Client(
     process.env.CLIENT_ID,
     process.env.CLIENT_SECRET,
