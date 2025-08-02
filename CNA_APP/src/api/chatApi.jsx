@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Base URL for your backend API
-const API_URL = 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 /**
  * Initiates a new patient simulation chat session on the backend.

@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_ENV=production node index.js",
-    "dev": "NODE_ENV=development node --watch index.js",
+    "start": "set NODE_ENV=production && node index.js",
+    "dev": "set NODE_ENV=development && node --watch index.js",
     "dev:local": "node --watch index.js"
   },
   "dependencies": {
