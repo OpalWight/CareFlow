@@ -6,10 +6,13 @@
   "scripts": {
     "dev": "vite --mode development",
     "dev:local": "vite",
-    "build": "vite build --mode production",
-    "build:dev": "vite build --mode development",
+    "build": "node scripts/log-env.js && vite build --mode production",
+    "build:dev": "node scripts/log-env.js && vite build --mode development",
+    "build:debug": "NODE_ENV=production node scripts/log-env.js && vite build --mode production",
+    "build:test-prod": "cross-env NODE_ENV=production VITE_API_URL=https://careflow-ssas.onrender.com VITE_ENV=production node scripts/log-env.js && vite build --mode production",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:prod": "npm run build:test-prod && vite preview"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -25,6 +28,7 @@
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.4.1",
+    "cross-env": "^7.0.3",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
