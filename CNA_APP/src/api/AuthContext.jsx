@@ -24,8 +24,17 @@ export const AuthProvider = ({ children }) => {
         try {
             setLoading(true);
             console.log('🔍 Checking authentication status...');
+            console.log('🔍 DEBUG: Frontend environment detection:');
+            console.log('  - VITE_API_URL:', import.meta.env.VITE_API_URL);
+            console.log('  - VITE_ENV:', import.meta.env.VITE_ENV);
+            console.log('  - MODE:', import.meta.env.MODE);
+            console.log('  - PROD:', import.meta.env.PROD);
+            console.log('  - DEV:', import.meta.env.DEV);
             
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/oauth/verify`, {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+            console.log('🔍 DEBUG: Using API URL:', apiUrl);
+            
+            const response = await fetch(`${apiUrl}/oauth/verify`, {
                 method: 'GET',
                 credentials: 'include', // ✅ This sends HTTP-only cookies automatically
                 headers: {
@@ -146,7 +155,9 @@ export const AuthProvider = ({ children }) => {
         // After successful OAuth, backend will:
         // 1. Set HTTP-only cookie with JWT
         // 2. Redirect back to your frontend
-        window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/request`;
+        const requestUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/request`;
+        console.log('🔍 DEBUG: Redirecting to OAuth request URL:', requestUrl);
+        window.location.href = requestUrl;
     };
 
     // ✅ Backward compatibility alias
