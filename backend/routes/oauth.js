@@ -13,6 +13,22 @@ dotenv.config();
 
 const { OAuth2Client } = require('google-auth-library');
 
+// Smart frontend URL detection utility
+const getFrontendUrl = () => {
+  // 1. Use explicit FRONTEND_URL if set and valid
+  if (process.env.FRONTEND_URL && process.env.FRONTEND_URL.startsWith('http')) {
+    return process.env.FRONTEND_URL;
+  }
+  
+  // 2. Use production mode detection
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://care-flow-ten.vercel.app';
+  }
+  
+  // 3. Fallback to development
+  return 'http://localhost:5173';
+};
+
 // IMPORTANT SECURITY WARNING:
 // In production, process.env.JWT_SECRET MUST be a very long, random, and truly secret string.
 // DO NOT use 'your-secret-key-change-this-in-production' in production environments.
@@ -80,12 +96,12 @@ router.get('/', async (req, res) => {
   if (error) {
     console.error('❌ OAuth error from Google:', error);
     // Redirect with error, but do NOT include tokens in URL
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=${encodeURIComponent(error)}`);
+    return res.redirect(`${getFrontendUrl()}/login?error=${encodeURIComponent(error)}`);
   }
 
   if (!code) {
     console.error('❌ No authorization code provided');
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=no_code`);
+    return res.redirect(`${getFrontendUrl()}/login?error=no_code`);
   }
 
   try {
@@ -250,7 +266,9 @@ router.get('/', async (req, res) => {
     }
 
     // ✅ REDIRECT TO FRONTEND INSTEAD OF RETURNING JSON (CHANGED)
-    let redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard`;
+    const frontendUrl = getFrontendUrl();
+    console.log('🔍 DEBUG: Using frontend URL for redirect:', frontendUrl);
+    let redirectUrl = `${frontendUrl}/dashboard`;
     
     // Add query parameters for success messages
     if (isNewUser) {
@@ -275,7 +293,7 @@ router.get('/', async (req, res) => {
     }
 
     // Still redirect for errors as per your original logic, but without tokens
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=${clientErrorMessage}`);
+    return res.redirect(`${getFrontendUrl()}/login?error=${clientErrorMessage}`);
   }
 });
 

@@ -34,15 +34,58 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(cors({
-  origin: [
+// Dynamic CORS configuration to handle various deployment URLs
+const getAllowedOrigins = () => {
+  const baseOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
-    'https://care-flow-ten.vercel.app',
+    'https://care-flow-ten.vercel.app', // Production Vercel URL
     process.env.FRONTEND_URL
-  ].filter(Boolean),
+  ];
+
+  // Add Vercel preview URL patterns
+  const vercelPatterns = [
+    'https://care-flow-*.vercel.app',
+    'https://*-albert-vos-projects.vercel.app',
+    'https://careflow-*.vercel.app'
+  ];
+
+  console.log('🔍 DEBUG: CORS Origins Configuration:');
+  console.log('  Base origins:', baseOrigins.filter(Boolean));
+  console.log('  Vercel patterns:', vercelPatterns);
+
+  return [...baseOrigins.filter(Boolean), ...vercelPatterns];
+};
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = getAllowedOrigins();
+    
+    // Allow requests with no origin (mobile apps, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check exact matches first
+    if (allowedOrigins.includes(origin)) {
+      console.log('✅ CORS: Allowed exact origin:', origin);
+      return callback(null, true);
+    }
+    
+    // Check wildcard patterns for Vercel
+    const isVercelUrl = origin.includes('.vercel.app') && 
+                       (origin.includes('care-flow') || origin.includes('albert-vos-projects'));
+    
+    if (isVercelUrl) {
+      console.log('✅ CORS: Allowed Vercel pattern:', origin);
+      return callback(null, true);
+    }
+    
+    console.log('❌ CORS: Blocked origin:', origin);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
-}));
+};
+
+app.use(cors(corsOptions));
 
 app.use('/request', requestRoutes);
 app.use('/oauth', oauthRoutes);

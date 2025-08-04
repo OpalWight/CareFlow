@@ -1,8 +1,8 @@
 // CNA_APP/src/api/chatApi.js
 import axios from 'axios';
+import API_URL from '../config/apiConfig.js';
 
-// Base URL for your backend API
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Base URL for your backend API - now using robust configuration
 
 /**
  * Initiates a new patient simulation chat session on the backend.
