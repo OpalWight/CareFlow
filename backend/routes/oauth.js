@@ -89,8 +89,14 @@ router.get('/', async (req, res) => {
   }
 
   try {
+    console.log('🔍 DEBUG: Environment check in oauth.js:');
+    console.log('  - NODE_ENV:', process.env.NODE_ENV);
+    console.log('  - Is Production?', process.env.NODE_ENV === 'production');
+    console.log('  - FRONTEND_URL:', process.env.FRONTEND_URL);
+    
     // IMPORTANT: This redirectURL MUST EXACTLY MATCH the "Authorized redirect URIs" in your Google Cloud Console.
     const redirectURL = `${process.env.NODE_ENV === 'production' ? 'https://careflow-ssas.onrender.com' : 'http://localhost:3001'}/oauth`;
+    console.log('🔍 DEBUG: Using redirectURL:', redirectURL);
     const oAuth2Client = new OAuth2Client(
       process.env.CLIENT_ID,
       process.env.CLIENT_SECRET,

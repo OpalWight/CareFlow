@@ -4,7 +4,9 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
 // ✅ Load environment variables based on NODE_ENV
+console.log('🔍 DEBUG: NODE_ENV =', process.env.NODE_ENV);
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
+console.log('🔍 DEBUG: Loading env file:', envFile);
 dotenv.config({ path: envFile });
 
 // Fallback to default .env if specific env file doesn't exist
@@ -62,6 +64,11 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
+  console.log('🔍 DEBUG: Environment Detection:');
+  console.log('  - NODE_ENV:', process.env.NODE_ENV);
+  console.log('  - Is Production?', process.env.NODE_ENV === 'production');
+  console.log('  - FRONTEND_URL:', process.env.FRONTEND_URL);
+  console.log('  - PORT:', PORT);
   console.log(`🚀 Server is listening on http://localhost:${PORT}`);
   console.log(`📱 Frontend URL: http://localhost:5173`);
   console.log(`🔑 Google Client ID: ${process.env.CLIENT_ID ? 'Set ✅' : 'Missing ❌'}`);
