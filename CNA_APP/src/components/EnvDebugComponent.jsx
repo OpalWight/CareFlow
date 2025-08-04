@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import API_URL from '../config/apiConfig.js';
 
 const EnvDebugComponent = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -8,19 +9,25 @@ const EnvDebugComponent = () => {
       'MODE': import.meta.env.MODE,
       'PROD': import.meta.env.PROD,
       'DEV': import.meta.env.DEV,
-      'VITE_API_URL': import.meta.env.VITE_API_URL,
+      'VITE_API_URL (raw)': import.meta.env.VITE_API_URL,
       'VITE_ENV': import.meta.env.VITE_ENV
+    },
+    'API Configuration': {
+      'Computed API URL': API_URL,
+      'Is Production URL': API_URL.includes('careflow-ssas.onrender.com'),
+      'Is Localhost': API_URL.includes('localhost')
     },
     'Runtime Info': {
       'Current Time': new Date().toISOString(),
       'User Agent': navigator.userAgent,
-      'Location': window.location.href
+      'Location': window.location.href,
+      'Hostname': window.location.hostname
     },
     'Full import.meta.env': import.meta.env
   };
 
   const getApiUrl = () => {
-    return import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    return API_URL;
   };
 
   const testApiConnection = async () => {
@@ -101,7 +108,7 @@ const EnvDebugComponent = () => {
           padding: '5px', 
           margin: '5px 0',
           borderRadius: '3px',
-          color: import.meta.env.VITE_API_URL?.includes('localhost') ? '#ff6b6b' : '#00ff00'
+          color: API_URL.includes('localhost') ? '#ff6b6b' : '#00ff00'
         }}>
           {getApiUrl()}
         </div>
@@ -130,7 +137,7 @@ const EnvDebugComponent = () => {
                 <div key={key} style={{ margin: '3px 0' }}>
                   <span style={{ color: '#87ceeb' }}>{key}:</span>{' '}
                   <span style={{ 
-                    color: key.includes('API_URL') && value?.includes('localhost') ? '#ff6b6b' : '#ffffff'
+                    color: (key.includes('API_URL') && typeof value === 'string' && value.includes('localhost')) ? '#ff6b6b' : '#ffffff'
                   }}>
                     {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
                   </span>

@@ -1,3 +1,6 @@
+/* Import Inter fonts from public folder */
+@import url('/fonts/inter.css');
+
 /* Basic reset or global styles */
 :root {
   /* Define some CSS variables if you like */
