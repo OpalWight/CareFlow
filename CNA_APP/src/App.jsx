@@ -14,12 +14,15 @@ import Help from './pages/Help';
 import Settings from './pages/Settings';
 import LearnerHomeFinal from './pages/LearnerHomeFinal';
 import SkillSimulationPage from './pages/SkillSimulationPage';
+import EnvDebugComponent from './components/EnvDebugComponent';
 
 
 function App() {
   return (
     <AuthProvider>
       <Router>
+        {/* Environment Debug Component - Shows current environment variables */}
+        <EnvDebugComponent />
         <Routes>
           <Route path="/" element={<LandingPage />} />
         <Route path="/flashcards" element={<Flashcards />} />
