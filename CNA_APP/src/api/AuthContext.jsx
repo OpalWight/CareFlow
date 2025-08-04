@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import API_URL from '../config/apiConfig.js';
 
 // ✅ Step 1: Create the AuthContext - this is the "empty container"
 const AuthContext = createContext();
@@ -31,10 +32,9 @@ export const AuthProvider = ({ children }) => {
             console.log('  - PROD:', import.meta.env.PROD);
             console.log('  - DEV:', import.meta.env.DEV);
             
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-            console.log('🔍 DEBUG: Using API URL:', apiUrl);
+            console.log('🔍 DEBUG: Using API URL:', API_URL);
             
-            const response = await fetch(`${apiUrl}/oauth/verify`, {
+            const response = await fetch(`${API_URL}/oauth/verify`, {
                 method: 'GET',
                 credentials: 'include', // ✅ This sends HTTP-only cookies automatically
                 headers: {
@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }) => {
             setError(null);
             console.log('🔐 Attempting email/password login...');
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/auth/login`, {
+            const response = await fetch(`${API_URL}/auth/login`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }) => {
             setError(null);
             console.log('📝 Attempting email registration...');
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/auth/register`, {
+            const response = await fetch(`${API_URL}/auth/register`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -155,7 +155,7 @@ export const AuthProvider = ({ children }) => {
         // After successful OAuth, backend will:
         // 1. Set HTTP-only cookie with JWT
         // 2. Redirect back to your frontend
-        const requestUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/request`;
+        const requestUrl = `${API_URL}/request`;
         console.log('🔍 DEBUG: Redirecting to OAuth request URL:', requestUrl);
         window.location.href = requestUrl;
     };
@@ -169,7 +169,7 @@ export const AuthProvider = ({ children }) => {
             console.log('🚪 Logging out user...');
             
             // First, try the auth logout endpoint
-            let response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/auth/logout`, {
+            let response = await fetch(`${API_URL}/auth/logout`, {
                 method: 'POST',
                 credentials: 'include', // ✅ Send cookies so backend can clear them
                 headers: {
@@ -180,7 +180,7 @@ export const AuthProvider = ({ children }) => {
             if (!response.ok) {
                 console.warn('⚠️ Auth logout failed, trying OAuth logout as fallback...');
                 // Fallback to OAuth logout endpoint
-                response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/oauth/logout`, {
+                response = await fetch(`${API_URL}/oauth/logout`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: {
@@ -212,7 +212,7 @@ export const AuthProvider = ({ children }) => {
         try {
             console.log('🔄 Refreshing user data...');
             
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/oauth/profile`, {
+            const response = await fetch(`${API_URL}/oauth/profile`, {
                 method: 'GET',
                 credentials: 'include', // ✅ Send cookies for authentication
                 headers: {
@@ -244,7 +244,7 @@ export const AuthProvider = ({ children }) => {
         try {
             console.log('📝 Updating user profile...');
             
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/oauth/profile`, {
+            const response = await fetch(`${API_URL}/oauth/profile`, {
                 method: 'PUT',
                 credentials: 'include', // ✅ Send cookies for authentication
                 headers: {
@@ -273,7 +273,7 @@ export const AuthProvider = ({ children }) => {
         try {
             console.log('🗑️ Deleting user account...');
             
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/oauth/account`, {
+            const response = await fetch(`${API_URL}/oauth/account`, {
                 method: 'DELETE',
                 credentials: 'include', // ✅ Send cookies for authentication
                 headers: {
