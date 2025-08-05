@@ -143,7 +143,7 @@ const SKILL_SUPPLIES = {
 // Default to hand hygiene skill for demo
 const DEFAULT_SKILL = 'hand-hygiene';
 
-function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
+function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillName, skillCategory }) {
   const [currentStep, setCurrentStep] = useState(SCENARIO_STEPS.GATHERING_SUPPLIES);
   const [supplies, setSupplies] = useState(SKILL_SUPPLIES[skillId] || SKILL_SUPPLIES[DEFAULT_SKILL]);
   const [collectedSupplies, setCollectedSupplies] = useState([]);
@@ -153,6 +153,7 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
   const [startTime, setStartTime] = useState(null);
   const [sessionDuration, setSessionDuration] = useState(0);
   const [userProgress, setUserProgress] = useState(null);
+  const [highlightedSupply, setHighlightedSupply] = useState(null);
 
   useEffect(() => {
     // Initialize skill scenario and progress tracking
@@ -374,7 +375,7 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case SCENARIO_STEPS.GATHERING_SUPPLIES:
-        return <SupplyRoom supplies={supplies} selectedSkill={skillId} />;
+        return <SupplyRoom supplies={supplies} selectedSkill={skillId} collectedSupplies={collectedSupplies} highlightedSupply={highlightedSupply} />;
       case SCENARIO_STEPS.PERFORMING_SKILL:
         return <PatientRoom 
           collectedSupplies={collectedSupplies} 
@@ -435,36 +436,83 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="interactive-scenario-container">
-        <button 
-          onClick={handleBackToHub}
-          className="exit-button"
-          title="Exit Simulation"
-        >
-          ✕
-        </button>
-        <div className="scenario-main-content">
-          <div className="scenario-header">
+      <div className={`interactive-scenario-container ${currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES ? 'gathering-supplies' : ''}`}>
+        {/* Header */}
+        <div className="scenario-header">
+          <div className="header-left">
+            <h1 id="interactive-scenario-h1">
+              {skillName || getSkillTitle(skillId)}
+              {skillCategory && (
+                <span className="skill-category-badge" style={{ backgroundColor: skillCategory.color, marginLeft: '1rem' }}>
+                  <span className="category-icon">{skillCategory.icon}</span>
+                  <span className="category-name">{skillCategory.name}</span>
+                </span>
+              )}
+            </h1>
+          </div>
+          <div className="header-right">
+            <div className="step-indicator">
+              <h3 id="interactive-scenario-h3">
+                Step: {currentStep.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
+              </h3>
+            </div>
             <button 
               onClick={handleBackToHub}
-              className="scenario-button back-button"
+              className="exit-button"
+              title="Exit Simulation"
             >
-              ← Back to Learning Hub
+              ✕
             </button>
-            <h1 id="interactive-scenario-h1">CNA Skill: {getSkillTitle(skillId)}</h1>
           </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="scenario-main-content">
           <div className="scenario-step-info">
-            <h3 id="interactive-scenario-h3">Current Step: {currentStep.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}</h3>
             {currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES && (
               <p id="interactive-scenario-gathering-supplies-p">Find all required supplies in the supply room before proceeding to perform the skill.</p>
             )}
             {currentStep === SCENARIO_STEPS.PERFORMING_SKILL && (
-              <p id="interactive-scenario-performing-skill-p">Follow the proper sequence to perform the {getSkillTitle(skillId)} skill.</p>
+              <p id="interactive-scenario-performing-skill-p">Follow the proper sequence to perform the {skillName || getSkillTitle(skillId)} skill.</p>
             )}
           </div>
           
           {renderCurrentStep()}
-          
+        </div>
+        
+        {/* Sidebar */}
+        <div className="scenario-sidebar">
+          {/* Sidebar placeholder content - supplies now float */}
+          <div className="sidebar-placeholder">
+            <div className="placeholder-icon">ℹ️</div>
+            <h3>Simulation Information</h3>
+            <p>Use the floating panels to track your progress and manage collected supplies.</p>
+            <div className="info-hints">
+              <div className="hint-item">📋 Task checklist tracks your progress</div>
+              <div className="hint-item">📦 Collected supplies show your gathered items</div>
+              <div className="hint-item">🖱️ Both panels are draggable</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Floating Components */}
+        <TaskList
+          tasks={getCurrentTasks()}
+          title={currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES ? '📦 Item Checklist' : '📋 Task Checklist'}
+          onTaskClick={
+            currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES
+              ? (supplyId) => {
+                  console.log(`Highlighting supply: ${supplyId}`);
+                  setHighlightedSupply(supplyId);
+                  // Clear the highlight after 3 seconds to stop the pulsation
+                  setTimeout(() => setHighlightedSupply(null), 3000);
+                }
+              : null // No click action needed during other phases
+          }
+        />
+
+        {/* Footer */}
+        <div className="scenario-footer">
           {currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES && allSuppliesFound && (
             <button 
               onClick={proceedToNextStep}
@@ -481,26 +529,6 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub }) {
             >
               Complete Scenario
             </button>
-          )}
-        </div>
-        
-        <div className="scenario-sidebar">
-          <TaskList tasks={getCurrentTasks()} />
-          
-          {collectedSupplies.length > 0 && (
-            <div className="collected-supplies-container">
-              <h3 id="interactive-scenario-collected-supplies-h3">Collected Supplies</h3>
-              <div className="collected-supplies-grid">
-                {collectedSupplies.map(supply => (
-                  <DraggableItem 
-                    key={`collected-${supply.id}`}
-                    id={supply.id}
-                    name={supply.name}
-                    isCollected={true}
-                  />
-                ))}
-              </div>
-            </div>
           )}
         </div>
       </div>

@@ -7,20 +7,30 @@ import '../styles/SkillSimulation.css';
 function SkillSimulation() {
     const location = useLocation();
     const [selectedSkill, setSelectedSkill] = useState('');
+    const [skillId, setSkillId] = useState('');
+    const [simulationStarted, setSimulationStarted] = useState(false);
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const skill = params.get('skill');
+        const id = params.get('skillId');
+        
         if (skill) {
             setSelectedSkill(decodeURIComponent(skill));
+        }
+        
+        if (id) {
+            setSkillId(id);
+            setSimulationStarted(true);
+        } else if (skill) {
+            const convertedId = getSkillId(decodeURIComponent(skill));
+            setSkillId(convertedId);
         }
     }, [location]);
 
     const handleBackToHome = () => {
         window.location.href = '/learner-home-final';
     };
-
-    const [simulationStarted, setSimulationStarted] = useState(false);
 
     const getSkillId = (skillName) => {
         const skillNameToId = {
@@ -48,7 +58,7 @@ function SkillSimulation() {
             "Performs Modified Passive Range of Motion (PROM) for One Knee and One Ankle": "prom-knee-ankle",
             "Performs Modified Passive Range of Motion (PROM) for One Shoulder": "prom-shoulder"
         };
-        return skillNameToId[skillName] || null;
+        return skillNameToId[skillName] || 'hand-hygiene';
     };
 
     const handleStartSimulation = () => {
@@ -95,21 +105,52 @@ function SkillSimulation() {
 
     const skillCategory = selectedSkill ? getSkillCategory(selectedSkill) : null;
 
-    // If simulation is started, render the InteractiveScenarioPage
-    if (simulationStarted && selectedSkill) {
-        const skillId = getSkillId(selectedSkill);
+    // If skillId is provided directly in URL or simulation is started, render full-screen InteractiveScenarioPage
+    if ((simulationStarted || skillId) && selectedSkill) {
+        return (
+            <InteractiveScenarioPage 
+                skillId={skillId} 
+                onBackToHub={handleBackToSelection}
+                skillName={selectedSkill}
+                skillCategory={skillCategory}
+            />
+        );
+    }
+
+    // If no skill is selected, show skill selection interface with enhanced features
+    if (!selectedSkill) {
         return (
             <Layout>
-                <div style={{ padding: '1rem' }}>
-                    <InteractiveScenarioPage 
-                        skillId={skillId} 
-                        onBackToHub={handleBackToSelection}
-                    />
+                <div className="skill-simulation-container">
+                    <button 
+                        className="back-button"
+                        onClick={handleBackToHome}
+                    >
+                        ← Back to Learning Hub
+                    </button>
+
+                    <div className="skill-simulation-header">
+                        <h1>🎯 Skill Simulation</h1>
+                        <p>Please select a skill from the Learning Hub to begin simulation</p>
+                    </div>
+
+                    <div className="no-skill-selected">
+                        <div className="no-skill-icon">🎯</div>
+                        <h2>No Skill Selected</h2>
+                        <p>Return to the Learning Hub to choose a CNA skill for simulation practice.</p>
+                        <button 
+                            className="select-skill-button"
+                            onClick={handleBackToHome}
+                        >
+                            Go to Learning Hub
+                        </button>
+                    </div>
                 </div>
             </Layout>
         );
     }
 
+    // Show skill information and features before starting simulation
     return (
         <Layout>
             <div className="skill-simulation-container">
@@ -128,7 +169,7 @@ function SkillSimulation() {
                 <div className="skill-info-card">
                     <h2>Selected Skill:</h2>
                     <div className="skill-name-display">
-                        {selectedSkill || 'No skill selected'}
+                        {selectedSkill}
                     </div>
                     
                     {skillCategory && (
@@ -138,15 +179,13 @@ function SkillSimulation() {
                         </div>
                     )}
                     
-                    {selectedSkill && (
-                        <div className="skill-description">
-                            <p>
-                                You're about to enter an immersive simulation environment where you'll practice 
-                                this CNA skill in realistic scenarios. The simulation will present you with 
-                                virtual patients and situations that mirror real clinical environments.
-                            </p>
-                        </div>
-                    )}
+                    <div className="skill-description">
+                        <p>
+                            You're about to enter an immersive simulation environment where you'll practice 
+                            this CNA skill in realistic scenarios. The simulation will present you with 
+                            virtual patients and situations that mirror real clinical environments.
+                        </p>
+                    </div>
                 </div>
 
                 <div className="simulation-features">
@@ -175,24 +214,12 @@ function SkillSimulation() {
                 </div>
 
                 <div className="practice-actions">
-                    {selectedSkill ? (
-                        <button 
-                            className="start-simulation-button"
-                            onClick={handleStartSimulation}
-                        >
-                            Enter Simulation Environment
-                        </button>
-                    ) : (
-                        <div className="no-skill-message">
-                            <p>Please select a skill from the Learning Hub to begin simulation.</p>
-                            <button 
-                                className="select-skill-button"
-                                onClick={handleBackToHome}
-                            >
-                                Select a Skill
-                            </button>
-                        </div>
-                    )}
+                    <button 
+                        className="start-simulation-button"
+                        onClick={handleStartSimulation}
+                    >
+                        Enter Simulation Environment
+                    </button>
                 </div>
 
                 <div className="simulation-info">

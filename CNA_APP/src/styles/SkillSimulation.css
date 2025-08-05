@@ -13,11 +13,15 @@
     cursor: pointer;
     font-size: 14px;
     margin-bottom: 20px;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .back-button:hover {
     background-color: #5a6268;
+    transform: translateY(-1px);
 }
 
 .skill-simulation-header {
@@ -168,20 +172,6 @@
     margin-bottom: 20px;
 }
 
-.select-skill-button {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.select-skill-button:hover {
-    background-color: #218838;
-}
 
 .simulation-info {
     background-color: white;
@@ -221,13 +211,142 @@
 }
 
 
+/* Additional styles for skill simulation page container */
+.skill-simulation-page-container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.skill-simulation-page-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.skill-simulation-page-header h1 {
+    font-size: 2.5rem;
+    color: #ffc107;
+    margin-bottom: 10px;
+}
+
+.skill-simulation-page-header p {
+    font-size: 1.2rem;
+    color: #6c757d;
+}
+
+.simulation-skill-info {
+    margin-bottom: 20px;
+}
+
+.skill-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #dee2e6;
+    margin-bottom: 20px;
+}
+
+.skill-info-content {
+    flex: 1;
+}
+
+.skill-info-content h2 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+}
+
+.interactive-simulation-wrapper {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* No skill selected state */
+.no-skill-selected {
+    text-align: center;
+    padding: 60px 20px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #dee2e6;
+}
+
+.no-skill-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.no-skill-selected h2 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.8rem;
+}
+
+.no-skill-selected p {
+    color: #6c757d;
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+.select-skill-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.select-skill-button:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Integration with InteractiveScenarioPage */
+.interactive-simulation-wrapper .interactive-scenario-container {
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    margin: 0;
+}
+
+.interactive-simulation-wrapper .scenario-header {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.interactive-simulation-wrapper .scenario-header h1 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.interactive-simulation-wrapper .back-button {
+    margin-bottom: 0;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
-    .skill-simulation-container {
+    .skill-simulation-container,
+    .skill-simulation-page-container {
         padding: 15px;
     }
     
-    .skill-simulation-header h1 {
+    .skill-simulation-header h1,
+    .skill-simulation-page-header h1 {
         font-size: 2rem;
     }
     
@@ -238,5 +357,28 @@
     .skill-info-card,
     .simulation-info {
         padding: 20px;
+    }
+    
+    .skill-info-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .skill-info-content h2 {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+    }
+    
+    .no-skill-selected {
+        padding: 40px 15px;
+    }
+    
+    .no-skill-icon {
+        font-size: 3rem;
+    }
+    
+    .no-skill-selected h2 {
+        font-size: 1.5rem;
     }
 }

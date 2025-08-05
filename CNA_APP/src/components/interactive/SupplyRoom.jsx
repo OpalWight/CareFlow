@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import DraggableItem from './DraggableItem';
 import DropZone from './DropZone';
+import DraggableSupplyCollection from './DraggableSupplyCollection';
 import '../../styles/interactive/SupplyRoom.css';
 
-function SupplyRoom({ supplies, selectedSkill }) {
+function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlightedSupply }) {
   const [selectedCabinet, setSelectedCabinet] = useState(null);
   const [sinkUsed, setSinkUsed] = useState(false);
+  const [showTip, setShowTip] = useState(true);
 
   const cabinetCategories = {
     linens: {
@@ -91,6 +93,13 @@ function SupplyRoom({ supplies, selectedSkill }) {
     }
   };
 
+  const supplyToCabinetMap = Object.entries(cabinetCategories).reduce((acc, [cabinet, { supplies }]) => {
+    supplies.forEach(supply => {
+      acc[supply.id] = cabinet;
+    });
+    return acc;
+  }, {});
+
   const handleCabinetClick = (cabinetKey) => {
     setSelectedCabinet(cabinetKey);
   };
@@ -112,35 +121,6 @@ function SupplyRoom({ supplies, selectedSkill }) {
   // Check if current skill requires sink
   const requiresSink = supplies.some(s => s.id === 'sink');
 
-  const getSupplyIcon = (supplyId) => {
-    const iconMap = {
-      // Linens & Barriers
-      'bath-towel': '🛁', 'cloth-protector': '🛡️', 'disposable-bed-pad': '🛏️',
-      'disposable-bed-protector': '🛏️', 'gown': '👘', 'liner-towel': '🧻',
-      'paper-towel': '🧻', 'pillows': '🛏️', 'shirts': '👔', 'wash-towel': '🧽',
-      'washcloth': '🧽', 'barrier-paper-towel': '🧻',
-      // Cleaning & Hygiene
-      'alcohol-wipes': '🧼', 'denture-paste': '🦷', 'hand-wipe': '🧼',
-      'lotion': '🧴', 'soap': '🧼', 'toilet-paper': '🧻', 'toothpaste': '🦷',
-      'warm-water': '💧',
-      // Medical Equipment
-      'bed-pan': '🚽', 'bp-machine-electronic': '🩺', 'bp-machine-manual': '🩺',
-      'denture-brush': '🦷', 'elastic-stocking': '🧦', 'emesis-basin': '🥣',
-      'graduated-cylinder': '🧪', 'standing-scale': '⚖️', 'stethoscope': '🩺',
-      'transfer-belt': '🔗', 'wheelchair': '♿',
-      // Containers & Utensils
-      'basin': '🥣', 'cup-water': '🥤', 'denture-container': '📦',
-      'fork': '🍴', 'food-tray': '🍽️', 'trashcan': '🗑️',
-      // PPE
-      'gloves': '🧤',
-      // Miscellaneous
-      'diet-card': '📋', 'magazine': '📺', 'non-skid-socks': '🧦',
-      'sink': '🚿', 'wall-clock': '🕐',
-      // Original supplies
-      'bandage': '🩹', 'antiseptic': '🧴', 'gauze': '🏥'
-    };
-    return iconMap[supplyId] || '📦';
-  };
 
   if (selectedCabinet) {
     const cabinet = cabinetCategories[selectedCabinet];
@@ -176,138 +156,143 @@ function SupplyRoom({ supplies, selectedSkill }) {
         </div>
         
         <div className="cabinet-instructions">
-          <p id="cabinet-instructions-p">💡 Drag the supplies you need to the collection area below</p>
-        </div>
-        
-        {/* Collection area in cabinet view */}
-        <div className="cabinet-collection-area">
-          <DropZone 
-            id="supply-collector"
-            label="Supply Collection Area - Drop supplies here"
-            style={{
-              minHeight: '80px',
-              backgroundColor: '#fff3cd',
-              borderColor: '#ffc107'
-            }}
-          >
-            <div className="collection-icon">📦</div>
-            <div className="collection-text">
-              Drop collected supplies here
-            </div>
-          </DropZone>
+          <p>💡 Drag the supplies you need to the collection area</p>
         </div>
       </div>
     );
   }
 
+
   return (
     <div>
-      <h2 id="supply-room-h2">Supply Room</h2>
-      <p id="supply-room-p">Click on cabinets and shelves to explore their contents. Find and collect all required supplies.</p>
+      <h2>Supply Room</h2>
+      <p>Click on cabinets and shelves to explore their contents. Find and collect all required supplies.</p>
       
       <div className="supply-room-container">
-        {/* Clickable Cabinets */}
+        {/* Cabinets arranged around sink with 10px gaps */}
+        {/* Top Row - Above sink */}
         <div 
-          className="supply-room-cabinet clickable-cabinet linens"
+          className={`cabinet linens ${supplyToCabinetMap[highlightedSupply] === 'linens' ? 'cabinet-pulsating' : ''}`}
           onClick={() => handleCabinetClick('linens')}
           title="Linens & Barriers"
-          style={{ top: '20px', right: '20px' }}
+          style={{ 
+            top: 'calc(45% - 80px)', // Sink top minus 60px height minus 10px gap minus 70px cabinet height
+            left: 'calc(50% - 140px)' // Left of sink with gap
+          }}
         >
           <div className="cabinet-label">Linens & Barriers</div>
           <div className="cabinet-icon">🛏️</div>
         </div>
         
         <div 
-          className="supply-room-cabinet clickable-cabinet cleaning"
+          className={`cabinet cleaning ${supplyToCabinetMap[highlightedSupply] === 'cleaning' ? 'cabinet-pulsating' : ''}`}
           onClick={() => handleCabinetClick('cleaning')}
           title="Cleaning & Hygiene Products"
-          style={{ top: '15%', right: '20px' }}
+          style={{ 
+            top: 'calc(45% - 80px)', // Above sink
+            left: 'calc(50% - 45px)' // Center aligned with sink
+          }}
         >
           <div className="cabinet-label">Cleaning & Hygiene</div>
           <div className="cabinet-icon">🧼</div>
         </div>
 
         <div 
-          className="supply-room-shelf clickable-cabinet medical"
+          className={`cabinet medical ${supplyToCabinetMap[highlightedSupply] === 'medical' ? 'cabinet-pulsating' : ''}`}
           onClick={() => handleCabinetClick('medical')}
           title="Medical Devices & Equipment"
-          style={{ top: '50%', right: '20px' }}
+          style={{ 
+            top: 'calc(45% - 80px)', // Above sink
+            left: 'calc(50% + 50px)' // Right of sink with gap
+          }}
         >
           <div className="cabinet-label">Medical Equipment</div>
           <div className="cabinet-icon">🩺</div>
         </div>
         
+        {/* Bottom Row - Below sink */}
         <div 
-          className="supply-room-cabinet clickable-cabinet containers"
+          className={`cabinet containers ${supplyToCabinetMap[highlightedSupply] === 'containers' ? 'cabinet-pulsating' : ''}`}
           onClick={() => handleCabinetClick('containers')}
           title="Containers & Utensils"
-          style={{ top: '60%', right: '20px', width: '100px', height: '70px' }}
+          style={{ 
+            top: 'calc(45% + 70px)', // Sink bottom plus 60px height plus 10px gap
+            left: 'calc(50% - 140px)' // Left of sink with gap
+          }}
         >
           <div className="cabinet-label">Containers & Utensils</div>
           <div className="cabinet-icon">🍽️</div>
         </div>
         
         <div 
-          className="supply-room-counter clickable-cabinet ppe"
+          className={`cabinet ppe ${supplyToCabinetMap[highlightedSupply] === 'ppe' ? 'cabinet-pulsating' : ''}`}
           onClick={() => handleCabinetClick('ppe')}
           title="Personal Protective Equipment"
-          style={{ bottom: '20px', left: '20px' }}
+          style={{ 
+            top: 'calc(45% + 70px)', // Below sink
+            left: 'calc(50% - 45px)' // Center aligned with sink
+          }}
         >
           <div className="cabinet-label">PPE</div>
           <div className="cabinet-icon">🧤</div>
         </div>
         
         <div 
-          className="supply-room-cabinet clickable-cabinet misc"
+          className={`cabinet misc ${supplyToCabinetMap[highlightedSupply] === 'misc' ? 'cabinet-pulsating' : ''}`}
           onClick={() => handleCabinetClick('misc')}
           title="Miscellaneous"
-          style={{ top: '35%', left: '20px', width: '90px', height: '80px' }}
+          style={{ 
+            top: 'calc(45% + 70px)', // Below sink
+            left: 'calc(50% + 50px)' // Right of sink with gap
+          }}
         >
           <div className="cabinet-label">Miscellaneous</div>
           <div className="cabinet-icon">📋</div>
         </div>
 
-        {/* Sink - clickable element for hand hygiene */}
+        {/* Sink */}
         {requiresSink && (
           <div 
-            className={`supply-room-sink ${sinkUsed ? 'sink-used' : ''}`}
+            className={`sink ${sinkUsed ? 'sink-used' : ''}`}
             onClick={handleSinkClick}
             title="Click to use sink"
-            style={{ bottom: '30%', right: '30%', width: '80px', height: '60px' }}
+            style={{ 
+              top: '45%', 
+              left: 'calc(50% - 40px)',
+              width: '80px', 
+              height: '60px'
+            }}
           >
-            <div className="sink-label">{sinkUsed ? '✅ Sink Used' : '🚿 Sink'}</div>
+            <div>{sinkUsed ? '✅ Sink Used' : '🚿 Sink'}</div>
           </div>
         )}
 
-        {/* Room decoration */}
-        <div className="supply-room-title">
+        <div className="room-title">
           🏥 Medical Supply Room - Click cabinets to explore
         </div>
         
-        {/* Click instruction */}
-        <div className="room-click-instruction">
-          💡 Click on any cabinet or shelf to see what's inside
-          {requiresSink && <><br />🚿 Click the sink to use it</>}
-        </div>
+        {showTip && (
+          <div className="tip-window">
+            <div className="tip-header">
+              <span className="tip-icon">💡</span>
+              <span className="tip-title">Tips</span>
+              <button 
+                className="tip-close-btn"
+                onClick={() => setShowTip(false)}
+                aria-label="Close tip"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="tip-content">
+              Click on any cabinet or shelf to see what's inside
+              {requiresSink && <><br />🚿 Click the sink to use it</>}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Collection area */}
-      <div className="supply-collection-area">
-        <DropZone 
-          id="supply-collector"
-          label="Supply Collection Area - Drop supplies here"
-          style={{
-            minHeight: '100px',
-            backgroundColor: '#fff3cd',
-            borderColor: '#ffc107'
-          }}
-        >
-          <div className="collection-icon">📦</div>
-          <div className="collection-text">
-            Drop collected supplies here
-          </div>
-        </DropZone>
-      </div>
+      <DraggableSupplyCollection collectedSupplies={collectedSupplies} />
     </div>
   );
 }

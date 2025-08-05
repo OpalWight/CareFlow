@@ -1,7 +1,8 @@
+/* Supply Room Container */
 .supply-room-container {
   width: 100%;
-  height: calc(100vh - 120px);
-  min-height: 700px;
+  height: 100%;
+  min-height: 400px;
   background-color: #f0f8ff;
   border: 2px solid #ccc;
   border-radius: 8px;
@@ -9,175 +10,60 @@
   background-image: 
     linear-gradient(to right, #e6f3ff 1px, transparent 1px),
     linear-gradient(to bottom, #e6f3ff 1px, transparent 1px);
-  background-size: 50px 50px;
+  background-size: 30px 30px;
   padding: 1rem;
-  margin: 0;
   overflow: hidden;
   box-sizing: border-box;
 }
 
-.supply-room-cabinet {
+/* Cabinet Base Styles */
+.cabinet {
   position: absolute;
-  width: 80px;
-  height: 60px;
+  width: 90px;
+  height: 70px;
   background-color: #8B4513;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  color: white;
-}
-
-.supply-room-counter {
-  position: absolute;
-  width: 100px;
-  height: 40px;
-  background-color: #696969;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  color: white;
-}
-
-.supply-room-shelf {
-  position: absolute;
-  width: 60px;
-  height: 80px;
-  background-color: #f5f5dc;
-  border: 2px solid #ddd;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  text-align: center;
-}
-
-.supply-item-position {
-  position: absolute;
-}
-
-.supply-room-title {
-  position: absolute;
-  top: 5px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.8rem;
-  color: #666;
-  font-weight: bold;
-}
-
-.supply-collection-area {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 280px;
-  max-height: 150px;
-  overflow-y: auto;
-  padding: 1rem;
-  background-color: rgba(255, 243, 205, 0.95);
-  border-radius: 12px;
-  z-index: 10003;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(8px);
-  border: 2px solid #ffc107;
-  cursor: move;
-  user-select: none;
-}
-
-.collection-icon {
-  font-size: 2rem;
-}
-
-.collection-text {
-  font-size: 0.9rem;
-  color: #856404;
-}
-
-/* Clickable Cabinet Styles */
-.clickable-cabinet {
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-  overflow: hidden;
-  position: relative;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
 }
 
-.clickable-cabinet:hover {
+.cabinet:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   border-color: #007bff;
 }
 
-.clickable-cabinet.linens:hover {
-  border-color: #2196F3;
-  background-color: #e3f2fd;
-}
-
-.clickable-cabinet.cleaning:hover {
-  border-color: #4CAF50;
-  background-color: #e8f5e8;
-}
-
-.clickable-cabinet.medical:hover {
-  border-color: #FF9800;
-  background-color: #fff3e0;
-}
-
-.clickable-cabinet.containers:hover {
-  border-color: #9C27B0;
-  background-color: #f3e5f5;
-}
-
-.clickable-cabinet.ppe:hover {
-  border-color: #F44336;
-  background-color: #ffebee;
-}
-
-.clickable-cabinet.misc:hover {
-  border-color: #607D8B;
-  background-color: #f5f5f5;
-}
+/* Cabinet Category Colors */
+.cabinet.linens:hover { border-color: #2196F3; background-color: #e3f2fd; }
+.cabinet.cleaning:hover { border-color: #4CAF50; background-color: #e8f5e8; }
+.cabinet.medical:hover { border-color: #FF9800; background-color: #fff3e0; }
+.cabinet.containers:hover { border-color: #9C27B0; background-color: #f3e5f5; }
+.cabinet.ppe:hover { border-color: #F44336; background-color: #ffebee; }
+.cabinet.misc:hover { border-color: #607D8B; background-color: #f5f5f5; }
 
 .cabinet-label {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: bold;
   color: #333;
   text-align: center;
   margin-bottom: 0.25rem;
   line-height: 1.1;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 .cabinet-icon {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   text-align: center;
-  margin-top: auto;
-}
-
-.room-click-instruction {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  font-size: 0.7rem;
-  color: #666;
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 0.5rem;
-  border-radius: 4px;
-  max-width: 150px;
-  text-align: center;
-  border: 1px solid #ddd;
 }
 
 /* Sink Styles */
-.supply-room-sink {
+.sink {
   position: absolute;
   background-color: #ADD8E6;
   border: 2px solid #4682B4;
@@ -188,36 +74,100 @@
   cursor: pointer;
   transition: all 0.3s ease;
   padding: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: #2F4F4F;
+  text-align: center;
 }
 
-.supply-room-sink:hover {
+.sink:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 15px rgba(70, 130, 180, 0.3);
   background-color: #87CEEB;
 }
 
-.supply-room-sink.sink-used {
+.sink.sink-used {
   background-color: #90EE90;
   border-color: #32CD32;
 }
 
-.supply-room-sink.sink-used:hover {
-  background-color: #98FB98;
+/* Room Elements */
+.room-title {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: bold;
 }
 
-.sink-label {
+/* Tip Window */
+.tip-window {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 200px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+}
+
+.tip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background-color: #007bff;
+  color: white;
+  border-radius: 6px 6px 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.tip-icon {
+  font-size: 0.9rem;
+}
+
+.tip-title {
+  flex: 1;
+  margin-left: 0.5rem;
+}
+
+.tip-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.tip-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.tip-content {
+  padding: 0.75rem;
   font-size: 0.7rem;
-  font-weight: bold;
-  color: #2F4F4F;
-  text-align: center;
-  line-height: 1.1;
+  color: #333;
+  line-height: 1.3;
+  text-align: left;
 }
 
 /* Cabinet Interior View */
 .cabinet-interior-view {
   position: relative;
   background: white;
-  z-index: 10;
   overflow: auto;
   padding: 1rem;
   min-height: 600px;
@@ -275,10 +225,6 @@
   transition: all 0.2s ease;
 }
 
-.cabinet-supply-position:hover {
-  z-index: 10;
-}
-
 .cabinet-instructions {
   margin-top: 2rem;
   text-align: center;
@@ -289,54 +235,139 @@
   font-style: italic;
 }
 
-.cabinet-collection-area {
-  position: fixed;
-  bottom: 20px;
-  right: 340px; /* Account for sidebar width + margin */
-  width: 280px;
-  max-height: 150px;
-  overflow-y: auto;
-  padding: 1rem;
-  background-color: rgba(255, 243, 205, 0.95);
-  border-radius: 12px;
-  z-index: 10003;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(8px);
-  border: 2px solid #ffc107;
-}
-
-/* Responsive Design for Cabinet View */
+/* Responsive Design */
 @media (max-width: 768px) {
-  .cabinet-interior-view {
-    padding: 0.5rem;
-    min-height: 400px;
+  .supply-room-container {
+    min-height: 300px;
+    padding: 0.75rem;
   }
   
-  .cabinet-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+  .cabinet {
+    width: 70px;
+    height: 55px;
+    font-size: 0.7rem;
   }
   
-  .cabinet-title {
+  /* Adjust positioning for cabinets around sink - tablet */
+  .cabinet[style*="calc(50% - 140px)"] { left: calc(50% - 105px) !important; }
+  .cabinet[style*="calc(50% - 45px)"] { left: calc(50% - 35px) !important; }
+  .cabinet[style*="calc(50% + 50px)"] { left: calc(50% + 35px) !important; }
+  .cabinet[style*="calc(45% - 80px)"] { top: calc(45% - 65px) !important; }
+  .cabinet[style*="calc(45% + 70px)"] { top: calc(45% + 55px) !important; }
+  
+  .cabinet-label {
+    font-size: 0.65rem;
+    line-height: 1;
+    margin-bottom: 0.1rem;
+  }
+  
+  .cabinet-icon {
     font-size: 1.4rem;
   }
   
-  .cabinet-supplies-grid {
-    padding: 1rem;
+  .sink {
+    width: 60px !important;
+    height: 45px !important;
+    font-size: 0.6rem;
+  }
+  
+  .tip-window {
+    width: 180px;
+    bottom: 8px;
+    right: 8px;
+  }
+  
+  .tip-header {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  
+  .tip-content {
+    padding: 0.6rem;
+    font-size: 0.65rem;
+  }
+  
+  .room-title {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .supply-room-container {
     min-height: 250px;
+    padding: 0.5rem;
   }
   
-  .cabinet-supply-position {
-    position: relative !important;
-    display: inline-block;
-    margin: 0.5rem;
-    top: auto !important;
-    left: auto !important;
+  .cabinet {
+    width: 60px;
+    height: 45px;
+    font-size: 0.6rem;
   }
   
-  .cabinet-collection-area {
-    padding: 0 1rem;
-    margin-top: 1rem;
+  /* Adjust positioning for cabinets around sink - mobile */
+  .cabinet[style*="calc(50% - 140px)"], .cabinet[style*="calc(50% - 105px)"] { left: calc(50% - 90px) !important; }
+  .cabinet[style*="calc(50% - 45px)"], .cabinet[style*="calc(50% - 35px)"] { left: calc(50% - 30px) !important; }
+  .cabinet[style*="calc(50% + 50px)"], .cabinet[style*="calc(50% + 35px)"] { left: calc(50% + 30px) !important; }
+  .cabinet[style*="calc(45% - 80px)"], .cabinet[style*="calc(45% - 65px)"] { top: calc(45% - 50px) !important; }
+  .cabinet[style*="calc(45% + 70px)"], .cabinet[style*="calc(45% + 55px)"] { top: calc(45% + 45px) !important; }
+  
+  .cabinet-label {
+    font-size: 0.55rem;
+    margin-bottom: 0.05rem;
+  }
+  
+  .cabinet-icon {
+    font-size: 1.2rem;
+  }
+  
+  .sink {
+    width: 50px !important;
+    height: 35px !important;
+    font-size: 0.5rem;
+  }
+  
+  .tip-window {
+    width: 160px;
+    bottom: 5px;
+    right: 5px;
+  }
+  
+  .tip-header {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.7rem;
+  }
+  
+  .tip-close-btn {
+    width: 18px;
+    height: 18px;
+    font-size: 0.8rem;
+  }
+  
+  .tip-content {
+    padding: 0.5rem;
+    font-size: 0.6rem;
+  }
+  
+  .room-title {
+    font-size: 0.6rem;
+  }
+}
+
+.cabinet-pulsating {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px 20px rgba(0, 123, 255, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
   }
 }
