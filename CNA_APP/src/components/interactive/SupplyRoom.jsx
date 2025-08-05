@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DraggableItem from './DraggableItem';
 import DropZone from './DropZone';
 import DraggableSupplyCollection from './DraggableSupplyCollection';
@@ -8,6 +8,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
   const [selectedCabinet, setSelectedCabinet] = useState(null);
   const [sinkUsed, setSinkUsed] = useState(false);
   const [showTip, setShowTip] = useState(true);
+  const [pulsatingElement, setPulsatingElement] = useState(null);
 
   const cabinetCategories = {
     linens: {
@@ -113,6 +114,70 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
 
   // Check if current skill requires sink
   const requiresSink = supplies.some(s => s.id === 'sink');
+
+  useEffect(() => {
+    const handleTaskItemClick = (event) => {
+      const { taskId, taskName, task } = event.detail;
+      
+      // Map task to supply item and find which cabinet contains it
+      let targetCabinetKey = null;
+      let targetSupplyId = null;
+      
+      // Extract supply ID from task name (e.g., "Find Soap" -> "soap")
+      if (taskName.startsWith('Find ')) {
+        const supplyName = taskName.replace('Find ', '').toLowerCase();
+        
+        // Find which cabinet contains this supply
+        for (const [cabinetKey, cabinet] of Object.entries(cabinetCategories)) {
+          const supply = cabinet.supplies.find(s => 
+            s.name.toLowerCase().includes(supplyName) || 
+            s.id.toLowerCase().includes(supplyName) ||
+            supplyName.includes(s.name.toLowerCase()) ||
+            supplyName.includes(s.id.toLowerCase())
+          );
+          if (supply) {
+            targetCabinetKey = cabinetKey;
+            targetSupplyId = supply.id;
+            break;
+          }
+        }
+        
+        // Special case for sink
+        if (supplyName.includes('sink') || supplyName.includes('water')) {
+          targetSupplyId = 'sink';
+        }
+      }
+      
+      // Apply pulsating effect
+      if (targetCabinetKey) {
+        pulsateElement(`.cabinet.${targetCabinetKey}`);
+      } else if (targetSupplyId === 'sink') {
+        pulsateElement('.sink');
+      }
+    };
+
+    window.addEventListener('taskItemClicked', handleTaskItemClick);
+    return () => window.removeEventListener('taskItemClicked', handleTaskItemClick);
+  }, []);
+
+  const pulsateElement = (selector) => {
+    const element = document.querySelector(selector);
+    if (element) {
+      // Remove existing pulsate class if present
+      element.classList.remove('pulsate-highlight');
+      
+      // Force reflow
+      element.offsetHeight;
+      
+      // Add pulsate class
+      element.classList.add('pulsate-highlight');
+      
+      // Remove the class after animation completes
+      setTimeout(() => {
+        element.classList.remove('pulsate-highlight');
+      }, 6000); // 2s * 3 iterations = 6s
+    }
+  };
 
 
   if (selectedCabinet) {

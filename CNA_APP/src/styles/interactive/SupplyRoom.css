@@ -1,3 +1,26 @@
+/* Pulsating animation for containers */
+@keyframes pulsate {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(255, 193, 7, 0.3);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 20px rgba(255, 193, 7, 0);
+  }
+}
+
+.pulsate-highlight {
+  animation: pulsate 2s ease-in-out 3;
+  border: 3px solid #ffc107 !important;
+  z-index: 1000;
+  position: relative;
+}
+
 /* Supply Room Container */
 .supply-room-container {
   width: 100%;

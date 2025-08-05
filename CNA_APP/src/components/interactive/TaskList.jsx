@@ -52,6 +52,21 @@ function TaskList({ tasks }) {
     }
   }, [isDragging, dragStart]);
 
+  const handleTaskClick = (task) => {
+    // Don't trigger if the task is already completed
+    if (task.completed) return;
+    
+    // Emit a custom event that can be caught by parent components
+    const event = new CustomEvent('taskItemClicked', { 
+      detail: { 
+        taskId: task.id,
+        taskName: task.name,
+        task: task
+      } 
+    });
+    window.dispatchEvent(event);
+  };
+
   return (
     <div 
       ref={containerRef}
@@ -76,6 +91,7 @@ function TaskList({ tasks }) {
             <li
               key={task.id}
               className="task-item"
+              onClick={() => handleTaskClick(task)}
             >
               <div className={`task-indicator ${task.completed ? 'completed' : 'pending'}`}>
                 {task.completed ? '✓' : index + 1}
