@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import '../../styles/interactive/TaskList.css';
 
-function TaskList({ tasks }) {
+function TaskList({ tasks, title, onTaskClick }) {
   const [position, setPosition] = useState({ x: 20, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -63,7 +63,7 @@ function TaskList({ tasks }) {
       onMouseDown={handleMouseDown}
     >
       <h3 className="task-list-title">
-        📋 Task Checklist
+        {title || '📋 Task Checklist'}
       </h3>
       
       {tasks.length === 0 ? (
@@ -75,7 +75,8 @@ function TaskList({ tasks }) {
           {tasks.map((task, index) => (
             <li
               key={task.id}
-              className="task-item"
+              className={`task-item ${onTaskClick ? 'clickable' : ''}`}
+              onClick={() => onTaskClick && onTaskClick(task.id)}
             >
               <div className={`task-indicator ${task.completed ? 'completed' : 'pending'}`}>
                 {task.completed ? '✓' : index + 1}
