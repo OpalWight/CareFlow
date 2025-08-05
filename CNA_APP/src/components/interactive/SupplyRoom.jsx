@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import DraggableItem from './DraggableItem';
 import DropZone from './DropZone';
+import DraggableSupplyCollection from './DraggableSupplyCollection';
 import '../../styles/interactive/SupplyRoom.css';
 
 function SupplyRoom({ supplies, selectedSkill }) {
@@ -200,18 +201,24 @@ function SupplyRoom({ supplies, selectedSkill }) {
     );
   }
 
+
   return (
     <div>
       <h2 id="supply-room-h2">Supply Room</h2>
       <p id="supply-room-p">Click on cabinets and shelves to explore their contents. Find and collect all required supplies.</p>
       
       <div className="supply-room-container">
-        {/* Clickable Cabinets */}
+        {/* Optimized Grid System - 3x2 Grid with better spacing for full-width */}
+        {/* Top Row: 15%, 42.5%, 70% horizontal positions at 25% vertical */}
         <div 
           className="supply-room-cabinet clickable-cabinet linens"
           onClick={() => handleCabinetClick('linens')}
           title="Linens & Barriers"
-          style={{ top: '20px', right: '20px' }}
+          style={{ 
+            top: '25%', 
+            left: 'calc(15% - 45px)', // Center 90px cabinet at 15%
+            transform: 'none'
+          }}
         >
           <div className="cabinet-label">Linens & Barriers</div>
           <div className="cabinet-icon">🛏️</div>
@@ -221,7 +228,11 @@ function SupplyRoom({ supplies, selectedSkill }) {
           className="supply-room-cabinet clickable-cabinet cleaning"
           onClick={() => handleCabinetClick('cleaning')}
           title="Cleaning & Hygiene Products"
-          style={{ top: '15%', right: '20px' }}
+          style={{ 
+            top: '25%', 
+            left: 'calc(42.5% - 45px)', // Center 90px cabinet at 42.5%
+            transform: 'none'
+          }}
         >
           <div className="cabinet-label">Cleaning & Hygiene</div>
           <div className="cabinet-icon">🧼</div>
@@ -231,17 +242,26 @@ function SupplyRoom({ supplies, selectedSkill }) {
           className="supply-room-shelf clickable-cabinet medical"
           onClick={() => handleCabinetClick('medical')}
           title="Medical Devices & Equipment"
-          style={{ top: '50%', right: '20px' }}
+          style={{ 
+            top: '25%', 
+            left: 'calc(70% - 45px)', // Center 90px cabinet at 70%
+            transform: 'none'
+          }}
         >
           <div className="cabinet-label">Medical Equipment</div>
           <div className="cabinet-icon">🩺</div>
         </div>
         
+        {/* Bottom Row: 15%, 42.5%, 70% horizontal positions at 70% vertical */}
         <div 
           className="supply-room-cabinet clickable-cabinet containers"
           onClick={() => handleCabinetClick('containers')}
           title="Containers & Utensils"
-          style={{ top: '60%', right: '20px', width: '100px', height: '70px' }}
+          style={{ 
+            top: '70%', 
+            left: 'calc(15% - 45px)', // Center 90px cabinet at 15%
+            transform: 'none'
+          }}
         >
           <div className="cabinet-label">Containers & Utensils</div>
           <div className="cabinet-icon">🍽️</div>
@@ -251,7 +271,11 @@ function SupplyRoom({ supplies, selectedSkill }) {
           className="supply-room-counter clickable-cabinet ppe"
           onClick={() => handleCabinetClick('ppe')}
           title="Personal Protective Equipment"
-          style={{ bottom: '20px', left: '20px' }}
+          style={{ 
+            top: '70%', 
+            left: 'calc(42.5% - 45px)', // Center 90px cabinet at 42.5%
+            transform: 'none'
+          }}
         >
           <div className="cabinet-label">PPE</div>
           <div className="cabinet-icon">🧤</div>
@@ -261,19 +285,29 @@ function SupplyRoom({ supplies, selectedSkill }) {
           className="supply-room-cabinet clickable-cabinet misc"
           onClick={() => handleCabinetClick('misc')}
           title="Miscellaneous"
-          style={{ top: '35%', left: '20px', width: '90px', height: '80px' }}
+          style={{ 
+            top: '70%', 
+            left: 'calc(70% - 45px)', // Center 90px cabinet at 70%
+            transform: 'none'
+          }}
         >
           <div className="cabinet-label">Miscellaneous</div>
           <div className="cabinet-icon">📋</div>
         </div>
 
-        {/* Sink - clickable element for hand hygiene */}
+        {/* Sink - clickable element for hand hygiene - positioned to avoid cabinet overlap */}
         {requiresSink && (
           <div 
             className={`supply-room-sink ${sinkUsed ? 'sink-used' : ''}`}
             onClick={handleSinkClick}
             title="Click to use sink"
-            style={{ bottom: '30%', right: '30%', width: '80px', height: '60px' }}
+            style={{ 
+              top: '45%', 
+              left: 'calc(50% - 40px)', // Center 80px sink at 50%
+              width: '80px', 
+              height: '60px',
+              transform: 'none'
+            }}
           >
             <div className="sink-label">{sinkUsed ? '✅ Sink Used' : '🚿 Sink'}</div>
           </div>
@@ -291,23 +325,8 @@ function SupplyRoom({ supplies, selectedSkill }) {
         </div>
       </div>
 
-      {/* Collection area */}
-      <div className="supply-collection-area">
-        <DropZone 
-          id="supply-collector"
-          label="Supply Collection Area - Drop supplies here"
-          style={{
-            minHeight: '100px',
-            backgroundColor: '#fff3cd',
-            borderColor: '#ffc107'
-          }}
-        >
-          <div className="collection-icon">📦</div>
-          <div className="collection-text">
-            Drop collected supplies here
-          </div>
-        </DropZone>
-      </div>
+      {/* Draggable Collection area */}
+      <DraggableSupplyCollection />
     </div>
   );
 }

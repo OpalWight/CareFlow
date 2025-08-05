@@ -1,15 +1,44 @@
+/* 
+ * Z-Index Management for Simulation Screen:
+ * 10000 - Base simulation container
+ * 10004 - Supply collection areas
+ * 10005 - TaskList (normal state)
+ * 10006 - TaskList (dragging state)
+ * 10007 - Drag overlays
+ */
+
 .interactive-scenario-container {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  display: flex;
-  padding: 0.5rem;
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  grid-template-rows: 80px 1fr 60px;
+  grid-template-areas: 
+    "header header"
+    "main sidebar"
+    "footer footer";
   background-color: #f8f9fa;
-  z-index: 10000;
+  z-index: 10000; /* Base layer for simulation */
   overflow: hidden;
   box-sizing: border-box;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+/* Full-width layout for gathering supplies phase */
+.interactive-scenario-container.gathering-supplies {
+  grid-template-columns: 1fr;
+  grid-template-areas: 
+    "header"
+    "main"
+    "footer";
+}
+
+.interactive-scenario-container.gathering-supplies .scenario-sidebar {
+  display: none;
 }
 
 .progress-summary {
@@ -51,17 +80,127 @@
   font-size: 1.1rem;
 }
 
+.scenario-header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-left h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.step-indicator h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.skill-category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 16px;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.category-icon {
+  font-size: 1rem;
+}
+
+.category-name {
+  font-size: 0.8rem;
+}
+
 .scenario-main-content {
-  flex: 1;
-  width: 100%;
-  height: 100vh;
+  grid-area: main;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .scenario-sidebar {
-  display: none;
+  grid-area: sidebar;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.sidebar-placeholder {
+  background-color: white;
+  border-radius: 12px;
+  padding: 2rem 1rem;
+  text-align: center;
+  border: 2px dashed #dee2e6;
+  color: #6c757d;
+}
+
+.placeholder-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.sidebar-placeholder h3 {
+  margin: 0 0 1rem 0;
+  color: #495057;
+  font-size: 1.1rem;
+}
+
+.sidebar-placeholder p {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.info-hints {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hint-item {
+  font-size: 0.8rem;
+  color: #495057;
+  padding: 0.4rem 0.6rem;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #007bff;
+}
+
+.scenario-footer {
+  grid-area: footer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+  border-radius: 8px;
+  padding: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .scenario-step-info {
@@ -104,21 +243,12 @@
 }
 
 .collected-supplies-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  width: 300px;
-  max-height: 300px;
   background-color: rgba(227, 242, 253, 0.95);
   border: 2px solid #2196F3;
   border-radius: 12px;
   padding: 1rem;
   overflow-y: auto;
-  z-index: 10002;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(8px);
-  cursor: move;
-  user-select: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .collected-supplies-grid {
@@ -152,18 +282,14 @@
 }
 
 .exit-button {
-  position: fixed;
-  top: 20px;
-  right: 20px;
   background-color: #dc3545;
   color: white;
   border: none;
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  font-size: 1.2rem;
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
   cursor: pointer;
-  z-index: 10001;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -175,4 +301,104 @@
   background-color: #c82333;
   transform: scale(1.1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .interactive-scenario-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: 100px 1fr 200px 60px;
+    grid-template-areas: 
+      "header"
+      "main"
+      "sidebar"
+      "footer";
+    gap: 0.25rem;
+    padding: 0.25rem;
+  }
+
+  .scenario-header {
+    padding: 0.75rem;
+  }
+
+  .header-left h1 {
+    font-size: 1.2rem;
+  }
+
+  .header-right {
+    gap: 0.5rem;
+  }
+
+  .step-indicator h3 {
+    font-size: 0.9rem;
+  }
+
+  .exit-button {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+  }
+
+  .scenario-main-content {
+    padding: 0.75rem;
+  }
+
+  .scenario-sidebar {
+    max-height: 200px;
+    padding: 0.5rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .collected-supplies-container {
+    padding: 0.75rem;
+  }
+
+  .collected-supplies-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .skill-category-badge {
+    display: none; /* Hide on mobile to save space */
+  }
+}
+
+@media (max-width: 480px) {
+  .interactive-scenario-container {
+    grid-template-rows: 80px 1fr 180px 50px;
+    padding: 0.125rem;
+  }
+
+  .scenario-header {
+    padding: 0.5rem;
+  }
+
+  .header-left h1 {
+    font-size: 1rem;
+  }
+
+  .step-indicator h3 {
+    font-size: 0.8rem;
+  }
+
+  .exit-button {
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
+  }
+
+  .scenario-main-content {
+    padding: 0.5rem;
+  }
+
+  .scenario-footer {
+    padding: 0.25rem;
+  }
+
+  .scenario-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
 }
