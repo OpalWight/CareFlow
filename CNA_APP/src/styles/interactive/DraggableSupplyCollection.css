@@ -1,0 +1,189 @@
+.draggable-supply-collection {
+  position: fixed;
+  width: 300px;
+  max-height: 400px;
+  background-color: rgba(255, 243, 205, 0.95);
+  border: 2px solid #ffc107;
+  border-radius: 12px;
+  z-index: 10004; /* Above simulation base, below TaskList */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  overflow-y: auto;
+}
+
+.draggable-supply-collection.dragging {
+  transform: scale(1.02);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  z-index: 10005;
+}
+
+.collection-header {
+  padding: 0.75rem 1rem 0.5rem 1rem;
+  border-bottom: 1px solid #ffc107;
+  cursor: move;
+  user-select: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(255, 193, 7, 0.1);
+  border-radius: 10px 10px 0 0;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.collection-title {
+  font-weight: 600;
+  color: #856404;
+  font-size: 0.9rem;
+}
+
+.drag-hint {
+  font-size: 0.7rem;
+  color: #6c757d;
+  opacity: 0.7;
+}
+
+.draggable-supply-collection .drop-zone {
+  margin: 0.75rem;
+  border-radius: 8px;
+}
+
+.collection-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.collection-text {
+  font-size: 0.9rem;
+  color: #856404;
+  font-weight: 500;
+}
+
+.supply-count {
+  background-color: #ffc107;
+  color: #856404;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.collected-supplies-section {
+  padding: 0.75rem;
+  border-top: 1px solid #ffc107;
+}
+
+.collected-supplies-header {
+  margin-bottom: 0.5rem;
+}
+
+.collected-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #856404;
+}
+
+.collected-supplies-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.no-supplies-message {
+  text-align: center;
+  padding: 1rem;
+  color: #6c757d;
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .draggable-supply-collection {
+    width: 260px;
+    max-height: 350px;
+  }
+  
+  .collection-header {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .collection-title {
+    font-size: 0.8rem;
+  }
+  
+  .drag-hint {
+    font-size: 0.6rem;
+  }
+  
+  .collection-icon {
+    font-size: 1.5rem;
+  }
+  
+  .collection-text {
+    font-size: 0.8rem;
+  }
+  
+  .supply-count {
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+  }
+  
+  .collected-supplies-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem;
+  }
+  
+  .collected-supplies-section {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .draggable-supply-collection {
+    width: 220px;
+    max-height: 300px;
+  }
+  
+  .collection-header {
+    padding: 0.4rem 0.6rem;
+  }
+  
+  .collection-title {
+    font-size: 0.75rem;
+  }
+  
+  .collection-icon {
+    font-size: 1.3rem;
+  }
+  
+  .collection-text {
+    font-size: 0.75rem;
+  }
+  
+  .supply-count {
+    width: 18px;
+    height: 18px;
+    font-size: 0.65rem;
+  }
+  
+  .collected-supplies-grid {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+  
+  .collected-supplies-section {
+    padding: 0.4rem;
+  }
+  
+  .no-supplies-message {
+    font-size: 0.7rem;
+    padding: 0.75rem;
+  }
+}
