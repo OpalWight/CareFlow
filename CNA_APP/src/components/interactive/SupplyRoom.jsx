@@ -235,7 +235,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
           title="Linens & Barriers"
           style={{ 
             top: 'calc(45% - 80px)', // Sink top minus 60px height minus 10px gap minus 70px cabinet height
-            left: 'calc(50% - 140px)' // Left of sink with gap
+            left: 'calc(50% - 150px)' // Left of sink with increased gap
           }}
         >
           <div className="cabinet-label">Linens & Barriers</div>
@@ -261,7 +261,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
           title="Medical Devices & Equipment"
           style={{ 
             top: 'calc(45% - 80px)', // Above sink
-            left: 'calc(50% + 50px)' // Right of sink with gap
+            left: 'calc(50% + 60px)' // Right of sink with increased gap
           }}
         >
           <div className="cabinet-label">Medical Equipment</div>
@@ -275,7 +275,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
           title="Containers & Utensils"
           style={{ 
             top: 'calc(45% + 70px)', // Sink bottom plus 60px height plus 10px gap
-            left: 'calc(50% - 140px)' // Left of sink with gap
+            left: 'calc(50% - 150px)' // Left of sink with increased gap
           }}
         >
           <div className="cabinet-label">Containers & Utensils</div>
@@ -301,7 +301,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
           title="Miscellaneous"
           style={{ 
             top: 'calc(45% + 70px)', // Below sink
-            left: 'calc(50% + 50px)' // Right of sink with gap
+            left: 'calc(50% + 60px)' // Right of sink with increased gap
           }}
         >
           <div className="cabinet-label">Miscellaneous</div>
@@ -343,7 +343,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
               </button>
             </div>
             <div className="tip-content">
-              Click on any cabinet or shelf to see what's inside
+              Click on items in checklist for a hint!
               {requiresSink && <><br />🚿 Click the sink to use it</>}
             </div>
           </div>
