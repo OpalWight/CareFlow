@@ -4,7 +4,7 @@ import DropZone from './DropZone';
 import DraggableSupplyCollection from './DraggableSupplyCollection';
 import '../../styles/interactive/SupplyRoom.css';
 
-function SupplyRoom({ supplies, selectedSkill }) {
+function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
   const [selectedCabinet, setSelectedCabinet] = useState(null);
   const [sinkUsed, setSinkUsed] = useState(false);
 
@@ -208,15 +208,15 @@ function SupplyRoom({ supplies, selectedSkill }) {
       <p id="supply-room-p">Click on cabinets and shelves to explore their contents. Find and collect all required supplies.</p>
       
       <div className="supply-room-container">
-        {/* Optimized Grid System - 3x2 Grid with better spacing for full-width */}
-        {/* Top Row: 15%, 42.5%, 70% horizontal positions at 25% vertical */}
+        {/* Tight Grid System - 3x2 Grid with 10px gaps between all cabinets */}
+        {/* Top Row: centered vertically with 10px gap to bottom row */}
         <div 
           className="supply-room-cabinet clickable-cabinet linens"
           onClick={() => handleCabinetClick('linens')}
           title="Linens & Barriers"
           style={{ 
-            top: '25%', 
-            left: 'calc(15% - 45px)', // Center 90px cabinet at 15%
+            top: 'calc(50% - 75px)', // Center minus half total height (150px/2 = 75px)
+            left: 'calc(50% - 145px)', // First cabinet: center minus half of total width (290px/2 = 145px)
             transform: 'none'
           }}
         >
@@ -229,8 +229,8 @@ function SupplyRoom({ supplies, selectedSkill }) {
           onClick={() => handleCabinetClick('cleaning')}
           title="Cleaning & Hygiene Products"
           style={{ 
-            top: '25%', 
-            left: 'calc(42.5% - 45px)', // Center 90px cabinet at 42.5%
+            top: 'calc(50% - 75px)', // Center minus half total height (150px/2 = 75px)
+            left: 'calc(50% - 45px)', // Middle cabinet: perfectly centered
             transform: 'none'
           }}
         >
@@ -243,8 +243,8 @@ function SupplyRoom({ supplies, selectedSkill }) {
           onClick={() => handleCabinetClick('medical')}
           title="Medical Devices & Equipment"
           style={{ 
-            top: '25%', 
-            left: 'calc(70% - 45px)', // Center 90px cabinet at 70%
+            top: 'calc(50% - 75px)', // Center minus half total height (150px/2 = 75px)
+            left: 'calc(50% + 55px)', // Third cabinet: center plus 90px + 10px gap
             transform: 'none'
           }}
         >
@@ -252,14 +252,14 @@ function SupplyRoom({ supplies, selectedSkill }) {
           <div className="cabinet-icon">🩺</div>
         </div>
         
-        {/* Bottom Row: 15%, 42.5%, 70% horizontal positions at 70% vertical */}
+        {/* Bottom Row: 10px below top row */}
         <div 
           className="supply-room-cabinet clickable-cabinet containers"
           onClick={() => handleCabinetClick('containers')}
           title="Containers & Utensils"
           style={{ 
-            top: '70%', 
-            left: 'calc(15% - 45px)', // Center 90px cabinet at 15%
+            top: 'calc(50% + 5px)', // Center plus 70px + 10px gap = 80px, but using 5px for precise alignment
+            left: 'calc(50% - 145px)', // First cabinet: center minus half of total width (290px/2 = 145px)
             transform: 'none'
           }}
         >
@@ -272,8 +272,8 @@ function SupplyRoom({ supplies, selectedSkill }) {
           onClick={() => handleCabinetClick('ppe')}
           title="Personal Protective Equipment"
           style={{ 
-            top: '70%', 
-            left: 'calc(42.5% - 45px)', // Center 90px cabinet at 42.5%
+            top: 'calc(50% + 5px)', // Center plus 70px + 10px gap = 80px, but using 5px for precise alignment
+            left: 'calc(50% - 45px)', // Middle cabinet: perfectly centered
             transform: 'none'
           }}
         >
@@ -286,8 +286,8 @@ function SupplyRoom({ supplies, selectedSkill }) {
           onClick={() => handleCabinetClick('misc')}
           title="Miscellaneous"
           style={{ 
-            top: '70%', 
-            left: 'calc(70% - 45px)', // Center 90px cabinet at 70%
+            top: 'calc(50% + 5px)', // Center plus 70px + 10px gap = 80px, but using 5px for precise alignment
+            left: 'calc(50% + 55px)', // Third cabinet: center plus 90px + 10px gap
             transform: 'none'
           }}
         >
@@ -325,8 +325,8 @@ function SupplyRoom({ supplies, selectedSkill }) {
         </div>
       </div>
 
-      {/* Draggable Collection area */}
-      <DraggableSupplyCollection />
+      {/* Unified Draggable Collection area */}
+      <DraggableSupplyCollection collectedSupplies={collectedSupplies} />
     </div>
   );
 }

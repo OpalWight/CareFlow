@@ -357,17 +357,26 @@
     font-size: 0.7rem;
   }
   
-  /* Adjust positioning calculations for smaller cabinet sizes - Updated for new 15%, 42.5%, 70% layout */
-  .clickable-cabinet[style*="calc(15% - 45px)"] {
-    left: calc(15% - 35px) !important; /* Center 70px cabinet at 15% */
+  /* Adjust positioning calculations for smaller cabinet sizes - Updated for 10px gap layout */
+  .clickable-cabinet[style*="calc(50% - 145px)"] {
+    left: calc(50% - 110px) !important; /* First 70px cabinet: center minus adjusted total width */
   }
   
-  .clickable-cabinet[style*="calc(42.5% - 45px)"] {
-    left: calc(42.5% - 35px) !important; /* Center 70px cabinet at 42.5% */
+  .clickable-cabinet[style*="calc(50% - 45px)"] {
+    left: calc(50% - 35px) !important; /* Middle 70px cabinet: perfectly centered */
   }
   
-  .clickable-cabinet[style*="calc(70% - 45px)"] {
-    left: calc(70% - 35px) !important; /* Center 70px cabinet at 70% */
+  .clickable-cabinet[style*="calc(50% + 55px)"] {
+    left: calc(50% + 40px) !important; /* Third 70px cabinet: center plus adjusted gap */
+  }
+  
+  /* Adjust vertical positioning for mobile */
+  .clickable-cabinet[style*="calc(50% - 75px)"] {
+    top: calc(50% - 55px) !important; /* Top row: adjusted for 55px cabinet height */
+  }
+  
+  .clickable-cabinet[style*="calc(50% + 5px)"] {
+    top: calc(50% + 0px) !important; /* Bottom row: adjusted for 55px cabinet height */
   }
   
   .cabinet-label {
@@ -414,20 +423,31 @@
     font-size: 0.6rem;
   }
   
-  /* Adjust positioning calculations for even smaller cabinet sizes - Updated for new 15%, 42.5%, 70% layout */
-  .clickable-cabinet[style*="calc(15% - 45px)"],
-  .clickable-cabinet[style*="calc(15% - 35px)"] {
-    left: calc(15% - 30px) !important; /* Center 60px cabinet at 15% */
+  /* Adjust positioning calculations for even smaller cabinet sizes - Updated for 10px gap layout with 60px cabinets */
+  .clickable-cabinet[style*="calc(50% - 145px)"],
+  .clickable-cabinet[style*="calc(50% - 110px)"] {
+    left: calc(50% - 95px) !important; /* First 60px cabinet: center minus adjusted total width (190px/2 = 95px) */
   }
   
-  .clickable-cabinet[style*="calc(42.5% - 45px)"],
-  .clickable-cabinet[style*="calc(42.5% - 35px)"] {
-    left: calc(42.5% - 30px) !important; /* Center 60px cabinet at 42.5% */
+  .clickable-cabinet[style*="calc(50% - 45px)"],
+  .clickable-cabinet[style*="calc(50% - 35px)"] {
+    left: calc(50% - 30px) !important; /* Middle 60px cabinet: perfectly centered */
   }
   
-  .clickable-cabinet[style*="calc(70% - 45px)"],
-  .clickable-cabinet[style*="calc(70% - 35px)"] {
-    left: calc(70% - 30px) !important; /* Center 60px cabinet at 70% */
+  .clickable-cabinet[style*="calc(50% + 55px)"],
+  .clickable-cabinet[style*="calc(50% + 40px)"] {
+    left: calc(50% + 35px) !important; /* Third 60px cabinet: center plus adjusted gap */
+  }
+  
+  /* Adjust vertical positioning for very small mobile */
+  .clickable-cabinet[style*="calc(50% - 75px)"],
+  .clickable-cabinet[style*="calc(50% - 55px)"] {
+    top: calc(50% - 45px) !important; /* Top row: adjusted for 45px cabinet height */
+  }
+  
+  .clickable-cabinet[style*="calc(50% + 5px)"],
+  .clickable-cabinet[style*="calc(50% + 0px)"] {
+    top: calc(50% + 5px) !important; /* Bottom row: adjusted for 45px cabinet height */
   }
   
   .cabinet-label {

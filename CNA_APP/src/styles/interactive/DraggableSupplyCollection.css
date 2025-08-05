@@ -1,7 +1,7 @@
 .draggable-supply-collection {
   position: fixed;
-  width: 280px;
-  max-height: 200px;
+  width: 300px;
+  max-height: 400px;
   background-color: rgba(255, 243, 205, 0.95);
   border: 2px solid #ffc107;
   border-radius: 12px;
@@ -9,6 +9,7 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(8px);
   transition: transform 0.1s ease, box-shadow 0.1s ease;
+  overflow-y: auto;
 }
 
 .draggable-supply-collection.dragging {
@@ -27,6 +28,8 @@
   align-items: center;
   background-color: rgba(255, 193, 7, 0.1);
   border-radius: 10px 10px 0 0;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .collection-title {
@@ -57,11 +60,53 @@
   font-weight: 500;
 }
 
+.supply-count {
+  background-color: #ffc107;
+  color: #856404;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.collected-supplies-section {
+  padding: 0.75rem;
+  border-top: 1px solid #ffc107;
+}
+
+.collected-supplies-header {
+  margin-bottom: 0.5rem;
+}
+
+.collected-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #856404;
+}
+
+.collected-supplies-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.no-supplies-message {
+  text-align: center;
+  padding: 1rem;
+  color: #6c757d;
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .draggable-supply-collection {
-    width: 240px;
-    max-height: 180px;
+    width: 260px;
+    max-height: 350px;
   }
   
   .collection-header {
@@ -83,12 +128,27 @@
   .collection-text {
     font-size: 0.8rem;
   }
+  
+  .supply-count {
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+  }
+  
+  .collected-supplies-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem;
+  }
+  
+  .collected-supplies-section {
+    padding: 0.5rem;
+  }
 }
 
 @media (max-width: 480px) {
   .draggable-supply-collection {
-    width: 200px;
-    max-height: 160px;
+    width: 220px;
+    max-height: 300px;
   }
   
   .collection-header {
@@ -105,5 +165,25 @@
   
   .collection-text {
     font-size: 0.75rem;
+  }
+  
+  .supply-count {
+    width: 18px;
+    height: 18px;
+    font-size: 0.65rem;
+  }
+  
+  .collected-supplies-grid {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+  
+  .collected-supplies-section {
+    padding: 0.4rem;
+  }
+  
+  .no-supplies-message {
+    font-size: 0.7rem;
+    padding: 0.75rem;
   }
 }

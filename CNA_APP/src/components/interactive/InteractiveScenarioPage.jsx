@@ -4,7 +4,6 @@ import SupplyRoom from './SupplyRoom';
 import PatientRoom from './PatientRoom';
 import TaskList from './TaskList';
 import DraggableItem from './DraggableItem';
-import DraggableCollectedSupplies from './DraggableCollectedSupplies';
 import CNA_SKILL_SCENARIOS from '../../data/cnaSkillScenarios';
 import progressService from '../../api/progressService';
 import '../../styles/interactive/InteractiveScenarioPage.css';
@@ -375,7 +374,7 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
   const renderCurrentStep = () => {
     switch (currentStep) {
       case SCENARIO_STEPS.GATHERING_SUPPLIES:
-        return <SupplyRoom supplies={supplies} selectedSkill={skillId} />;
+        return <SupplyRoom supplies={supplies} selectedSkill={skillId} collectedSupplies={collectedSupplies} />;
       case SCENARIO_STEPS.PERFORMING_SKILL:
         return <PatientRoom 
           collectedSupplies={collectedSupplies} 
@@ -497,7 +496,6 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
 
         {/* Floating Components */}
         <TaskList tasks={getCurrentTasks()} />
-        <DraggableCollectedSupplies collectedSupplies={collectedSupplies} />
 
         {/* Footer */}
         <div className="scenario-footer">
