@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DraggableItem from './DraggableItem';
 import DropZone from './DropZone';
 import DraggableSupplyCollection from './DraggableSupplyCollection';
@@ -8,6 +8,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
   const [selectedCabinet, setSelectedCabinet] = useState(null);
   const [sinkUsed, setSinkUsed] = useState(false);
   const [showTip, setShowTip] = useState(true);
+  const [pulsatingElement, setPulsatingElement] = useState(null);
 
   const cabinetCategories = {
     linens: {
@@ -121,6 +122,70 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
   // Check if current skill requires sink
   const requiresSink = supplies.some(s => s.id === 'sink');
 
+  useEffect(() => {
+    const handleTaskItemClick = (event) => {
+      const { taskId, taskName, task } = event.detail;
+      
+      // Map task to supply item and find which cabinet contains it
+      let targetCabinetKey = null;
+      let targetSupplyId = null;
+      
+      // Extract supply ID from task name (e.g., "Find Soap" -> "soap")
+      if (taskName.startsWith('Find ')) {
+        const supplyName = taskName.replace('Find ', '').toLowerCase();
+        
+        // Find which cabinet contains this supply
+        for (const [cabinetKey, cabinet] of Object.entries(cabinetCategories)) {
+          const supply = cabinet.supplies.find(s => 
+            s.name.toLowerCase().includes(supplyName) || 
+            s.id.toLowerCase().includes(supplyName) ||
+            supplyName.includes(s.name.toLowerCase()) ||
+            supplyName.includes(s.id.toLowerCase())
+          );
+          if (supply) {
+            targetCabinetKey = cabinetKey;
+            targetSupplyId = supply.id;
+            break;
+          }
+        }
+        
+        // Special case for sink
+        if (supplyName.includes('sink') || supplyName.includes('water')) {
+          targetSupplyId = 'sink';
+        }
+      }
+      
+      // Apply pulsating effect
+      if (targetCabinetKey) {
+        pulsateElement(`.cabinet.${targetCabinetKey}`);
+      } else if (targetSupplyId === 'sink') {
+        pulsateElement('.sink');
+      }
+    };
+
+    window.addEventListener('taskItemClicked', handleTaskItemClick);
+    return () => window.removeEventListener('taskItemClicked', handleTaskItemClick);
+  }, []);
+
+  const pulsateElement = (selector) => {
+    const element = document.querySelector(selector);
+    if (element) {
+      // Remove existing pulsate class if present
+      element.classList.remove('pulsate-highlight');
+      
+      // Force reflow
+      element.offsetHeight;
+      
+      // Add pulsate class
+      element.classList.add('pulsate-highlight');
+      
+      // Remove the class after animation completes
+      setTimeout(() => {
+        element.classList.remove('pulsate-highlight');
+      }, 6000); // 2s * 3 iterations = 6s
+    }
+  };
+
 
   if (selectedCabinet) {
     const cabinet = cabinetCategories[selectedCabinet];
@@ -177,7 +242,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
           title="Linens & Barriers"
           style={{ 
             top: 'calc(45% - 80px)', // Sink top minus 60px height minus 10px gap minus 70px cabinet height
-            left: 'calc(50% - 140px)' // Left of sink with gap
+            left: 'calc(50% - 150px)' // Left of sink with increased gap
           }}
         >
           <div className="cabinet-label">Linens & Barriers</div>
@@ -203,7 +268,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
           title="Medical Devices & Equipment"
           style={{ 
             top: 'calc(45% - 80px)', // Above sink
-            left: 'calc(50% + 50px)' // Right of sink with gap
+            left: 'calc(50% + 60px)' // Right of sink with increased gap
           }}
         >
           <div className="cabinet-label">Medical Equipment</div>
@@ -217,7 +282,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
           title="Containers & Utensils"
           style={{ 
             top: 'calc(45% + 70px)', // Sink bottom plus 60px height plus 10px gap
-            left: 'calc(50% - 140px)' // Left of sink with gap
+            left: 'calc(50% - 150px)' // Left of sink with increased gap
           }}
         >
           <div className="cabinet-label">Containers & Utensils</div>
@@ -243,7 +308,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
           title="Miscellaneous"
           style={{ 
             top: 'calc(45% + 70px)', // Below sink
-            left: 'calc(50% + 50px)' // Right of sink with gap
+            left: 'calc(50% + 60px)' // Right of sink with increased gap
           }}
         >
           <div className="cabinet-label">Miscellaneous</div>
@@ -285,7 +350,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
               </button>
             </div>
             <div className="tip-content">
-              Click on any cabinet or shelf to see what's inside
+              Click on items in checklist for a hint!
               {requiresSink && <><br />🚿 Click the sink to use it</>}
             </div>
           </div>
