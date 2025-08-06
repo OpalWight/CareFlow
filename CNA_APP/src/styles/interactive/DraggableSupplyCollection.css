@@ -1,7 +1,7 @@
 .draggable-supply-collection {
   position: fixed;
-  width: 300px;
-  max-height: 400px;
+  width: 320px;
+  height: 250px;
   background-color: rgba(255, 243, 205, 0.95);
   border: 2px solid #ffc107;
   border-radius: 12px;
@@ -9,13 +9,27 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(8px);
   transition: transform 0.1s ease, box-shadow 0.1s ease;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 280px;
+  min-height: 200px;
+  max-width: 600px;
+  max-height: 500px;
 }
 
 .draggable-supply-collection.dragging {
   transform: scale(1.02);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   z-index: 10005;
+}
+
+.draggable-supply-collection.resizing {
+  cursor: nw-resize;
+}
+
+.draggable-supply-collection.minimized {
+  height: auto !important;
+  min-height: auto;
 }
 
 .collection-header {
@@ -30,6 +44,27 @@
   border-radius: 10px 10px 0 0;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.draggable-supply-collection .minimize-button {
+  background: transparent;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  color: #ffc107;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  height: 24px;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.draggable-supply-collection .minimize-button:hover {
+  background-color: #ffc107;
+  color: #856404;
 }
 
 .collection-title {
@@ -76,6 +111,8 @@
 .collected-supplies-section {
   padding: 0.75rem;
   border-top: 1px solid #ffc107;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .collected-supplies-header {
@@ -100,6 +137,47 @@
   color: #6c757d;
   font-style: italic;
   font-size: 0.8rem;
+}
+
+/* Resize handles for all corners */
+.draggable-supply-collection .resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.draggable-supply-collection:hover .resize-handle {
+  opacity: 0.3;
+}
+
+.draggable-supply-collection .resize-handle:hover {
+  opacity: 0.7 !important;
+}
+
+.draggable-supply-collection .resize-handle.top-left {
+  top: 0;
+  left: 0;
+  cursor: nw-resize;
+}
+
+.draggable-supply-collection .resize-handle.top-right {
+  top: 0;
+  right: 0;
+  cursor: ne-resize;
+}
+
+.draggable-supply-collection .resize-handle.bottom-left {
+  bottom: 0;
+  left: 0;
+  cursor: sw-resize;
+}
+
+.draggable-supply-collection .resize-handle.bottom-right {
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
 }
 
 /* Responsive Design */

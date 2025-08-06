@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DropZone from './DropZone';
 import CNA_SKILL_SCENARIOS from '../../data/cnaSkillScenarios';
 import '../../styles/interactive/PatientRoom.css';
@@ -44,6 +44,53 @@ function PatientRoom({ collectedSupplies, skillId = 'hand-hygiene', onStepComple
 
   const isStepCompleted = (stepId) => completedSteps.includes(stepId);
 
+  useEffect(() => {
+    const handleTaskItemClick = (event) => {
+      const { taskId, taskName, task } = event.detail;
+      
+      // Find the step that matches this task
+      const matchingStep = scenario.steps.find(step => 
+        step.id === taskId || 
+        step.name.toLowerCase() === taskName.toLowerCase() ||
+        taskName.toLowerCase().includes(step.name.toLowerCase()) ||
+        step.name.toLowerCase().includes(taskName.toLowerCase())
+      );
+      
+      if (matchingStep && matchingStep.dropZone) {
+        // Find the drop zone element and pulsate it
+        pulsateElement(`.drop-zone-${matchingStep.dropZone}`);
+      } else {
+        // If no specific drop zone, try to find action buttons
+        const actionButton = document.querySelector(`[data-step-id="${taskId}"]`);
+        if (actionButton) {
+          pulsateElement(`[data-step-id="${taskId}"]`);
+        }
+      }
+    };
+
+    window.addEventListener('taskItemClicked', handleTaskItemClick);
+    return () => window.removeEventListener('taskItemClicked', handleTaskItemClick);
+  }, [scenario]);
+
+  const pulsateElement = (selector) => {
+    const element = document.querySelector(selector);
+    if (element) {
+      // Remove existing pulsate class if present
+      element.classList.remove('pulsate-highlight');
+      
+      // Force reflow
+      element.offsetHeight;
+      
+      // Add pulsate class
+      element.classList.add('pulsate-highlight');
+      
+      // Remove the class after animation completes
+      setTimeout(() => {
+        element.classList.remove('pulsate-highlight');
+      }, 6000); // 2s * 3 iterations = 6s
+    }
+  };
+
   // Define action buttons for steps that require verbal communication or specific actions
   const getActionButtons = (step) => {
     const communicationSteps = [
@@ -78,6 +125,7 @@ function PatientRoom({ collectedSupplies, skillId = 'hand-hygiene', onStepComple
           className={`action-button communication-action ${isStepCompleted(step.id) ? 'completed' : ''} ${activeActions[step.id] ? 'active' : ''}`}
           onClick={() => handleActionButtonClick(step.id, 'communication')}
           disabled={isStepCompleted(step.id)}
+          data-step-id={step.id}
         >
           💬 {step.name}
         </button>
@@ -90,6 +138,7 @@ function PatientRoom({ collectedSupplies, skillId = 'hand-hygiene', onStepComple
           className={`action-button physical-action ${isStepCompleted(step.id) ? 'completed' : ''} ${activeActions[step.id] ? 'active' : ''}`}
           onClick={() => handleActionButtonClick(step.id, 'physical')}
           disabled={isStepCompleted(step.id)}
+          data-step-id={step.id}
         >
           ✋ {step.name}
         </button>

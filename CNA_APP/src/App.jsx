@@ -21,8 +21,6 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        {/* Environment Debug Component - Shows current environment variables */}
-        <EnvDebugComponent />
         <Routes>
           <Route path="/" element={<LandingPage />} />
         <Route path="/flashcards" element={<Flashcards />} />
