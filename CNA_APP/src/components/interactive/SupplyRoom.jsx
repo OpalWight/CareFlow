@@ -4,7 +4,7 @@ import DropZone from './DropZone';
 import DraggableSupplyCollection from './DraggableSupplyCollection';
 import '../../styles/interactive/SupplyRoom.css';
 
-function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
+function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlightedSupply }) {
   const [selectedCabinet, setSelectedCabinet] = useState(null);
   const [sinkUsed, setSinkUsed] = useState(false);
   const [showTip, setShowTip] = useState(true);
@@ -93,6 +93,13 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
       ]
     }
   };
+
+  const supplyToCabinetMap = Object.entries(cabinetCategories).reduce((acc, [cabinet, { supplies }]) => {
+    supplies.forEach(supply => {
+      acc[supply.id] = cabinet;
+    });
+    return acc;
+  }, {});
 
   const handleCabinetClick = (cabinetKey) => {
     setSelectedCabinet(cabinetKey);
@@ -230,7 +237,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
         {/* Cabinets arranged around sink with 10px gaps */}
         {/* Top Row - Above sink */}
         <div 
-          className="cabinet linens"
+          className={`cabinet linens ${supplyToCabinetMap[highlightedSupply] === 'linens' ? 'cabinet-pulsating' : ''}`}
           onClick={() => handleCabinetClick('linens')}
           title="Linens & Barriers"
           style={{ 
@@ -243,7 +250,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
         </div>
         
         <div 
-          className="cabinet cleaning"
+          className={`cabinet cleaning ${supplyToCabinetMap[highlightedSupply] === 'cleaning' ? 'cabinet-pulsating' : ''}`}
           onClick={() => handleCabinetClick('cleaning')}
           title="Cleaning & Hygiene Products"
           style={{ 
@@ -256,7 +263,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
         </div>
 
         <div 
-          className="cabinet medical"
+          className={`cabinet medical ${supplyToCabinetMap[highlightedSupply] === 'medical' ? 'cabinet-pulsating' : ''}`}
           onClick={() => handleCabinetClick('medical')}
           title="Medical Devices & Equipment"
           style={{ 
@@ -270,7 +277,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
         
         {/* Bottom Row - Below sink */}
         <div 
-          className="cabinet containers"
+          className={`cabinet containers ${supplyToCabinetMap[highlightedSupply] === 'containers' ? 'cabinet-pulsating' : ''}`}
           onClick={() => handleCabinetClick('containers')}
           title="Containers & Utensils"
           style={{ 
@@ -283,7 +290,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
         </div>
         
         <div 
-          className="cabinet ppe"
+          className={`cabinet ppe ${supplyToCabinetMap[highlightedSupply] === 'ppe' ? 'cabinet-pulsating' : ''}`}
           onClick={() => handleCabinetClick('ppe')}
           title="Personal Protective Equipment"
           style={{ 
@@ -296,7 +303,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
         </div>
         
         <div 
-          className="cabinet misc"
+          className={`cabinet misc ${supplyToCabinetMap[highlightedSupply] === 'misc' ? 'cabinet-pulsating' : ''}`}
           onClick={() => handleCabinetClick('misc')}
           title="Miscellaneous"
           style={{ 
