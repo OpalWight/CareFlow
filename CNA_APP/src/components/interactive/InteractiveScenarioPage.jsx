@@ -153,6 +153,7 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
   const [startTime, setStartTime] = useState(null);
   const [sessionDuration, setSessionDuration] = useState(0);
   const [userProgress, setUserProgress] = useState(null);
+  const [highlightedSupply, setHighlightedSupply] = useState(null);
 
   useEffect(() => {
     // Initialize skill scenario and progress tracking
@@ -374,7 +375,7 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
   const renderCurrentStep = () => {
     switch (currentStep) {
       case SCENARIO_STEPS.GATHERING_SUPPLIES:
-        return <SupplyRoom supplies={supplies} selectedSkill={skillId} collectedSupplies={collectedSupplies} />;
+        return <SupplyRoom supplies={supplies} selectedSkill={skillId} collectedSupplies={collectedSupplies} highlightedSupply={highlightedSupply} />;
       case SCENARIO_STEPS.PERFORMING_SKILL:
         return <PatientRoom 
           collectedSupplies={collectedSupplies} 
@@ -495,7 +496,20 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
         </div>
 
         {/* Floating Components */}
-        <TaskList tasks={getCurrentTasks()} />
+        <TaskList
+          tasks={getCurrentTasks()}
+          title={currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES ? '📦 Item Checklist' : '📋 Task Checklist'}
+          onTaskClick={
+            currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES
+              ? (supplyId) => {
+                  console.log(`Highlighting supply: ${supplyId}`);
+                  setHighlightedSupply(supplyId);
+                  // Clear the highlight after 3 seconds to stop the pulsation
+                  setTimeout(() => setHighlightedSupply(null), 3000);
+                }
+              : null // No click action needed during other phases
+          }
+        />
 
         {/* Footer */}
         <div className="scenario-footer">

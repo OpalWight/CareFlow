@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import '../../styles/interactive/TaskList.css';
 
-function TaskList({ tasks }) {
+function TaskList({ tasks, title, onTaskClick }) {
   const [position, setPosition] = useState({ x: 20, y: 20 });
   const [size, setSize] = useState({ width: 300, height: 400 });
   const [isDragging, setIsDragging] = useState(false);
@@ -41,7 +41,7 @@ function TaskList({ tasks }) {
   const handleMinimizeClick = () => {
     setIsMinimized(!isMinimized);
   };
-
+  
   const handleMouseMove = (e) => {
     if (isDragging) {
       const newX = e.clientX - dragStart.x;
@@ -131,6 +131,7 @@ function TaskList({ tasks }) {
       }}
       onMouseDown={handleMouseDown}
     >
+
       <div className="task-list-header">
         <h3 className="task-list-title">
           📋 Task Checklist
@@ -189,6 +190,7 @@ function TaskList({ tasks }) {
             </div>
           </div>
         </>
+
       )}
       
       {/* Four corner resize handles */}
