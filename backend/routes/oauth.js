@@ -252,7 +252,8 @@ router.get('/', async (req, res) => {
       secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Cross-site cookies for production
       expires: cookieExpiration,   // Cookie expiration matching JWT expiration
-      path: '/'                   // Cookie available for entire application
+      path: '/',                  // Cookie available for entire application
+      domain: process.env.NODE_ENV === 'production' ? undefined : undefined // Let browser handle domain
     });
 
     console.log('🍪 JWT token set as HTTP-only cookie for user:', user.email);
@@ -265,19 +266,24 @@ router.get('/', async (req, res) => {
       console.log('🚫 Error: Set-Cookie header not found after attempting to set it.');
     }
 
-    // ✅ REDIRECT TO FRONTEND INSTEAD OF RETURNING JSON (CHANGED)
+    // ✅ ALTERNATIVE APPROACH: Redirect with temporary token in URL
+    // Since cross-origin cookies are unreliable, use a temporary token approach
     const frontendUrl = getFrontendUrl();
     console.log('🔍 DEBUG: Using frontend URL for redirect:', frontendUrl);
-    let redirectUrl = `${frontendUrl}/dashboard`;
+    
+    // Create a temporary token that expires in 30 seconds
+    const tempToken = createToken(user, '30s');
+    
+    let redirectUrl = `${frontendUrl}/auth-callback?token=${tempToken}`;
     
     // Add query parameters for success messages
     if (isNewUser) {
-      redirectUrl += '?newUser=true';
+      redirectUrl += '&newUser=true';
     } else if (isAccountLinking) {
-      redirectUrl += '?accountLinked=true';
+      redirectUrl += '&accountLinked=true';
     }
 
-    console.log('🔄 Redirecting to frontend:', redirectUrl);
+    console.log('🔄 Redirecting to frontend with temp token:', redirectUrl);
     return res.redirect(redirectUrl);
 
   } catch (err) {
@@ -424,6 +430,73 @@ router.delete('/account', authMiddleware, async (req, res) => {
       error: 'Failed to delete account.',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
+  }
+});
+
+/**
+ * ✅ NEW: Token exchange endpoint - converts temporary URL token to httpOnly cookie
+ * This provides security of httpOnly cookies while solving cross-origin OAuth issues
+ * 
+ * @route POST /oauth/exchange-token
+ */
+router.post('/exchange-token', async (req, res) => {
+  try {
+    console.log('🔄 Token exchange request received');
+    console.log('  - Request origin:', req.get('origin'));
+    
+    // Get temporary token from request body
+    const { tempToken } = req.body;
+    
+    if (!tempToken) {
+      return res.status(400).json({ error: 'Temporary token required' });
+    }
+    
+    console.log('🔍 Verifying temporary token...');
+    
+    // Import verifyToken here to avoid circular dependency
+    const verifyToken = require('../utils/verifyToken');
+    
+    // Verify the temporary token
+    const user = await verifyToken(tempToken);
+    
+    console.log('✅ Temporary token valid for user:', user.email);
+    
+    // Create a new long-lived token (1 hour)
+    const longLivedToken = createToken(user, '1h');
+    
+    // Set as httpOnly cookie (same domain as frontend request)
+    const cookieExpiration = new Date();
+    cookieExpiration.setTime(cookieExpiration.getTime() + (60 * 60 * 1000)); // 1 hour
+    
+    res.cookie('authToken', longLivedToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax', // Same-origin now, so 'lax' is fine
+      expires: cookieExpiration,
+      path: '/'
+    });
+    
+    console.log('🍪 HttpOnly cookie set for user:', user.email);
+    console.log('🍪 Cookie will be available for origin:', req.get('origin'));
+    
+    // Return user data (don't include the token in response)
+    res.json({
+      success: true,
+      user: user,
+      message: 'Token exchanged successfully'
+    });
+    
+  } catch (error) {
+    console.error('❌ Token exchange failed:', error);
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Temporary token has expired' });
+    }
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(403).json({ error: 'Invalid temporary token' });
+    }
+    
+    res.status(500).json({ error: 'Token exchange failed' });
   }
 });
 
