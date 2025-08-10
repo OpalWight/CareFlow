@@ -9,6 +9,8 @@ const AuthCallbackHandler = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       console.log('🔄 Auth callback handler started');
+      console.log('🔍 Current URL:', window.location.href);
+      console.log('🔍 Current pathname:', window.location.pathname);
       
       try {
         // Get the temporary token from URL
@@ -17,7 +19,7 @@ const AuthCallbackHandler = () => {
         const accountLinked = searchParams.get('accountLinked');
 
         console.log('📦 Received parameters:', { 
-          tempToken: tempToken ? 'Present' : 'Missing',
+          tempToken: tempToken ? `Present (${tempToken.substring(0, 20)}...)` : 'Missing',
           newUser, 
           accountLinked 
         });
@@ -27,9 +29,11 @@ const AuthCallbackHandler = () => {
         }
 
         // ✅ HYBRID APPROACH: Exchange temporary token for httpOnly cookie
-        console.log('🔄 Exchanging temporary token for secure cookie...');
+        console.log('🔄 Starting token exchange...');
         const API_URL = import.meta.env.VITE_API_URL || 'https://careflow-ssas.onrender.com';
+        console.log('🔍 Using API URL:', API_URL);
         
+        const requestTime = Date.now();
         const response = await fetch(`${API_URL}/oauth/exchange-token`, {
           method: 'POST',
           credentials: 'include', // Important: allows setting cookies
@@ -38,16 +42,36 @@ const AuthCallbackHandler = () => {
           },
           body: JSON.stringify({ tempToken })
         });
-
-        console.log('🔍 Token exchange response:', response.status);
+        
+        const responseTime = Date.now() - requestTime;
+        console.log('🔍 Token exchange response:', response.status, `(took ${responseTime}ms)`);
+        
+        // Check for cookies after response
+        console.log('🍪 Cookies after token exchange:');
+        console.log('🍪 document.cookie:', document.cookie);
+        console.log('🍪 Response headers:', [...response.headers.entries()]);
+        
+        const setCookieHeader = response.headers.get('set-cookie');
+        if (setCookieHeader) {
+          console.log('🍪 Set-Cookie header from response:', setCookieHeader);
+        } else {
+          console.log('⚠️ No Set-Cookie header in response');
+        }
 
         if (response.ok) {
           const data = await response.json();
           setStatus('success');
           
-          console.log('✅ Token exchanged successfully, user:', data.user.email);
+          console.log('✅ Token exchanged successfully!');
+          console.log('📊 User data received:', {
+            email: data.user?.email,
+            name: data.user?.name,
+            id: data.user?._id,
+            authMethod: data.user?.authMethod
+          });
 
           // Clean up URL
+          console.log('🧹 Cleaning up URL parameters...');
           window.history.replaceState({}, document.title, window.location.pathname);
 
           // Show success message based on type
@@ -58,27 +82,41 @@ const AuthCallbackHandler = () => {
             successMessage = 'Great! Your Google account has been linked.';
           }
 
+          console.log('💬 Success message:', successMessage);
+
           // Navigate immediately with user data in state (secure)
-          navigate('/dashboard', { 
-            state: { 
-              successMessage,
-              user: data.user, // Pass user data securely via navigation state
-              fromOAuth: true
-            }
-          });
+          const navigationState = { 
+            successMessage,
+            user: data.user, // Pass user data securely via navigation state
+            fromOAuth: true
+          };
+          
+          console.log('🚀 Navigating to dashboard with secure state...');
+          console.log('📦 Navigation state keys:', Object.keys(navigationState));
+          
+          navigate('/dashboard', { state: navigationState });
 
         } else {
-          throw new Error(`Authentication failed: ${response.status}`);
+          console.error('❌ Token exchange failed with status:', response.status);
+          const errorText = await response.text();
+          console.error('❌ Error response body:', errorText);
+          throw new Error(`Authentication failed: ${response.status} - ${errorText}`);
         }
 
       } catch (error) {
         console.error('❌ Auth callback error:', error);
+        console.error('❌ Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
         setStatus('error');
         
         // Redirect to login after delay
+        console.log('🔄 Redirecting to login in 3 seconds...');
         setTimeout(() => {
           navigate('/login', { 
-            state: { error: 'Authentication failed. Please try logging in again.' }
+            state: { error: `Authentication failed: ${error.message}` }
           });
         }, 3000);
       }
