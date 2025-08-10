@@ -1,0 +1,189 @@
+.draggable-available-actions {
+  position: fixed;
+  width: 350px;
+  height: 300px;
+  background-color: rgba(255, 241, 224, 0.95);
+  border: 2px solid #ff9800;
+  border-radius: 12px;
+  z-index: 12000;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  display: flex;
+  flex-direction: column;
+  min-width: 280px;
+  min-height: 200px;
+  max-width: 600px;
+  max-height: 500px;
+}
+
+.draggable-available-actions.dragging {
+  transform: scale(1.02);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  z-index: 12001;
+}
+
+.draggable-available-actions.resizing {
+  cursor: nw-resize;
+}
+
+.draggable-available-actions.minimized {
+  height: auto !important;
+  min-height: auto;
+}
+
+.available-actions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 2px solid #ff9800;
+  background-color: rgba(255, 152, 0, 0.1);
+  border-radius: 10px 10px 0 0;
+  cursor: move;
+  user-select: none;
+}
+
+.available-actions-title {
+  margin: 0;
+  color: #e65100;
+  font-size: 1.1rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.draggable-available-actions .minimize-button {
+  background: transparent;
+  border: 1px solid #ff9800;
+  border-radius: 4px;
+  color: #ff9800;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  height: 24px;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.draggable-available-actions .minimize-button:hover {
+  background-color: #ff9800;
+  color: white;
+}
+
+.available-actions-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.action-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.action-button-container {
+  display: flex;
+  justify-content: center;
+}
+
+.action-button-container .action-button {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.action-button-container .communication-action {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+}
+
+.action-button-container .communication-action:hover:not(.completed) {
+  background-color: #1976d2;
+  color: white;
+}
+
+.action-button-container .physical-action {
+  background-color: #fff3e0;
+  color: #f57c00;
+  border: 1px solid #f57c00;
+}
+
+.action-button-container .physical-action:hover:not(.completed) {
+  background-color: #f57c00;
+  color: white;
+}
+
+.action-button-container .action-button.completed {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+  border-color: #4caf50;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.action-button-container .action-button.active {
+  transform: scale(0.95);
+}
+
+.no-actions-message {
+  text-align: center;
+  padding: 2rem;
+  color: #e65100;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* Resize handles for all corners */
+.draggable-available-actions .resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.draggable-available-actions:hover .resize-handle {
+  opacity: 0.3;
+}
+
+.draggable-available-actions .resize-handle:hover {
+  opacity: 0.7 !important;
+}
+
+.draggable-available-actions .resize-handle.top-left {
+  top: 0;
+  left: 0;
+  cursor: nw-resize;
+}
+
+.draggable-available-actions .resize-handle.top-right {
+  top: 0;
+  right: 0;
+  cursor: ne-resize;
+}
+
+.draggable-available-actions .resize-handle.bottom-left {
+  bottom: 0;
+  left: 0;
+  cursor: sw-resize;
+}
+
+.draggable-available-actions .resize-handle.bottom-right {
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+}

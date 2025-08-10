@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DropZone from './DropZone';
+import DraggableProcedureSteps from './DraggableProcedureSteps';
+import DraggableAvailableActions from './DraggableAvailableActions';
 import CNA_SKILL_SCENARIOS from '../../data/cnaSkillScenarios';
 import '../../styles/interactive/PatientRoom.css';
 
@@ -233,64 +235,20 @@ function PatientRoom({ collectedSupplies, skillId = 'hand-hygiene', onStepComple
           🏥 {scenario.patientRoomTitle}
         </div>
 
-        {/* Interactive Actions Panel */}
-        <div className="interactive-actions-panel">
-          <h4>Available Actions:</h4>
-          <div className="action-buttons-grid">
-            {scenario.steps.map((step) => {
-              const actionButton = getActionButtons(step);
-              if (actionButton) {
-                return (
-                  <div key={step.id} className="action-button-container">
-                    {actionButton}
-                  </div>
-                );
-              }
-              return null;
-            })}
-          </div>
-        </div>
-
-        {/* Dynamic instructions based on skill */}
-        <div className="room-instructions">
-          <h4>Procedure Steps:</h4>
-          <ol>
-            {scenario.steps.map((step, index) => (
-              <li 
-                key={step.id} 
-                className={isStepCompleted(step.id) ? 'completed-step' : 'pending-step'}
-                style={{
-                  color: isStepCompleted(step.id) ? '#4caf50' : '#666',
-                  textDecoration: isStepCompleted(step.id) ? 'line-through' : 'none'
-                }}
-              >
-                {isStepCompleted(step.id) ? '✅' : `${index + 1}.`} {step.name}
-                {getActionButtons(step) && (
-                  <div className="inline-action-button">
-                    {getActionButtons(step)}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ol>
-        </div>
-
-        {/* Progress indicator */}
-        <div className="progress-indicator">
-          <div className="progress-text">
-            Progress: {completedSteps.length} / {scenario.steps.length} steps completed
-          </div>
-          <div className="progress-bar">
-            <div 
-              className="progress-fill"
-              style={{
-                width: `${(completedSteps.length / scenario.steps.length) * 100}%`,
-                backgroundColor: completedSteps.length === scenario.steps.length ? '#4caf50' : '#2196f3'
-              }}
-            />
-          </div>
-        </div>
       </div>
+
+      {/* Draggable Procedure Steps */}
+      <DraggableProcedureSteps 
+        steps={scenario.steps}
+        completedSteps={completedSteps}
+        getActionButtons={getActionButtons}
+      />
+
+      {/* Draggable Available Actions */}
+      <DraggableAvailableActions 
+        steps={scenario.steps}
+        getActionButtons={getActionButtons}
+      />
     </div>
   );
 }

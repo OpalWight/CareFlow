@@ -8,7 +8,7 @@
   border: 2px solid #007bff;
   border-radius: 12px;
   padding: 1rem;
-  z-index: 10005;
+  z-index: 15000;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(8px);
   cursor: move;
@@ -25,7 +25,7 @@
 .task-list-container.dragging {
   transform: scale(1.02);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-  z-index: 10006;
+  z-index: 15001;
 }
 
 .task-list-container.resizing {
@@ -103,12 +103,16 @@
   transform: translateX(2px);
 }
 
-.task-item.clickable {
-  cursor: pointer;
+
+.task-item.on-cooldown {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.task-item.clickable:hover {
-  background-color: #e9ecef;
+.task-item.on-cooldown:hover {
+  background-color: transparent;
+  transform: none;
+
 }
 
 .task-item:not(:last-child) {
@@ -157,6 +161,22 @@
   margin-left: auto;
   font-size: 1rem;
   color: #28a745;
+}
+
+.task-cooldown-icon {
+  margin-left: auto;
+  font-size: 1rem;
+  color: #ffc107;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .task-progress-container {

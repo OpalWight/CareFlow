@@ -5,7 +5,7 @@
   background-color: rgba(255, 243, 205, 0.95);
   border: 2px solid #ffc107;
   border-radius: 12px;
-  z-index: 10004; /* Above simulation base, below TaskList */
+  z-index: 14000; /* Above simulation base and modal, below TaskList */
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(8px);
   transition: transform 0.1s ease, box-shadow 0.1s ease;
@@ -20,7 +20,7 @@
 .draggable-supply-collection.dragging {
   transform: scale(1.02);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-  z-index: 10005;
+  z-index: 14001;
 }
 
 .draggable-supply-collection.resizing {
