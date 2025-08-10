@@ -33,7 +33,6 @@ function App() {
         <Route path = "/about-us" element={<AboutUs />} />
         <Route path = "/signup" element={<SignUp />} />
         <Route path = "/chat" element={<ChatPage />} />
-        <Route path = "/learner-home" element={<LearnerHomeFinal />} />
         <Route path = "/combined-learning-hub" element={<CombinedLearningHub />} />
         <Route path = "/help" element={<Help />} />
         <Route path = "/settings" element={<Settings />} />
