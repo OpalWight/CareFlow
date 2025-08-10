@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../api/AuthContext'; // ← Import useAuth hook
 import '../styles/Dashboard.css';
@@ -22,49 +22,38 @@ function Dashboard() {
     const [successMessage, setSuccessMessage] = useState(null); // ✅ ADDED: Success messages
     const [error, setError] = useState(null); // ✅ ADDED: Error handling
 
-    // ✅ Handle OAuth navigation data securely
+    // ✅ Handle OAuth navigation data securely - OPTIMIZED to prevent re-render loops
     useEffect(() => {
-        console.log('🔍 Dashboard mounted, checking for OAuth navigation data...');
-        console.log('📍 Current location state:', location.state ? Object.keys(location.state) : 'None');
+        console.log('🔍 Dashboard OAuth effect running...');
         
-        // Check for secure OAuth navigation data
-        if (location.state?.fromOAuth && location.state?.user) {
-            console.log('🔐 Received secure OAuth user data via navigation!');
+        // Only process if we have OAuth navigation data and haven't processed it yet
+        if (location.state?.fromOAuth && location.state?.user && !user) {
+            console.log('🔐 Processing OAuth user data via navigation...');
             console.log('👤 User data received:', {
                 email: location.state.user?.email,
                 name: location.state.user?.name,
-                id: location.state.user?._id,
-                authMethod: location.state.user?.authMethod
+                id: location.state.user?._id
             });
             
-            console.log('🔄 Calling setUserFromOAuth...');
+            // Set user data
             setUserFromOAuth(location.state.user);
             
+            // Set success message if provided
             if (location.state.successMessage) {
                 console.log('💬 Setting success message:', location.state.successMessage);
                 setSuccessMessage(location.state.successMessage);
             }
             
-            // Clean navigation state for security
+            // Clean navigation state for security (only once)
             console.log('🧹 Cleaning navigation state for security...');
             window.history.replaceState({}, document.title, window.location.pathname);
+            
+        } else if (location.state?.fromOAuth && user) {
+            console.log('✅ OAuth data already processed, user authenticated');
         } else {
-            console.log('⚠️ No OAuth navigation data found:', {
-                hasLocationState: !!location.state,
-                hasFromOAuth: !!location.state?.fromOAuth,
-                hasUser: !!location.state?.user
-            });
-            
-            // If we're clearly coming from an OAuth flow but missing data, show error
-            const urlParams = new URLSearchParams(window.location.search);
-            const hadToken = urlParams.has('token') || window.location.href.includes('auth-callback');
-            
-            if (hadToken && !user && !loading) {
-                console.error('❌ OAuth flow detected but no user data found');
-                setError('Authentication data was lost. Please try logging in again.');
-            }
+            console.log('ℹ️ No OAuth navigation data or already processed');
         }
-    }, [location.state, setUserFromOAuth]);
+    }, [location.state?.fromOAuth, location.state?.user, setUserFromOAuth, user]); // More specific dependencies
 
     // ✅ Initialize edit form when user data is available
     useEffect(() => {
