@@ -45,8 +45,7 @@ const AuthCallbackHandler = () => {
           const data = await response.json();
           setStatus('success');
           
-          console.log('✅ Token exchanged for httpOnly cookie, user:', data.user.email);
-          console.log('🍪 HttpOnly cookie should now be set for future requests');
+          console.log('✅ Token exchanged successfully, user:', data.user.email);
 
           // Clean up URL
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -59,12 +58,14 @@ const AuthCallbackHandler = () => {
             successMessage = 'Great! Your Google account has been linked.';
           }
 
-          // Redirect to dashboard after short delay
-          setTimeout(() => {
-            navigate('/dashboard', { 
-              state: { successMessage }
-            });
-          }, 2000);
+          // Navigate immediately with user data in state (secure)
+          navigate('/dashboard', { 
+            state: { 
+              successMessage,
+              user: data.user, // Pass user data securely via navigation state
+              fromOAuth: true
+            }
+          });
 
         } else {
           throw new Error(`Authentication failed: ${response.status}`);

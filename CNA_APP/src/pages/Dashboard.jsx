@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../api/AuthContext'; // ← Import useAuth hook
 import '../styles/Dashboard.css';
 import Layout from '../components/Layout';
 import ProgressDashboard from '../components/ProgressDashboard';
 
 function Dashboard() {
+    const location = useLocation();
     const {
         user,
         loading,
         logout,
         updateProfile,
         deleteAccount, // ✅ ADDED: Destructure deleteAccount function
-        isAuthenticated
+        isAuthenticated,
+        setUserFromOAuth // For secure OAuth data
     } = useAuth(); // ← Get authentication data
 
     const [editing, setEditing] = useState(false);
@@ -19,28 +22,28 @@ function Dashboard() {
     const [successMessage, setSuccessMessage] = useState(null); // ✅ ADDED: Success messages
     const [error, setError] = useState(null); // ✅ ADDED: Error handling
 
-    // ✅ ADDED: Handle OAuth success messages and initialize edit form
+    // ✅ Handle OAuth navigation data securely
     useEffect(() => {
-        // Handle OAuth success messages from URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const newUser = urlParams.get('newUser');
-        const accountLinked = urlParams.get('accountLinked');
-
-        if (newUser === 'true') {
-            setSuccessMessage('Welcome! Your Google account has been registered successfully.');
-            // Clean up URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-        } else if (accountLinked === 'true') {
-            setSuccessMessage('Great! Your Google account has been linked to your existing account.');
-            // Clean up URL
+        // Check for secure OAuth navigation data
+        if (location.state?.fromOAuth && location.state?.user) {
+            console.log('🔐 Received secure OAuth user data via navigation');
+            setUserFromOAuth(location.state.user);
+            
+            if (location.state.successMessage) {
+                setSuccessMessage(location.state.successMessage);
+            }
+            
+            // Clean navigation state for security
             window.history.replaceState({}, document.title, window.location.pathname);
         }
+    }, [location.state, setUserFromOAuth]);
 
-        // Initialize edit form when user data is available
+    // ✅ Initialize edit form when user data is available
+    useEffect(() => {
         if (user) {
             setEditForm({ name: user.name || '' });
         }
-    }, [user]); // ✅ CHANGED: Depend on user data
+    }, [user]);
 
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
