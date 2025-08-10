@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import API_URL from '../config/apiConfig.js';
 
 // ✅ Step 1: Create the AuthContext - this is the "empty container"
@@ -20,8 +20,8 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // ✅ Set user from OAuth navigation data (secure, temporary)
-    const setUserFromOAuth = (userData) => {
+    // ✅ Set user from OAuth navigation data (secure, temporary) - STABILIZED WITH useCallback
+    const setUserFromOAuth = useCallback((userData) => {
         console.log('✅ setUserFromOAuth called!');
         
         // Validate user data
@@ -51,13 +51,8 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
         
         console.log('📊 Auth state updated - user set, loading false, error cleared');
-        
-        // Try to verify with backend cookies in background (for subsequent requests)
-        setTimeout(() => {
-            console.log('🔄 Starting background verification of cookies...');
-            checkAuth(true); // Skip loading state since user is already set
-        }, 2000);
-    };
+        console.log('✅ OAuth user set successfully - stable authentication achieved');
+    }, []); // Empty dependency array since this should be stable
 
     // ✅ Check if user is authenticated by verifying cookie with backend
     const checkAuth = async (skipLoadingState = false) => {
