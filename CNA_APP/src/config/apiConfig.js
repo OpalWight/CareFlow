@@ -18,20 +18,41 @@ console.log('  DEV:', isDev);
 
 // Robust API URL determination function
 export const getApiUrl = () => {
-  // 1. If VITE_API_URL is a valid URL, use it
+  console.log('🔍 Analyzing environment for API URL...');
+  
+  // 1. If VITE_API_URL is a valid HTTP URL, use it
   if (viteApiUrl && viteApiUrl.startsWith('http')) {
-    console.log('✅ Using VITE_API_URL:', viteApiUrl);
+    console.log('✅ Using valid VITE_API_URL:', viteApiUrl);
     return viteApiUrl;
   }
+  
+  // 2. Log why VITE_API_URL was rejected
+  if (viteApiUrl) {
+    console.log('⚠️ VITE_API_URL rejected (not a valid HTTP URL):', viteApiUrl);
+  } else {
+    console.log('⚠️ VITE_API_URL is not set or empty');
+  }
 
-  // 2. If VITE_API_URL is "development" or invalid, use mode-based logic
+  // 3. Use domain-based detection (more reliable for deployed apps)
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    console.log('🌐 Current hostname:', hostname);
+    
+    if (hostname.includes('vercel.app') || hostname.includes('care-flow')) {
+      const prodUrl = 'https://careflow-ssas.onrender.com';
+      console.log('✅ Using production URL (domain-based):', prodUrl);
+      return prodUrl;
+    }
+  }
+
+  // 4. Fallback to mode-based logic
   if (mode === 'production' || isProd === true) {
     const prodUrl = 'https://careflow-ssas.onrender.com';
     console.log('✅ Using production URL (mode-based):', prodUrl);
     return prodUrl;
   }
 
-  // 3. Default to development
+  // 5. Default to development
   const devUrl = 'http://localhost:3001';
   console.log('✅ Using development URL (fallback):', devUrl);
   return devUrl;

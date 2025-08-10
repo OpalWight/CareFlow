@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import API_URL from '../config/apiConfig.js';
 
 /**
  * 🛡️ SECURITY NOTE: OAuth Callback Handler with Enhanced Security
@@ -86,11 +87,17 @@ const AuthCallbackHandler = () => {
 
         // ✅ HYBRID APPROACH: Exchange temporary token for httpOnly cookie
         console.log('🔄 Starting token exchange...');
-        const API_URL = import.meta.env.VITE_API_URL || 'https://careflow-ssas.onrender.com';
-        console.log('🔍 Using API URL:', API_URL);
+        console.log('🔍 Using corrected API URL:', API_URL);
+        
+        // 🛡️ SAFETY: Final API URL validation
+        let finalApiUrl = API_URL;
+        if (!finalApiUrl || !finalApiUrl.startsWith('http')) {
+          finalApiUrl = 'https://careflow-ssas.onrender.com';
+          console.log('⚠️ API_URL invalid, using safety fallback:', finalApiUrl);
+        }
         
         const requestTime = Date.now();
-        const response = await fetch(`${API_URL}/oauth/exchange-token`, {
+        const response = await fetch(`${finalApiUrl}/oauth/exchange-token`, {
           method: 'POST',
           credentials: 'include', // Important: allows setting cookies
           headers: {
