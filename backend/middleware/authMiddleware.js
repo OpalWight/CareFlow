@@ -7,6 +7,17 @@ const verifyToken = require('../utils/verifyToken');
  * and attaches the authenticated user object to the `req` object.
  */
 const authMiddleware = async (req, res, next) => {
+    // 🍪 COOKIE DEBUGGING: Log all incoming request details
+    console.log('🔍 AUTH MIDDLEWARE DEBUG:');
+    console.log('  - Request origin:', req.get('origin') || 'No origin header');
+    console.log('  - Request host:', req.get('host'));
+    console.log('  - Request method:', req.method);
+    console.log('  - Request URL:', req.originalUrl);
+    console.log('  - User-Agent:', req.get('user-agent')?.substring(0, 100) + '...');
+    console.log('🍪 All incoming cookies:', req.cookies);
+    console.log('🍪 Raw cookie header:', req.get('cookie'));
+    console.log('🍪 authToken present:', !!req.cookies.authToken);
+    
     const token = req.cookies.authToken;
 
     try {

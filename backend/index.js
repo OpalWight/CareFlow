@@ -93,6 +93,29 @@ app.use('/auth', authRoutes);
 app.use('/chat', chatRoutes);
 app.use('/progress', progressRoutes);
 
+// 🍪 COOKIE TEST ENDPOINT
+app.get('/test-cookie', (req, res) => {
+  console.log('🧪 COOKIE TEST ENDPOINT CALLED');
+  console.log('  - Request origin:', req.get('origin') || 'No origin header');
+  console.log('  - All cookies received:', req.cookies);
+  console.log('  - Raw cookie header:', req.get('cookie'));
+  console.log('  - authToken present:', !!req.cookies.authToken);
+  console.log('  - authToken value:', req.cookies.authToken ? 'Present (length: ' + req.cookies.authToken.length + ')' : 'Missing');
+
+  res.json({
+    success: true,
+    message: 'Cookie test endpoint',
+    cookies: req.cookies,
+    rawCookieHeader: req.get('cookie'),
+    authToken: {
+      present: !!req.cookies.authToken,
+      length: req.cookies.authToken ? req.cookies.authToken.length : 0
+    },
+    origin: req.get('origin'),
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Backend server is running!',

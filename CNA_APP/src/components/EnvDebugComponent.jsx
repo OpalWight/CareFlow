@@ -47,6 +47,24 @@ const EnvDebugComponent = () => {
     }
   };
 
+  const testCookieEndpoint = async () => {
+    const apiUrl = getApiUrl();
+    try {
+      console.log('🍪 Testing cookie endpoint...');
+      const response = await fetch(`${apiUrl}/test-cookie`, { 
+        method: 'GET',
+        credentials: 'include'
+      });
+      console.log('🍪 Cookie Test Response:', response.status, response.ok);
+      const data = await response.json();
+      console.log('🍪 Cookie Test Data:', data);
+      return { success: true, status: response.status, data };
+    } catch (error) {
+      console.error('🍪 Cookie Test Error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   if (!isVisible) {
     return (
       <div style={{
@@ -121,10 +139,25 @@ const EnvDebugComponent = () => {
             padding: '4px 8px',
             cursor: 'pointer',
             borderRadius: '3px',
-            fontSize: '10px'
+            fontSize: '10px',
+            marginRight: '5px'
           }}
         >
           Test API Connection
+        </button>
+        <button 
+          onClick={testCookieEndpoint}
+          style={{
+            background: '#FF9800',
+            color: 'white',
+            border: 'none',
+            padding: '4px 8px',
+            cursor: 'pointer',
+            borderRadius: '3px',
+            fontSize: '10px'
+          }}
+        >
+          Test Cookie Endpoint
         </button>
       </div>
 
