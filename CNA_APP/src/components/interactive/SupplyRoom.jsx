@@ -163,9 +163,20 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
       }
     };
 
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && selectedCabinet) {
+        handleBackToRoom();
+      }
+    };
+
     window.addEventListener('taskItemClicked', handleTaskItemClick);
-    return () => window.removeEventListener('taskItemClicked', handleTaskItemClick);
-  }, []);
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('taskItemClicked', handleTaskItemClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedCabinet]);
 
   const pulsateElement = (selector) => {
     const element = document.querySelector(selector);
@@ -187,45 +198,55 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
   };
 
 
-  if (selectedCabinet) {
+  const renderCabinetModal = () => {
+    if (!selectedCabinet) return null;
+    
     const cabinet = cabinetCategories[selectedCabinet];
     return (
-      <div className="cabinet-interior-view">
-        <div className="cabinet-header">
-          <button className="cabinet-back-button" onClick={handleBackToRoom}>
-            ← Back to Supply Room
-          </button>
-          <h2 className="cabinet-title">{cabinet.title}</h2>
-        </div>
+      <>
+        {/* Dark overlay */}
+        <div className="cabinet-overlay" onClick={handleBackToRoom}></div>
         
-        <div className="cabinet-supplies-grid" style={{ backgroundColor: cabinet.color }}>
-          {cabinet.supplies.map((supply, index) => {
-            const position = {
-              top: `${15 + (Math.floor(index / 4) * 20)}%`,
-              left: `${10 + ((index % 4) * 20)}%`
-            };
+        {/* Modal window */}
+        <div className="cabinet-modal">
+          <div className="cabinet-modal-header">
+            <h2 className="cabinet-modal-title">{cabinet.title}</h2>
+            <button className="cabinet-close-button" onClick={handleBackToRoom}>
+              ✕
+            </button>
+          </div>
+          
+          <div className="cabinet-modal-content" style={{ backgroundColor: cabinet.color }}>
+            <div className="cabinet-supplies-grid">
+              {cabinet.supplies.map((supply, index) => {
+                const position = {
+                  top: `${15 + (Math.floor(index / 4) * 20)}%`,
+                  left: `${10 + ((index % 4) * 20)}%`
+                };
+                
+                return (
+                  <div
+                    key={supply.id}
+                    className="cabinet-supply-position"
+                    style={position}
+                  >
+                    <DraggableItem 
+                      id={supply.id}
+                      name={supply.name}
+                    />
+                  </div>
+                );
+              })}
+            </div>
             
-            return (
-              <div
-                key={supply.id}
-                className="cabinet-supply-position"
-                style={position}
-              >
-                <DraggableItem 
-                  id={supply.id}
-                  name={supply.name}
-                />
-              </div>
-            );
-          })}
+            <div className="cabinet-instructions">
+              <p>💡 Drag the supplies you need to the collection area</p>
+            </div>
+          </div>
         </div>
-        
-        <div className="cabinet-instructions">
-          <p>💡 Drag the supplies you need to the collection area</p>
-        </div>
-      </div>
+      </>
     );
-  }
+  };
 
 
   return (
@@ -358,6 +379,9 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
       </div>
 
       <DraggableSupplyCollection collectedSupplies={collectedSupplies} />
+      
+      {/* Render cabinet modal if one is selected */}
+      {renderCabinetModal()}
     </div>
   );
 }

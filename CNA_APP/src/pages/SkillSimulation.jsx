@@ -68,7 +68,7 @@ function SkillSimulation() {
     };
 
     const handleBackToSelection = () => {
-        setSimulationStarted(false);
+        window.location.href = '/learner-home-final';
     };
 
     const getSkillCategory = (skill) => {
