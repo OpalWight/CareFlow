@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import InteractiveScenarioPage from '../components/interactive/InteractiveScenarioPage';
 import '../styles/SkillSimulation.css';
 
 function SkillSimulation() {
     const location = useLocation();
+    const navigate = useNavigate();
     const [selectedSkill, setSelectedSkill] = useState('');
     const [skillId, setSkillId] = useState('');
     const [simulationStarted, setSimulationStarted] = useState(false);
@@ -29,7 +30,7 @@ function SkillSimulation() {
     }, [location]);
 
     const handleBackToHome = () => {
-        window.location.href = '/learner-home-final';
+        navigate('/learner-home-final');
     };
 
     const getSkillId = (skillName) => {
@@ -68,7 +69,7 @@ function SkillSimulation() {
     };
 
     const handleBackToSelection = () => {
-        window.location.href = '/learner-home-final';
+        navigate('/learner-home-final');
     };
 
     const getSkillCategory = (skill) => {
