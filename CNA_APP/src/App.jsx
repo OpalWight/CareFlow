@@ -15,6 +15,7 @@ import Settings from './pages/Settings';
 import LearnerHomeFinal from './pages/LearnerHomeFinal';
 import SkillSimulation from './pages/SkillSimulation';
 import EnvDebugComponent from './components/EnvDebugComponent';
+import AuthCallbackHandler from './components/AuthCallbackHandler';
 
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
         <Route path="/resources" element={<Resources />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path = "/dashboard" element={<Dashboard />} />
+        <Route path = "/auth-callback" element={<AuthCallbackHandler />} />
         <Route path = "/about-us" element={<AboutUs />} />
         <Route path = "/signup" element={<SignUp />} />
         <Route path = "/chat" element={<ChatPage />} />
