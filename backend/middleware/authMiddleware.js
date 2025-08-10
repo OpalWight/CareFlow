@@ -18,7 +18,14 @@ const authMiddleware = async (req, res, next) => {
     console.log('🍪 Raw cookie header:', req.get('cookie'));
     console.log('🍪 authToken present:', !!req.cookies.authToken);
     
+    // Get token from httpOnly cookie (secure approach)
     const token = req.cookies.authToken;
+    
+    if (token) {
+      console.log('🍪 Using token from httpOnly cookie');
+    } else {
+      console.log('🚫 No authToken cookie found');
+    }
 
     try {
         const user = await verifyToken(token);
