@@ -34,6 +34,16 @@ export const AuthProvider = ({ children }) => {
             
             console.log('🔍 DEBUG: Using API URL:', API_URL);
             
+            // 🍪 COOKIE DEBUGGING: Check all cookies before making request
+            console.log('🍪 DEBUG: All document cookies:', document.cookie);
+            console.log('🍪 DEBUG: Cookie count:', document.cookie.split(';').length);
+            console.log('🍪 DEBUG: Individual cookies:');
+            document.cookie.split(';').forEach((cookie, index) => {
+                const [name, value] = cookie.trim().split('=');
+                console.log(`  Cookie ${index + 1}: ${name} = ${value ? value.substring(0, 50) + '...' : 'empty'}`);
+            });
+            
+            console.log('🔍 DEBUG: Making request to verify endpoint...');
             const response = await fetch(`${API_URL}/oauth/verify`, {
                 method: 'GET',
                 credentials: 'include', // ✅ This sends HTTP-only cookies automatically
@@ -43,6 +53,9 @@ export const AuthProvider = ({ children }) => {
                 // ❌ NO Authorization header needed - cookies handle this!
             });
 
+            console.log('🔍 DEBUG: Response status:', response.status);
+            console.log('🔍 DEBUG: Response headers:', [...response.headers.entries()]);
+            
             if (response.ok) {
                 const data = await response.json();
                 setUser(data.user);
@@ -55,6 +68,7 @@ export const AuthProvider = ({ children }) => {
                 // We log it but don't set a user-facing error unless they were previously logged in.
                 if (response.status === 401 || response.status === 403) {
                     console.log('❌ Authentication failed (invalid/expired token), clearing session.');
+                    console.log('❌ DEBUG: Response body:', await response.text());
                     if (user) { // Only show error if a user was already logged in.
                         setError('Session expired. Please log in again.');
                     }
