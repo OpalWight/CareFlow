@@ -103,6 +103,7 @@
   transform: translateX(2px);
 }
 
+
 .task-item.on-cooldown {
   opacity: 0.6;
   cursor: not-allowed;
@@ -111,6 +112,7 @@
 .task-item.on-cooldown:hover {
   background-color: transparent;
   transform: none;
+
 }
 
 .task-item:not(:last-child) {
