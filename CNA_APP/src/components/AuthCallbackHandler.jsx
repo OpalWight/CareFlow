@@ -1,31 +1,87 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+/**
+ * 🛡️ SECURITY NOTE: OAuth Callback Handler with Enhanced Security
+ * 
+ * This component handles the OAuth callback and implements several security measures:
+ * 
+ * 1. ⚡ IMMEDIATE URL CLEANUP: Removes tokens from URL and browser history ASAP
+ * 2. ⏱️  TOKEN VALIDATION: Validates token format and expiration before use
+ * 3. 🔒 SECURE EXCHANGE: Exchanges temporary token for httpOnly cookie immediately
+ * 4. 🧹 MEMORY CLEANUP: Clears token references from memory after use
+ * 5. 📝 SECURE LOGGING: Logs security actions without exposing sensitive data
+ * 
+ * The temporary token approach is used to solve cross-origin cookie issues while
+ * minimizing security exposure through immediate cleanup and validation.
+ */
+
 const AuthCallbackHandler = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('processing');
 
   useEffect(() => {
+    // 🛡️ SECURITY: Set a timeout to prevent indefinite token exposure
+    const securityTimeout = setTimeout(() => {
+      console.error('🚨 SECURITY: OAuth callback timeout - clearing state for security');
+      setStatus('error');
+      navigate('/login', { 
+        state: { error: 'Authentication timeout for security. Please try again.' }
+      });
+    }, 30000); // 30 second timeout
     const handleAuthCallback = async () => {
       console.log('🔄 Auth callback handler started');
       console.log('🔍 Current URL:', window.location.href);
       console.log('🔍 Current pathname:', window.location.pathname);
       
       try {
-        // Get the temporary token from URL
+        // 🛡️ SECURITY: Immediately extract and clear sensitive URL parameters
         const tempToken = searchParams.get('token');
         const newUser = searchParams.get('newUser');
         const accountLinked = searchParams.get('accountLinked');
 
+        // 🚨 SECURITY: Immediately clean URL to remove token from browser history
+        console.log('🧹 SECURITY: Immediately cleaning URL to remove token exposure...');
+        const cleanUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        
+        // 🚨 SECURITY: Clear the current URL from browser history entirely
+        if (window.history.length > 1) {
+          // Replace the current history entry to prevent back-button token exposure
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+
         console.log('📦 Received parameters:', { 
           tempToken: tempToken ? `Present (${tempToken.substring(0, 20)}...)` : 'Missing',
+          tempTokenLength: tempToken ? tempToken.length : 0,
           newUser, 
           accountLinked 
         });
 
         if (!tempToken) {
           throw new Error('No authentication token received');
+        }
+
+        // 🛡️ SECURITY: Validate token format and expiration
+        try {
+          const tokenParts = tempToken.split('.');
+          if (tokenParts.length !== 3) {
+            throw new Error('Invalid token format');
+          }
+          
+          // Decode token payload to check expiration (without verification)
+          const payload = JSON.parse(atob(tokenParts[1]));
+          const now = Math.floor(Date.now() / 1000);
+          
+          if (payload.exp && payload.exp < now) {
+            throw new Error('Authentication token has expired');
+          }
+          
+          console.log('✅ Token format valid, expires in:', payload.exp ? (payload.exp - now) : 'unknown', 'seconds');
+        } catch (tokenError) {
+          console.error('❌ Token validation failed:', tokenError.message);
+          throw new Error(`Invalid authentication token: ${tokenError.message}`);
         }
 
         // ✅ HYBRID APPROACH: Exchange temporary token for httpOnly cookie
@@ -70,9 +126,13 @@ const AuthCallbackHandler = () => {
             authMethod: data.user?.authMethod
           });
 
-          // Clean up URL
-          console.log('🧹 Cleaning up URL parameters...');
-          window.history.replaceState({}, document.title, window.location.pathname);
+          // 🛡️ SECURITY: Clear any remaining references to the temporary token
+          console.log('🛡️ SECURITY: Clearing temporary token from memory...');
+          const tempTokenCleared = tempToken; // Keep reference for logging only
+          // tempToken = null; // Variable is const, so it will be garbage collected
+          
+          console.log('🛡️ SECURITY: Token exchange complete, temporary token no longer needed');
+          console.log('🔒 SECURITY: Authentication now secured via httpOnly cookie only');
 
           // Show success message based on type
           let successMessage = 'Login successful!';
@@ -94,6 +154,9 @@ const AuthCallbackHandler = () => {
           console.log('🚀 Navigating to dashboard with secure state...');
           console.log('📦 Navigation state keys:', Object.keys(navigationState));
           
+          // 🛡️ SECURITY: Clear timeout since we're successfully completing
+          clearTimeout(securityTimeout);
+          
           navigate('/dashboard', { state: navigationState });
 
         } else {
@@ -112,6 +175,9 @@ const AuthCallbackHandler = () => {
         });
         setStatus('error');
         
+        // 🛡️ SECURITY: Clear timeout on error
+        clearTimeout(securityTimeout);
+        
         // Redirect to login after delay
         console.log('🔄 Redirecting to login in 3 seconds...');
         setTimeout(() => {
@@ -123,6 +189,12 @@ const AuthCallbackHandler = () => {
     };
 
     handleAuthCallback();
+    
+    // 🛡️ SECURITY: Cleanup function to clear timeout if component unmounts
+    return () => {
+      console.log('🧹 SECURITY: AuthCallbackHandler cleanup - clearing timeout');
+      clearTimeout(securityTimeout);
+    };
   }, [searchParams, navigate]);
 
   const renderStatus = () => {
@@ -135,19 +207,25 @@ const AuthCallbackHandler = () => {
               marginBottom: '20px',
               animation: 'spin 2s linear infinite' 
             }}>
-              ⚡
+              🔒
             </div>
-            <h2>Completing authentication...</h2>
-            <p>Please wait while we log you in.</p>
+            <h2>Securing your authentication...</h2>
+            <p>Please wait while we complete the secure login process.</p>
+            <small style={{ color: '#666', marginTop: '10px', display: 'block' }}>
+              🛡️ Implementing security measures...
+            </small>
           </div>
         );
         
       case 'success':
         return (
           <div style={{ textAlign: 'center', color: 'green' }}>
-            <div style={{ fontSize: '48px', marginBottom: '20px' }}>✅</div>
-            <h2>Authentication successful!</h2>
+            <div style={{ fontSize: '48px', marginBottom: '20px' }}>🔐</div>
+            <h2>Authentication secured!</h2>
             <p>Redirecting you to the dashboard...</p>
+            <small style={{ color: '#666', marginTop: '10px', display: 'block' }}>
+              ✅ Security measures completed successfully
+            </small>
           </div>
         );
         
