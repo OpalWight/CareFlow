@@ -14,18 +14,38 @@ dotenv.config();
 const { OAuth2Client } = require('google-auth-library');
 
 // Smart frontend URL detection utility
-const getFrontendUrl = () => {
+const getFrontendUrl = (req = null) => {
   // 1. Use explicit FRONTEND_URL if set and valid
   if (process.env.FRONTEND_URL && process.env.FRONTEND_URL.startsWith('http')) {
     return process.env.FRONTEND_URL;
   }
   
-  // 2. Use production mode detection
+  // 2. Try to detect from request origin (for dynamic Vercel URLs)
+  if (req && req.get('origin')) {
+    const origin = req.get('origin');
+    if (origin.includes('vercel.app') && origin.includes('care-flow')) {
+      console.log('🔍 Detected frontend URL from origin:', origin);
+      return origin;
+    }
+  }
+  
+  // 3. Try to detect from referer header
+  if (req && req.get('referer')) {
+    const referer = req.get('referer');
+    if (referer.includes('vercel.app') && referer.includes('care-flow')) {
+      const url = new URL(referer);
+      const detected = `${url.protocol}//${url.host}`;
+      console.log('🔍 Detected frontend URL from referer:', detected);
+      return detected;
+    }
+  }
+  
+  // 4. Use production mode detection (fallback)
   if (process.env.NODE_ENV === 'production') {
     return 'https://care-flow-ten.vercel.app';
   }
   
-  // 3. Fallback to development
+  // 5. Fallback to development
   return 'http://localhost:5173';
 };
 
@@ -96,12 +116,12 @@ router.get('/', async (req, res) => {
   if (error) {
     console.error('❌ OAuth error from Google:', error);
     // Redirect with error, but do NOT include tokens in URL
-    return res.redirect(`${getFrontendUrl()}/login?error=${encodeURIComponent(error)}`);
+    return res.redirect(`${getFrontendUrl(req)}/login?error=${encodeURIComponent(error)}`);
   }
 
   if (!code) {
     console.error('❌ No authorization code provided');
-    return res.redirect(`${getFrontendUrl()}/login?error=no_code`);
+    return res.redirect(`${getFrontendUrl(req)}/login?error=no_code`);
   }
 
   try {
@@ -268,7 +288,7 @@ router.get('/', async (req, res) => {
 
     // ✅ ALTERNATIVE APPROACH: Redirect with temporary token in URL
     // Since cross-origin cookies are unreliable, use a temporary token approach
-    const frontendUrl = getFrontendUrl();
+    const frontendUrl = getFrontendUrl(req);
     console.log('🔍 DEBUG: Using frontend URL for redirect:', frontendUrl);
     
     // Create a temporary token that expires in 30 seconds
@@ -299,7 +319,7 @@ router.get('/', async (req, res) => {
     }
 
     // Still redirect for errors as per your original logic, but without tokens
-    return res.redirect(`${getFrontendUrl()}/login?error=${clientErrorMessage}`);
+    return res.redirect(`${getFrontendUrl(req)}/login?error=${clientErrorMessage}`);
   }
 });
 
