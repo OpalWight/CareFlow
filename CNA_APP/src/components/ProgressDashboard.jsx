@@ -1,22 +1,33 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../api/AuthContext';
 import progressService from '../api/progressService';
 import CNA_SKILL_SCENARIOS from '../data/cnaSkillScenarios';
 import '../styles/ProgressDashboard.css';
 
 const ProgressDashboard = () => {
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
   const [progressSummary, setProgressSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const fetchProgressSummary = async () => {
+    // 🛡️ GUARD: Only fetch if user is authenticated and stable
+    if (!isAuthenticated || authLoading || !user) {
+      console.log('⏳ Skipping progress fetch - user not authenticated or still loading');
+      setLoading(false);
+      return;
+    }
+
     try {
+      console.log('📊 Fetching progress summary for authenticated user:', user.email);
       setLoading(true);
       setError(null);
       const summary = await progressService.getProgressSummary();
       setProgressSummary(summary);
+      console.log('✅ Progress summary loaded successfully');
     } catch (err) {
-      console.error('Error fetching progress summary:', err);
+      console.error('❌ Error fetching progress summary:', err);
       setError('Failed to load progress data');
     } finally {
       setLoading(false);
@@ -24,26 +35,47 @@ const ProgressDashboard = () => {
   };
 
   useEffect(() => {
+    console.log('🔄 ProgressDashboard effect - auth state:', { 
+      isAuthenticated, 
+      authLoading, 
+      hasUser: !!user 
+    });
     fetchProgressSummary();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, isAuthenticated, authLoading, user]); // Added auth dependencies
 
   // Function to manually refresh data
   const refreshData = () => {
     setRefreshTrigger(prev => prev + 1);
   };
 
-  // Set up auto-refresh and handle visibility changes
+  // Set up auto-refresh and handle visibility changes - REDUCED FREQUENCY
   useEffect(() => {
+    // 🔧 FIXED: Only set up auto-refresh if user is authenticated and stable
+    if (!isAuthenticated || authLoading || !user) {
+      console.log('⏸️ Skipping auto-refresh setup - user not stable');
+      return;
+    }
+
+    console.log('⏰ Setting up auto-refresh for authenticated user');
+    
+    // Increased interval from 30s to 5 minutes to reduce aggressive refreshing
     const interval = setInterval(() => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && isAuthenticated && user) {
+        console.log('🔄 Auto-refresh triggered');
         refreshData();
       }
-    }, 30000);
+    }, 300000); // 5 minutes instead of 30 seconds
 
-    // Refresh when user returns to tab
+    // Refresh when user returns to tab (but with debouncing)
+    let visibilityTimeout;
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        refreshData();
+      if (document.visibilityState === 'visible' && isAuthenticated && user) {
+        // Debounce visibility changes to prevent rapid refreshes
+        clearTimeout(visibilityTimeout);
+        visibilityTimeout = setTimeout(() => {
+          console.log('👁️ Tab visibility refresh triggered');
+          refreshData();
+        }, 1000); // 1 second debounce
       }
     };
 
@@ -51,9 +83,11 @@ const ProgressDashboard = () => {
 
     return () => {
       clearInterval(interval);
+      clearTimeout(visibilityTimeout);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      console.log('🧹 Auto-refresh cleanup completed');
     };
-  }, []);
+  }, [isAuthenticated, authLoading, user]); // Depend on auth state
 
   const formatDuration = (seconds) => {
     if (!seconds || seconds === 0) return '0 minutes';
