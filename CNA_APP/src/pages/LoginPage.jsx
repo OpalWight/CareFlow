@@ -24,28 +24,9 @@ function LoginPage() {
             return;
         }
 
-        // ✅ SIMPLIFIED: Only handle OAuth error parameters (no token parsing needed)
+        // ✅ Handle OAuth error redirects only (success handled by AuthCallbackHandler)
         const urlParams = new URLSearchParams(window.location.search);
         const errorParam = urlParams.get('error');
-        const newUser = urlParams.get('newUser');
-        const accountLinked = urlParams.get('accountLinked');
-
-        // ✅ ADDED: Handle success messages from OAuth redirect
-        if (newUser === 'true') {
-            setSuccessMessage('Welcome! Your Google account has been registered successfully.');
-            // Clean up URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-            // Redirect to dashboard after showing message
-            setTimeout(() => {
-                window.location.href = '/dashboard';
-            }, 2000);
-        } else if (accountLinked === 'true') {
-            setSuccessMessage('Great! Your Google account has been linked to your existing account.');
-            window.history.replaceState({}, document.title, window.location.pathname);
-            setTimeout(() => {
-                window.location.href = '/dashboard';
-            }, 2000);
-        }
 
         // Handle OAuth errors
         if (errorParam) {
