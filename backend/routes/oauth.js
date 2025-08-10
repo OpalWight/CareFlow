@@ -250,7 +250,7 @@ router.get('/', async (req, res) => {
     res.cookie('authToken', jwtToken, {
       httpOnly: true,              // Prevents client-side JavaScript access (XSS protection)
       secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
-      sameSite: 'lax',            // CSRF protection ('lax' or 'strict')
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Cross-site cookies for production
       expires: cookieExpiration,   // Cookie expiration matching JWT expiration
       path: '/'                   // Cookie available for entire application
     });
