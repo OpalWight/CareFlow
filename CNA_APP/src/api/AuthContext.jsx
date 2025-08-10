@@ -20,11 +20,28 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // ✅ Set user from OAuth navigation data (secure, temporary)
+    const setUserFromOAuth = (userData) => {
+        console.log('✅ Setting user from secure OAuth navigation data:', userData.email);
+        setUser(userData);
+        setError(null);
+        setLoading(false);
+        
+        // Try to verify with backend cookies in background (for subsequent requests)
+        setTimeout(() => {
+            console.log('🔄 Background verification of cookies...');
+            checkAuth(true); // Skip loading state since user is already set
+        }, 2000);
+    };
+
     // ✅ Check if user is authenticated by verifying cookie with backend
-    const checkAuth = async () => {
+    const checkAuth = async (skipLoadingState = false) => {
         try {
-            setLoading(true);
+            if (!skipLoadingState) {
+                setLoading(true);
+            }
             console.log('🔍 Checking authentication status...');
+            
             console.log('🔍 DEBUG: Frontend environment detection:');
             console.log('  - VITE_API_URL:', import.meta.env.VITE_API_URL);
             console.log('  - VITE_ENV:', import.meta.env.VITE_ENV);
@@ -84,7 +101,9 @@ export const AuthProvider = ({ children }) => {
             setError(`Network error: ${err.message}`);
             return false;
         } finally {
-            setLoading(false);
+            if (!skipLoadingState) {
+                setLoading(false);
+            }
         }
     };
 
@@ -347,6 +366,7 @@ export const AuthProvider = ({ children }) => {
         refreshUser,
         updateProfile,
         deleteAccount,
+        setUserFromOAuth, // For secure OAuth navigation data
         
         // Utility functions
         hasRole: (role) => user?.role === role,
