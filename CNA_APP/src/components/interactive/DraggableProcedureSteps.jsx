@@ -1,20 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import '../../styles/interactive/TaskList.css';
+import '../../styles/interactive/DraggableProcedureSteps.css';
 
-function TaskList({ tasks }) {
-  const [position, setPosition] = useState({ x: 20, y: 20 });
-  const [size, setSize] = useState({ width: 300, height: 400 });
+function DraggableProcedureSteps({ steps, completedSteps, getActionButtons }) {
+  const [position, setPosition] = useState({ x: window.innerWidth - 420, y: window.innerHeight - 450 }); // Bottom-right
+  const [size, setSize] = useState({ width: 400, height: 350 });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0, corner: '' });
-  const [clickCooldowns, setClickCooldowns] = useState(new Set());
   const containerRef = useRef(null);
 
   const handleMouseDown = (e) => {
-    // Only start drag if clicking on the container itself or title, not on task items, resize handle, or minimize button
-    if (e.target.closest('.task-item') || e.target.closest('.task-progress-container') || e.target.closest('.resize-handle') || e.target.closest('.minimize-button')) {
+    // Only start drag if clicking on the container header, not on action buttons, resize handle, or minimize button
+    if (e.target.closest('.action-button') || e.target.closest('.resize-handle') || e.target.closest('.minimize-button')) {
       return;
     }
     
@@ -70,18 +69,18 @@ function TaskList({ tasks }) {
       const { corner } = resizeStart;
       
       if (corner.includes('right')) {
-        newWidth = Math.max(250, Math.min(800, resizeStart.width + deltaX));
+        newWidth = Math.max(300, Math.min(800, resizeStart.width + deltaX));
       }
       if (corner.includes('left')) {
-        newWidth = Math.max(250, Math.min(800, resizeStart.width - deltaX));
-        newX = Math.min(position.x + deltaX, position.x + resizeStart.width - 250);
+        newWidth = Math.max(300, Math.min(800, resizeStart.width - deltaX));
+        newX = Math.min(position.x + deltaX, position.x + resizeStart.width - 300);
       }
       if (corner.includes('bottom')) {
-        newHeight = Math.max(200, Math.min(600, resizeStart.height + deltaY));
+        newHeight = Math.max(250, Math.min(600, resizeStart.height + deltaY));
       }
       if (corner.includes('top')) {
-        newHeight = Math.max(200, Math.min(600, resizeStart.height - deltaY));
-        newY = Math.min(position.y + deltaY, position.y + resizeStart.height - 200);
+        newHeight = Math.max(250, Math.min(600, resizeStart.height - deltaY));
+        newY = Math.min(position.y + deltaY, position.y + resizeStart.height - 250);
       }
       
       setSize({ width: newWidth, height: newHeight });
@@ -105,37 +104,12 @@ function TaskList({ tasks }) {
     }
   }, [isDragging, isResizing, dragStart, resizeStart]);
 
-  const handleTaskClick = (task) => {
-    // Don't trigger if the task is already completed or on cooldown
-    if (task.completed || clickCooldowns.has(task.id)) return;
-    
-    // Add task to cooldown
-    setClickCooldowns(prev => new Set([...prev, task.id]));
-    
-    // Remove from cooldown after animation duration (6 seconds)
-    setTimeout(() => {
-      setClickCooldowns(prev => {
-        const newCooldowns = new Set([...prev]);
-        newCooldowns.delete(task.id);
-        return newCooldowns;
-      });
-    }, 6000);
-    
-    // Emit a custom event that can be caught by parent components
-    const event = new CustomEvent('taskItemClicked', { 
-      detail: { 
-        taskId: task.id,
-        taskName: task.name,
-        task: task
-      } 
-    });
-    window.dispatchEvent(event);
-  };
+  const isStepCompleted = (stepId) => completedSteps.includes(stepId);
 
   return (
     <div 
       ref={containerRef}
-      className={`task-list-container ${isDragging ? 'dragging' : ''} ${isResizing ? 'resizing' : ''} ${isMinimized ? 'minimized' : ''}`}
+      className={`draggable-procedure-steps ${isDragging ? 'dragging' : ''} ${isResizing ? 'resizing' : ''} ${isMinimized ? 'minimized' : ''}`}
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -144,9 +118,9 @@ function TaskList({ tasks }) {
       }}
       onMouseDown={handleMouseDown}
     >
-      <div className="task-list-header">
-        <h3 className="task-list-title">
-          📋 Item Checklist
+      <div className="procedure-steps-header">
+        <h3 className="procedure-steps-title">
+          📋 Procedure Steps
         </h3>
         <button 
           className="minimize-button"
@@ -159,50 +133,41 @@ function TaskList({ tasks }) {
       
       {!isMinimized && (
         <>
-          {tasks.length === 0 ? (
-            <div className="task-list-empty">
-              No tasks available
-            </div>
-          ) : (
-            <ul className="task-list">
-              {tasks.map((task, index) => (
-                <li
-                  key={task.id}
-                  className={`task-item ${clickCooldowns.has(task.id) ? 'on-cooldown' : ''}`}
-                  onClick={() => handleTaskClick(task)}
+          <div className="procedure-steps-content">
+            <ol className="procedure-steps-list">
+              {steps.map((step, index) => (
+                <li 
+                  key={step.id} 
+                  className={`procedure-step-item ${isStepCompleted(step.id) ? 'completed-step' : 'pending-step'}`}
                 >
-                  <div className={`task-indicator ${task.completed ? 'completed' : 'pending'}`}>
-                    {task.completed ? '✓' : index + 1}
+                  <div className="step-content">
+                    <span className="step-number">
+                      {isStepCompleted(step.id) ? '✅' : `${index + 1}.`}
+                    </span>
+                    <span className="step-text">
+                      {step.name}
+                    </span>
                   </div>
-                  
-                  <span className={`task-text ${task.completed ? 'completed' : 'pending'}`}>
-                    {task.name}
-                  </span>
-                  
-                  {task.completed && (
-                    <span className="task-completed-icon">
-                      ✅
-                    </span>
-                  )}
-                  
-                  {clickCooldowns.has(task.id) && (
-                    <span className="task-cooldown-icon">
-                      ⏳
-                    </span>
+                  {getActionButtons && getActionButtons(step) && (
+                    <div className="step-action-button">
+                      {getActionButtons(step)}
+                    </div>
                   )}
                 </li>
               ))}
-            </ul>
-          )}
+            </ol>
+          </div>
           
-          <div className="task-progress-container">
-            <strong>Progress:</strong> {tasks.filter(t => t.completed).length} of {tasks.length} Items Collected
-            
-            <div className="task-progress-bar">
+          <div className="procedure-progress">
+            <div className="progress-text">
+              Progress: {completedSteps.length} / {steps.length} steps completed
+            </div>
+            <div className="progress-bar">
               <div 
-                className="task-progress-fill"
+                className="progress-fill"
                 style={{
-                  width: `${tasks.length > 0 ? (tasks.filter(t => t.completed).length / tasks.length) * 100 : 0}%`
+                  width: `${(completedSteps.length / steps.length) * 100}%`,
+                  backgroundColor: completedSteps.length === steps.length ? '#4caf50' : '#2196f3'
                 }}
               />
             </div>
@@ -223,4 +188,4 @@ function TaskList({ tasks }) {
   );
 }
 
-export default TaskList;
+export default DraggableProcedureSteps;
