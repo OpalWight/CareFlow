@@ -12,7 +12,7 @@ const setAuthCookie = (res, token) => {
     res.cookie('authToken', token, {
         httpOnly: true,              // Prevents client-side JavaScript access (XSS protection)
         secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
-        sameSite: 'lax',             // Provides a balance of security and usability for CSRF protection
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Cross-site cookies for production
         expires: cookieExpiration,   // Sets a persistent cookie
         path: '/'                    // Cookie is available for the entire application
     });
@@ -30,7 +30,7 @@ const clearAuthCookie = (res) => {
     res.clearCookie('authToken', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/'
     });
     
@@ -48,7 +48,7 @@ const clearAuthCookie = (res) => {
     res.cookie('authToken', '', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
         expires: new Date(0) // Set to expire immediately
     });
