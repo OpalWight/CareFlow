@@ -14,7 +14,6 @@ import Help from './pages/Help';
 import Settings from './pages/Settings';
 import LearnerHomeFinal from './pages/LearnerHomeFinal';
 import SkillSimulation from './pages/SkillSimulation';
-import EnvDebugComponent from './components/EnvDebugComponent';
 import AuthCallbackHandler from './components/AuthCallbackHandler';
 
 
@@ -22,7 +21,6 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <EnvDebugComponent />
         <Routes>
           <Route path="/" element={<LandingPage />} />
         <Route path="/flashcards" element={<Flashcards />} />
