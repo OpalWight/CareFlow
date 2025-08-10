@@ -22,14 +22,39 @@ export const AuthProvider = ({ children }) => {
 
     // ✅ Set user from OAuth navigation data (secure, temporary)
     const setUserFromOAuth = (userData) => {
-        console.log('✅ Setting user from secure OAuth navigation data:', userData.email);
+        console.log('✅ setUserFromOAuth called!');
+        
+        // Validate user data
+        if (!userData) {
+            console.error('❌ setUserFromOAuth: No user data provided');
+            setError('Invalid user data received from OAuth');
+            setLoading(false);
+            return;
+        }
+        
+        if (!userData.email || !userData._id) {
+            console.error('❌ setUserFromOAuth: Invalid user data structure:', userData);
+            setError('Incomplete user data received from OAuth');
+            setLoading(false);
+            return;
+        }
+        
+        console.log('👤 Valid user data to set:', {
+            email: userData.email,
+            name: userData.name,
+            id: userData._id,
+            authMethod: userData.authMethod
+        });
+        
         setUser(userData);
         setError(null);
         setLoading(false);
         
+        console.log('📊 Auth state updated - user set, loading false, error cleared');
+        
         // Try to verify with backend cookies in background (for subsequent requests)
         setTimeout(() => {
-            console.log('🔄 Background verification of cookies...');
+            console.log('🔄 Starting background verification of cookies...');
             checkAuth(true); // Skip loading state since user is already set
         }, 2000);
     };
@@ -342,9 +367,19 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // ✅ Check authentication when component mounts
+    // ✅ Check authentication when component mounts (skip on auth callback route)
     useEffect(() => {
         console.log('🏁 AuthProvider initializing...');
+        
+        // 🚨 FIX: Skip checkAuth on OAuth callback route to prevent race condition
+        const currentPath = window.location.pathname;
+        if (currentPath === '/auth-callback') {
+            console.log('🚫 Skipping auth check on OAuth callback route to prevent race condition');
+            setLoading(false);
+            return;
+        }
+        
+        console.log('✅ Running auth check for path:', currentPath);
         checkAuth();
     }, []);
 
