@@ -24,17 +24,45 @@ function Dashboard() {
 
     // ✅ Handle OAuth navigation data securely
     useEffect(() => {
+        console.log('🔍 Dashboard mounted, checking for OAuth navigation data...');
+        console.log('📍 Current location state:', location.state ? Object.keys(location.state) : 'None');
+        
         // Check for secure OAuth navigation data
         if (location.state?.fromOAuth && location.state?.user) {
-            console.log('🔐 Received secure OAuth user data via navigation');
+            console.log('🔐 Received secure OAuth user data via navigation!');
+            console.log('👤 User data received:', {
+                email: location.state.user?.email,
+                name: location.state.user?.name,
+                id: location.state.user?._id,
+                authMethod: location.state.user?.authMethod
+            });
+            
+            console.log('🔄 Calling setUserFromOAuth...');
             setUserFromOAuth(location.state.user);
             
             if (location.state.successMessage) {
+                console.log('💬 Setting success message:', location.state.successMessage);
                 setSuccessMessage(location.state.successMessage);
             }
             
             // Clean navigation state for security
+            console.log('🧹 Cleaning navigation state for security...');
             window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+            console.log('⚠️ No OAuth navigation data found:', {
+                hasLocationState: !!location.state,
+                hasFromOAuth: !!location.state?.fromOAuth,
+                hasUser: !!location.state?.user
+            });
+            
+            // If we're clearly coming from an OAuth flow but missing data, show error
+            const urlParams = new URLSearchParams(window.location.search);
+            const hadToken = urlParams.has('token') || window.location.href.includes('auth-callback');
+            
+            if (hadToken && !user && !loading) {
+                console.error('❌ OAuth flow detected but no user data found');
+                setError('Authentication data was lost. Please try logging in again.');
+            }
         }
     }, [location.state, setUserFromOAuth]);
 
