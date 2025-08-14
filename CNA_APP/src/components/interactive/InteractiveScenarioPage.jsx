@@ -143,7 +143,7 @@ const SKILL_SUPPLIES = {
 // Default to hand hygiene skill for demo
 const DEFAULT_SKILL = 'hand-hygiene';
 
-function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillName, skillCategory }) {
+function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillName, skillCategory, showHints = true }) {
   const [currentStep, setCurrentStep] = useState(SCENARIO_STEPS.GATHERING_SUPPLIES);
   const [supplies, setSupplies] = useState(SKILL_SUPPLIES[skillId] || SKILL_SUPPLIES[DEFAULT_SKILL]);
   const [collectedSupplies, setCollectedSupplies] = useState([]);
@@ -495,7 +495,7 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
         </div>
 
         {/* Floating Components */}
-        <TaskList tasks={getCurrentTasks()} />
+        {showHints && <TaskList tasks={getCurrentTasks()} />}
 
         {/* Footer */}
         <div className="scenario-footer">

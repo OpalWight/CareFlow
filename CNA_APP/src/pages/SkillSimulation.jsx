@@ -10,6 +10,8 @@ function SkillSimulation() {
     const [selectedSkill, setSelectedSkill] = useState('');
     const [skillId, setSkillId] = useState('');
     const [simulationStarted, setSimulationStarted] = useState(false);
+    const [showInstructionScreen, setShowInstructionScreen] = useState(false);
+    const [showHints, setShowHints] = useState(true);
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -26,6 +28,7 @@ function SkillSimulation() {
         } else if (skill) {
             const convertedId = getSkillId(decodeURIComponent(skill));
             setSkillId(convertedId);
+            setShowInstructionScreen(true);
         }
     }, [location]);
 
@@ -68,6 +71,18 @@ function SkillSimulation() {
         }
     };
 
+    const handleNormalMode = () => {
+        setShowHints(true);
+        setShowInstructionScreen(false);
+        setSimulationStarted(true);
+    };
+
+    const handleNoHints = () => {
+        setShowHints(false);
+        setShowInstructionScreen(false);
+        setSimulationStarted(true);
+    };
+
     const handleBackToSelection = () => {
         navigate('/learner-home-final');
     };
@@ -106,14 +121,15 @@ function SkillSimulation() {
 
     const skillCategory = selectedSkill ? getSkillCategory(selectedSkill) : null;
 
-    // If skillId is provided directly in URL or simulation is started, render full-screen InteractiveScenarioPage
-    if ((simulationStarted || skillId) && selectedSkill) {
+    // If simulation is started or skillId is provided directly in URL, render full-screen InteractiveScenarioPage
+    if (simulationStarted && selectedSkill && skillId) {
         return (
             <InteractiveScenarioPage 
                 skillId={skillId} 
                 onBackToHub={handleBackToSelection}
                 skillName={selectedSkill}
                 skillCategory={skillCategory}
+                showHints={showHints}
             />
         );
     }
@@ -145,6 +161,41 @@ function SkillSimulation() {
                         >
                             Go to Learning Hub
                         </button>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    // Show instruction screen when skill is selected but simulation hasn't started
+    if (showInstructionScreen && selectedSkill) {
+        return (
+            <Layout>
+                <div className="skill-simulation-container">
+                    <button 
+                        className="back-button"
+                        onClick={handleBackToHome}
+                    >
+                        ← Back to Learning Hub
+                    </button>
+
+                    <div className="instruction-screen">
+                        <h1 className="instruction-heading">Step 1, Find Materials!</h1>
+                        
+                        <div className="instruction-buttons">
+                            <button 
+                                className="instruction-button no-hints-button"
+                                onClick={handleNoHints}
+                            >
+                                No Hints
+                            </button>
+                            <button 
+                                className="instruction-button normal-mode-button"
+                                onClick={handleNormalMode}
+                            >
+                                Normal Mode
+                            </button>
+                        </div>
                     </div>
                 </div>
             </Layout>

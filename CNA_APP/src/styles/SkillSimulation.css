@@ -338,6 +338,68 @@
     margin-bottom: 0;
 }
 
+/* Instruction Screen Styles */
+.instruction-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 60vh;
+    padding: 40px 20px;
+}
+
+.instruction-heading {
+    font-size: 3.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 50px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.instruction-buttons {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.instruction-button {
+    background-color: #ffc107;
+    color: #212529;
+    border: none;
+    padding: 20px 40px;
+    border-radius: 12px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    min-width: 180px;
+}
+
+.instruction-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.no-hints-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.no-hints-button:hover {
+    background-color: #c82333;
+}
+
+.normal-mode-button {
+    background-color: #28a745;
+    color: white;
+}
+
+.normal-mode-button:hover {
+    background-color: #218838;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
     .skill-simulation-container,
@@ -380,5 +442,22 @@
     
     .no-skill-selected h2 {
         font-size: 1.5rem;
+    }
+    
+    .instruction-heading {
+        font-size: 2.5rem;
+        margin-bottom: 40px;
+    }
+    
+    .instruction-buttons {
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+    }
+    
+    .instruction-button {
+        padding: 15px 30px;
+        font-size: 1.1rem;
+        min-width: 200px;
     }
 }
