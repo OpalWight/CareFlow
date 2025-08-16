@@ -12,6 +12,7 @@ function SkillSimulation() {
     const [simulationStarted, setSimulationStarted] = useState(false);
     const [showInstructionScreen, setShowInstructionScreen] = useState(false);
     const [showHints, setShowHints] = useState(true);
+    const [difficultyMode, setDifficultyMode] = useState('normal'); // 'normal', 'hard', 'extraHard'
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -71,14 +72,23 @@ function SkillSimulation() {
         }
     };
 
-    const handleNormalMode = () => {
+    const handleEasyMode = () => {
         setShowHints(true);
+        setDifficultyMode('easy');
         setShowInstructionScreen(false);
         setSimulationStarted(true);
     };
 
-    const handleNoHints = () => {
+    const handleHardMode = () => {
+        setShowHints(true);
+        setDifficultyMode('hard');
+        setShowInstructionScreen(false);
+        setSimulationStarted(true);
+    };
+
+    const handleExtraHardMode = () => {
         setShowHints(false);
+        setDifficultyMode('extraHard');
         setShowInstructionScreen(false);
         setSimulationStarted(true);
     };
@@ -130,6 +140,7 @@ function SkillSimulation() {
                 skillName={selectedSkill}
                 skillCategory={skillCategory}
                 showHints={showHints}
+                difficultyMode={difficultyMode}
             />
         );
     }
@@ -180,21 +191,48 @@ function SkillSimulation() {
                     </button>
 
                     <div className="instruction-screen">
-                        <h1 className="instruction-heading">Step 1, Find Materials!</h1>
+                        <h1 className="instruction-heading">Choose Your Difficulty Mode</h1>
+                        <p className="instruction-subtitle">Select how you want to practice this skill:</p>
                         
-                        <div className="instruction-buttons">
-                            <button 
-                                className="instruction-button no-hints-button"
-                                onClick={handleNoHints}
-                            >
-                                No Hints
-                            </button>
-                            <button 
-                                className="instruction-button normal-mode-button"
-                                onClick={handleNormalMode}
-                            >
-                                Normal Mode
-                            </button>
+                        <div className="difficulty-options">
+                            <div className="difficulty-option" onClick={handleEasyMode}>
+                                <div className="difficulty-icon">😊</div>
+                                <h3>Easy Mode</h3>
+                                <p>Practice with full guidance and visible task checklist.</p>
+                                <ul>
+                                    <li>Step-by-step hints</li>
+                                    <li>Visible checklist</li>
+                                    <li>Guided practice</li>
+                                    <li>Beginner friendly</li>
+                                </ul>
+                                <button className="select-difficulty-btn">Select Easy Mode</button>
+                            </div>
+
+                            <div className="difficulty-option" onClick={handleHardMode}>
+                                <div className="difficulty-icon">📝</div>
+                                <h3>Hard Mode</h3>
+                                <p>Practice with hints and visible task checklist, but more challenging scenarios.</p>
+                                <ul>
+                                    <li>Step-by-step hints</li>
+                                    <li>Visible checklist</li>
+                                    <li>More complex scenarios</li>
+                                    <li>Intermediate level</li>
+                                </ul>
+                                <button className="select-difficulty-btn">Select Hard Mode</button>
+                            </div>
+
+                            <div className="difficulty-option" onClick={handleExtraHardMode}>
+                                <div className="difficulty-icon">🔥</div>
+                                <h3>Extra Hard Mode</h3>
+                                <p>Practice with no hints and no visible checklist. Test your knowledge!</p>
+                                <ul>
+                                    <li>No hints or guidance</li>
+                                    <li>No visible checklist</li>
+                                    <li>Memory-based execution</li>
+                                    <li>Expert level challenge</li>
+                                </ul>
+                                <button className="select-difficulty-btn">Select Extra Hard Mode</button>
+                            </div>
                         </div>
                     </div>
                 </div>

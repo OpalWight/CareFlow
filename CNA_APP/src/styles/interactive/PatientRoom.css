@@ -39,6 +39,17 @@
   box-sizing: border-box;
 }
 
+/* Fullscreen Patient Room */
+.interactive-scenario-container.fullscreen .patient-room-container {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+}
+
 .hospital-bed {
   position: absolute;
   top: 30%;

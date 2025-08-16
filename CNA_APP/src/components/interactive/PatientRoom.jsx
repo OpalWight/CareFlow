@@ -152,9 +152,6 @@ function PatientRoom({ collectedSupplies, skillId = 'hand-hygiene', onStepComple
 
   return (
     <div>
-      <h2 id="patient-room-h2">{scenario.patientRoomTitle}</h2>
-      <p id="patient-room-p">{scenario.description}</p>
-      
       <div className="patient-room-container">
         {/* Hospital bed - always present */}
         <div className="hospital-bed">

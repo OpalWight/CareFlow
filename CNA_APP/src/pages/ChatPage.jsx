@@ -46,9 +46,17 @@ const ChatPage = () => {
                 if (patientInitialResponse) {
                     setMessages([{ role: 'model', content: patientInitialResponse }]);
                 } else {
+                    let modeText = '';
+                    if (evaluationMode === 'specific') {
+                        modeText = ' (Hard Mode: Steps must be completed in order)';
+                    } else if (evaluationMode === 'extraHard') {
+                        modeText = ' (Extra Hard Mode: Steps must be completed in order, no checklist shown)';
+                    } else {
+                        modeText = ' (Easy Mode: Practice naturally without following a checklist)';
+                    }
                     setMessages([{ 
                         role: 'system', 
-                        content: `💬 Introduce yourself and state your purpose to start the scenario${evaluationMode === 'specific' ? ' (Steps must be completed in order)' : ''}` 
+                        content: `💬 Introduce yourself and state your purpose to start the scenario${modeText}` 
                     }]);
                 }
             } catch (error) {
@@ -193,16 +201,16 @@ const ChatPage = () => {
                                 className="mode-option"
                                 onClick={() => handleModeSelection('broad')}
                             >
-                                <div className="mode-icon">📋</div>
-                                <h3>Broad Objectives</h3>
-                                <p>Evaluate based on general CNA professional standards and skill competency. Complete objectives in any order.</p>
+                                <div className="mode-icon">😊</div>
+                                <h3>Easy Mode</h3>
+                                <p>Practice without visible task list. Focus on natural conversation and general skill demonstration.</p>
                                 <ul>
-                                    <li>Professional communication</li>
-                                    <li>Safety measures</li>
-                                    <li>Infection control</li>
-                                    <li>Patient dignity and comfort</li>
+                                    <li>No visible checklist</li>
+                                    <li>Natural conversation flow</li>
+                                    <li>General skill practice</li>
+                                    <li>Less structured approach</li>
                                 </ul>
-                                <button className="select-mode-btn">Select Broad Mode</button>
+                                <button className="select-mode-btn">Select Easy Mode</button>
                             </div>
 
                             <div 
@@ -210,15 +218,31 @@ const ChatPage = () => {
                                 onClick={() => handleModeSelection('specific')}
                             >
                                 <div className="mode-icon">📝</div>
-                                <h3>Specific Steps</h3>
-                                <p>Evaluate based on specific procedural steps that must be completed in the correct order.</p>
+                                <h3>Hard Mode</h3>
+                                <p>Practice with visible task list and specific procedural steps that must be completed in the correct order.</p>
                                 <ul>
+                                    <li>Visible task checklist</li>
                                     <li>Step-by-step procedure</li>
                                     <li>Correct sequence required</li>
                                     <li>Detailed skill demonstration</li>
-                                    <li>Order validation</li>
                                 </ul>
-                                <button className="select-mode-btn">Select Specific Mode</button>
+                                <button className="select-mode-btn">Select Hard Mode</button>
+                            </div>
+
+                            <div 
+                                className="mode-option"
+                                onClick={() => handleModeSelection('extraHard')}
+                            >
+                                <div className="mode-icon">🔥</div>
+                                <h3>Extra Hard Mode</h3>
+                                <p>Practice with no visible checklist but specific steps must be completed in the correct sequential order.</p>
+                                <ul>
+                                    <li>No visible checklist</li>
+                                    <li>Strict order requirements</li>
+                                    <li>Memory-based execution</li>
+                                    <li>Expert-level challenge</li>
+                                </ul>
+                                <button className="select-mode-btn">Select Extra Hard Mode</button>
                             </div>
                         </div>
                     </div>
@@ -233,10 +257,10 @@ const ChatPage = () => {
                     </div>
                 )}
             
-            {scenarioInfo && scenarioInfo.learningObjectives && (
+            {scenarioInfo && scenarioInfo.learningObjectives && selectedEvaluationMode === 'specific' && (
                 <div className="learning-objectives-tab">
                     <div className="objectives-header">
-                        <strong id="chat-page-learning-objectives-strong">Learning Objectives</strong>
+                        <strong id="chat-page-learning-objectives-strong">Task List</strong>
                         <div className="objectives-toggle">
                             <button 
                                 className={`toggle-btn ${!showSpecificObjectives ? 'active' : ''}`}

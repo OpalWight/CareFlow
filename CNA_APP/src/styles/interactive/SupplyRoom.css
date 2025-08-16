@@ -30,13 +30,24 @@
   border: 2px solid #ccc;
   border-radius: 8px;
   position: relative;
-  background-image: 
-    linear-gradient(to right, #e6f3ff 1px, transparent 1px),
-    linear-gradient(to bottom, #e6f3ff 1px, transparent 1px);
-  background-size: 30px 30px;
+  background-image: url('../../assets/svg/room.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   padding: 1rem;
   overflow: hidden;
   box-sizing: border-box;
+}
+
+/* Fullscreen Supply Room */
+.interactive-scenario-container.fullscreen .supply-room-container {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
 }
 
 /* Cabinet Base Styles */
@@ -66,9 +77,8 @@
 .cabinet.linens:hover { border-color: #2196F3; background-color: #e3f2fd; }
 .cabinet.cleaning:hover { border-color: #4CAF50; background-color: #e8f5e8; }
 .cabinet.medical:hover { border-color: #FF9800; background-color: #fff3e0; }
-.cabinet.containers:hover { border-color: #9C27B0; background-color: #f3e5f5; }
+.cabinet.supplies:hover { border-color: #9C27B0; background-color: #f3e5f5; }
 .cabinet.ppe:hover { border-color: #F44336; background-color: #ffebee; }
-.cabinet.misc:hover { border-color: #607D8B; background-color: #f5f5f5; }
 
 .cabinet-label {
   font-size: 0.75rem;
@@ -83,6 +93,59 @@
 .cabinet-icon {
   font-size: 1.8rem;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SVG Icon Styling */
+.svg-icon {
+  width: 32px;
+  height: 32px;
+  fill: currentColor;
+  transition: all 0.3s ease;
+}
+
+.cabinet:hover .svg-icon {
+  transform: scale(1.1);
+}
+
+/* Paper Towel Standalone Styling */
+.paper-towel-standalone {
+  position: absolute;
+  width: 90px;
+  height: 70px;
+  background: linear-gradient(135deg, #fff3e0, #ffcc80);
+  border: 2px solid #ff9800;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.paper-towel-standalone:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+  background: linear-gradient(135deg, #ffcc80, #ffb74d);
+}
+
+.paper-towel-standalone .cabinet-label {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  margin-bottom: 0.25rem;
+  line-height: 1.1;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.paper-towel-standalone .svg-icon {
+  width: 24px;
+  height: 24px;
 }
 
 /* Sink Styles */
@@ -112,6 +175,22 @@
 .sink.sink-used {
   background-color: #90EE90;
   border-color: #32CD32;
+}
+
+.sink-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 0.6rem;
+  font-weight: bold;
+}
+
+.sink-svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
 }
 
 /* Room Elements */
@@ -272,11 +351,29 @@
   }
   
   /* Adjust positioning for cabinets around sink - tablet */
-  .cabinet[style*="calc(50% - 140px)"] { left: calc(50% - 105px) !important; }
+  .cabinet[style*="calc(50% - 140px)"] { left: calc(50% - 110px) !important; }
   .cabinet[style*="calc(50% - 45px)"] { left: calc(50% - 35px) !important; }
-  .cabinet[style*="calc(50% + 50px)"] { left: calc(50% + 35px) !important; }
-  .cabinet[style*="calc(45% - 80px)"] { top: calc(45% - 65px) !important; }
-  .cabinet[style*="calc(45% + 70px)"] { top: calc(45% + 55px) !important; }
+  .cabinet[style*="calc(50% + 50px)"] { left: calc(50% + 30px) !important; }
+  .cabinet[style*="calc(45% - 90px)"] { top: calc(45% - 70px) !important; }
+  .cabinet[style*="calc(45% + 80px)"] { top: calc(45% + 60px) !important; }
+  
+  .paper-towel-standalone[style*="calc(45% + 80px)"] { top: calc(45% + 60px) !important; }
+  .paper-towel-standalone[style*="calc(50% + 50px)"] { left: calc(50% + 30px) !important; }
+  
+  .svg-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .paper-towel-standalone .svg-icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .sink-svg {
+    width: 16px;
+    height: 16px;
+  }
   
   .cabinet-label {
     font-size: 0.65rem;
@@ -328,11 +425,29 @@
   }
   
   /* Adjust positioning for cabinets around sink - mobile */
-  .cabinet[style*="calc(50% - 140px)"], .cabinet[style*="calc(50% - 105px)"] { left: calc(50% - 90px) !important; }
+  .cabinet[style*="calc(50% - 140px)"], .cabinet[style*="calc(50% - 110px)"] { left: calc(50% - 90px) !important; }
   .cabinet[style*="calc(50% - 45px)"], .cabinet[style*="calc(50% - 35px)"] { left: calc(50% - 30px) !important; }
-  .cabinet[style*="calc(50% + 50px)"], .cabinet[style*="calc(50% + 35px)"] { left: calc(50% + 30px) !important; }
-  .cabinet[style*="calc(45% - 80px)"], .cabinet[style*="calc(45% - 65px)"] { top: calc(45% - 50px) !important; }
-  .cabinet[style*="calc(45% + 70px)"], .cabinet[style*="calc(45% + 55px)"] { top: calc(45% + 45px) !important; }
+  .cabinet[style*="calc(50% + 50px)"], .cabinet[style*="calc(50% + 30px)"] { left: calc(50% + 15px) !important; }
+  .cabinet[style*="calc(45% - 90px)"], .cabinet[style*="calc(45% - 70px)"] { top: calc(45% - 50px) !important; }
+  .cabinet[style*="calc(45% + 80px)"], .cabinet[style*="calc(45% + 60px)"] { top: calc(45% + 40px) !important; }
+  
+  .paper-towel-standalone[style*="calc(45% + 80px)"], .paper-towel-standalone[style*="calc(45% + 60px)"] { top: calc(45% + 40px) !important; }
+  .paper-towel-standalone[style*="calc(50% + 50px)"], .paper-towel-standalone[style*="calc(50% + 30px)"] { left: calc(50% + 15px) !important; }
+  
+  .svg-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .paper-towel-standalone .svg-icon {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .sink-svg {
+    width: 14px;
+    height: 14px;
+  }
   
   .cabinet-label {
     font-size: 0.55rem;

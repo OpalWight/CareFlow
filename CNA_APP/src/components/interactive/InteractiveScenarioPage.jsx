@@ -435,70 +435,26 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className={`interactive-scenario-container ${currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES ? 'gathering-supplies' : ''}`}>
-        {/* Header */}
-        <div className="scenario-header">
-          <div className="header-left">
-            <h1 id="interactive-scenario-h1">
-              {skillName || getSkillTitle(skillId)}
-              {skillCategory && (
-                <span className="skill-category-badge" style={{ backgroundColor: skillCategory.color, marginLeft: '1rem' }}>
-                  <span className="category-icon">{skillCategory.icon}</span>
-                  <span className="category-name">{skillCategory.name}</span>
-                </span>
-              )}
-            </h1>
-          </div>
-          <div className="header-right">
-            <div className="step-indicator">
-              <h3 id="interactive-scenario-h3">
-                Step: {currentStep.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
-              </h3>
-            </div>
-            <button 
-              onClick={handleBackToHub}
-              className="exit-button"
-              title="Exit Simulation"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
+      <div className={`interactive-scenario-container fullscreen ${currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES ? 'gathering-supplies' : ''}`}>
+        {/* Overlaid Exit Button */}
+        <button 
+          onClick={handleBackToHub}
+          className="exit-button-overlay"
+          title="Exit Simulation"
+        >
+          exit scenario
+        </button>
 
-        {/* Main Content */}
-        <div className="scenario-main-content">
-          <div className="scenario-step-info">
-            {currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES && (
-              <p id="interactive-scenario-gathering-supplies-p">Find all required supplies in the supply room before proceeding to perform the skill.</p>
-            )}
-            {currentStep === SCENARIO_STEPS.PERFORMING_SKILL && (
-              <p id="interactive-scenario-performing-skill-p">Follow the proper sequence to perform the {skillName || getSkillTitle(skillId)} skill.</p>
-            )}
-          </div>
-          
+        {/* Main Content - Fullscreen */}
+        <div className="scenario-main-content fullscreen">
           {renderCurrentStep()}
-        </div>
-        
-        {/* Sidebar */}
-        <div className="scenario-sidebar">
-          {/* Sidebar placeholder content - supplies now float */}
-          <div className="sidebar-placeholder">
-            <div className="placeholder-icon">ℹ️</div>
-            <h3>Simulation Information</h3>
-            <p>Use the floating panels to track your progress and manage collected supplies.</p>
-            <div className="info-hints">
-              <div className="hint-item">📋 Task checklist tracks your progress</div>
-              <div className="hint-item">📦 Collected supplies show your gathered items</div>
-              <div className="hint-item">🖱️ Both panels are draggable</div>
-            </div>
-          </div>
         </div>
 
         {/* Floating Components */}
         {showHints && <TaskList tasks={getCurrentTasks()} />}
 
-        {/* Footer */}
-        <div className="scenario-footer">
+        {/* Floating Footer Actions */}
+        <div className="scenario-footer-overlay">
           {currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES && allSuppliesFound && (
             <button 
               onClick={proceedToNextStep}
