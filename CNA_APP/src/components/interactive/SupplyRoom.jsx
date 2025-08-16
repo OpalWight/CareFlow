@@ -20,6 +20,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
     linens: {
       title: "Linens & Barriers",
       color: "#e3f2fd",
+      svg: LinensSvg,
       supplies: [
         { id: 'bath-towel', name: 'Bath Towel' },
         { id: 'cloth-protector', name: 'Cloth Protector' },
@@ -34,9 +35,10 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
         { id: 'barrier-paper-towel', name: 'Barrier Paper Towel' }
       ]
     },
-    cleaning: {
-      title: "Cleaning & Hygiene Products",
+    hygiene: {
+      title: "Cleaning & Hygiene",
       color: "#e8f5e8",
+      svg: HygieneSvg,
       supplies: [
         { id: 'alcohol-wipes', name: 'Alcohol Wipes' },
         { id: 'antiseptic', name: 'Antiseptic' },
@@ -50,8 +52,9 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
       ]
     },
     medical: {
-      title: "Medical Devices & Equipment",
+      title: "Medical Equipment",
       color: "#fff3e0",
+      svg: MedicalSvg,
       supplies: [
         { id: 'bandage', name: 'Bandage' },
         { id: 'bed-pan', name: 'Bed Pan' },
@@ -65,12 +68,14 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
         { id: 'standing-scale', name: 'Standing Scale' },
         { id: 'stethoscope', name: 'Stethoscope (Trainer)' },
         { id: 'transfer-belt', name: 'Transfer/Gait Belt' },
-        { id: 'wheelchair', name: 'Wheelchair' }
+        { id: 'wheelchair', name: 'Wheelchair' },
+        { id: 'gloves', name: 'Gloves' }
       ]
     },
-    supplies: {
-      title: "Supplies & Equipment",
+    misc: {
+      title: "Misc",
       color: "#f3e5f5",
+      svg: MiscSvg,
       supplies: [
         { id: 'basin', name: 'Basin' },
         { id: 'cup-water', name: 'Cup of Water' },
@@ -82,13 +87,6 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
         { id: 'magazine', name: 'Magazine/TV Remote' },
         { id: 'non-skid-socks', name: 'Non-skid Socks' },
         { id: 'wall-clock', name: 'Wall Clock' }
-      ]
-    },
-    ppe: {
-      title: "Personal Protective Equipment (PPE)",
-      color: "#ffebee",
-      supplies: [
-        { id: 'gloves', name: 'Gloves' }
       ]
     }
   };
@@ -160,11 +158,11 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
       
       // Apply pulsating effect
       if (targetCabinetKey) {
-        pulsateElement(`.cabinet.${targetCabinetKey}`);
+        pulsateElement(`.svg-button.${targetCabinetKey}`);
       } else if (targetSupplyId === 'sink') {
-        pulsateElement('.sink');
+        pulsateElement('.svg-button.sink');
       } else if (targetSupplyId === 'paper-towel') {
-        pulsateElement('.paper-towel-standalone');
+        pulsateElement('.svg-button.paper-towel-standalone');
       }
     };
 
@@ -257,116 +255,83 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
   return (
     <div>
       <div className="supply-room-container">
-        {/* Cabinets arranged around sink */}
+        {/* SVG Buttons arranged around sink */}
         {/* Top Row - Above sink */}
-        <div 
-          className="cabinet linens"
+        <img 
+          src={LinensSvg}
+          className="svg-button linens"
           onClick={() => handleCabinetClick('linens')}
           title="Linens & Barriers"
+          alt="Linens & Barriers"
           style={{ 
-            top: 'calc(45% - 90px)',
-            left: 'calc(50% - 140px)'
+            top: 'calc(45% - 100px)',
+            left: 'calc(50% - 120px)'
           }}
-        >
-          <div className="cabinet-label">Linens & Barriers</div>
-          <div className="cabinet-icon"><img src={LinensSvg} className="svg-icon" alt="Linens" /></div>
-        </div>
+        />
         
-        <div 
-          className="cabinet cleaning"
-          onClick={() => handleCabinetClick('cleaning')}
-          title="Cleaning & Hygiene Products"
+        <img 
+          src={HygieneSvg}
+          className="svg-button hygiene"
+          onClick={() => handleCabinetClick('hygiene')}
+          title="Cleaning & Hygiene"
+          alt="Cleaning & Hygiene"
           style={{ 
-            top: 'calc(45% - 90px)',
-            left: 'calc(50% - 45px)'
+            top: 'calc(45% - 100px)',
+            left: 'calc(50% - 40px)'
           }}
-        >
-          <div className="cabinet-label">Cleaning & Hygiene</div>
-          <div className="cabinet-icon"><img src={HygieneSvg} className="svg-icon" alt="Hygiene" /></div>
-        </div>
+        />
 
-        <div 
-          className="cabinet medical"
+        <img 
+          src={MedicalSvg}
+          className="svg-button medical"
           onClick={() => handleCabinetClick('medical')}
-          title="Medical Devices & Equipment"
+          title="Medical Equipment"
+          alt="Medical Equipment"
           style={{ 
-            top: 'calc(45% - 90px)',
-            left: 'calc(50% + 50px)'
+            top: 'calc(45% - 100px)',
+            left: 'calc(50% + 40px)'
           }}
-        >
-          <div className="cabinet-label">Medical Equipment</div>
-          <div className="cabinet-icon"><img src={MedicalSvg} className="svg-icon" alt="Medical" /></div>
-        </div>
+        />
         
         {/* Bottom Row - Below sink */}
-        <div 
-          className="cabinet supplies"
-          onClick={() => handleCabinetClick('supplies')}
-          title="Supplies & Equipment"
+        <img 
+          src={MiscSvg}
+          className="svg-button misc"
+          onClick={() => handleCabinetClick('misc')}
+          title="Misc"
+          alt="Misc"
           style={{ 
             top: 'calc(45% + 80px)',
-            left: 'calc(50% - 140px)'
+            left: 'calc(50% - 80px)'
           }}
-        >
-          <div className="cabinet-label">Supplies & Equipment</div>
-          <div className="cabinet-icon"><img src={MiscSvg} className="svg-icon" alt="Misc" /></div>
-        </div>
-        
-        <div 
-          className="cabinet ppe"
-          onClick={() => handleCabinetClick('ppe')}
-          title="Personal Protective Equipment"
-          style={{ 
-            top: 'calc(45% + 80px)',
-            left: 'calc(50% - 45px)'
-          }}
-        >
-          <div className="cabinet-label">PPE</div>
-          <div className="cabinet-icon"><img src={MiscSvg} className="svg-icon" alt="Misc" /></div>
-        </div>
+        />
 
         {/* Standalone Paper Towel */}
-        <div 
-          className="paper-towel-standalone"
+        <img 
+          src={PaperTowelSvg}
+          className="svg-button paper-towel-standalone"
           onClick={handlePaperTowelClick}
           title="Paper Towel"
+          alt="Paper Towel"
           style={{ 
             top: 'calc(45% + 80px)',
-            left: 'calc(50% + 50px)'
+            left: 'calc(50% + 40px)'
           }}
-        >
-          <div className="cabinet-label">Paper Towel</div>
-          <div className="cabinet-icon"><img src={PaperTowelSvg} className="svg-icon" alt="Paper Towel" /></div>
-        </div>
+        />
 
         {/* Sink */}
         {requiresSink && (
-          <div 
-            className={`sink ${sinkUsed ? 'sink-used' : ''}`}
+          <img 
+            src={SinkSvg}
+            className={`svg-button sink ${sinkUsed ? 'sink-used' : ''}`}
             onClick={handleSinkClick}
-            title="Click to use sink"
+            title={sinkUsed ? "Sink (Used)" : "Click to use sink"}
+            alt={sinkUsed ? "Sink (Used)" : "Sink"}
             style={{ 
               top: '45%', 
-              left: 'calc(50% - 40px)',
-              width: '80px', 
-              height: '60px'
+              left: 'calc(50% - 30px)'
             }}
-          >
-            <div className="sink-content">
-              {sinkUsed ? (
-                <>
-                  <span>✅</span>
-                  <img src={SinkSvg} className="svg-icon sink-svg" alt="Sink" />
-                  <span>Used</span>
-                </>
-              ) : (
-                <>
-                  <img src={SinkSvg} className="svg-icon sink-svg" alt="Sink" />
-                  <span>Sink</span>
-                </>
-              )}
-            </div>
-          </div>
+          />
         )}
 
         <div className="room-title">
