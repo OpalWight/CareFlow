@@ -4,8 +4,8 @@ import DraggableItem from './DraggableItem';
 import '../../styles/interactive/DraggableSupplyCollection.css';
 
 function DraggableSupplyCollection({ collectedSupplies = [] }) {
-  const [position, setPosition] = useState({ x: window.innerWidth - 320, y: 20 }); // Top-right corner
-  const [size, setSize] = useState({ width: 320, height: 250 });
+  const [position, setPosition] = useState({ x: window.innerWidth - 160, y: 20 }); // Top-right corner
+  const [size, setSize] = useState({ width: 160, height: 125 });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -71,18 +71,18 @@ function DraggableSupplyCollection({ collectedSupplies = [] }) {
       const { corner } = resizeStart;
       
       if (corner.includes('right')) {
-        newWidth = Math.max(280, Math.min(600, resizeStart.width + deltaX));
+        newWidth = Math.max(140, Math.min(300, resizeStart.width + deltaX));
       }
       if (corner.includes('left')) {
-        newWidth = Math.max(280, Math.min(600, resizeStart.width - deltaX));
-        newX = Math.min(position.x + deltaX, position.x + resizeStart.width - 280);
+        newWidth = Math.max(140, Math.min(300, resizeStart.width - deltaX));
+        newX = Math.min(position.x + deltaX, position.x + resizeStart.width - 140);
       }
       if (corner.includes('bottom')) {
-        newHeight = Math.max(200, Math.min(500, resizeStart.height + deltaY));
+        newHeight = Math.max(100, Math.min(250, resizeStart.height + deltaY));
       }
       if (corner.includes('top')) {
-        newHeight = Math.max(200, Math.min(500, resizeStart.height - deltaY));
-        newY = Math.min(position.y + deltaY, position.y + resizeStart.height - 200);
+        newHeight = Math.max(100, Math.min(250, resizeStart.height - deltaY));
+        newY = Math.min(position.y + deltaY, position.y + resizeStart.height - 100);
       }
       
       setSize({ width: newWidth, height: newHeight });
@@ -137,7 +137,7 @@ function DraggableSupplyCollection({ collectedSupplies = [] }) {
             id="supply-collector"
             label="Drop supplies here"
             style={{
-              minHeight: '80px',
+              minHeight: '40px',
               backgroundColor: '#fff3cd',
               borderColor: '#ffc107'
             }}

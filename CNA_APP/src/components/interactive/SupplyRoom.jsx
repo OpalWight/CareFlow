@@ -266,8 +266,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
           style={{ 
             top: 'calc(45% - 100px)',
             left: 'calc(50% - 120px)'
-          }}
-        />
+          }}        />
         
         <img 
           src={HygieneSvg}

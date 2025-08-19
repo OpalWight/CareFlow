@@ -3,7 +3,7 @@ import '../../styles/interactive/TaskList.css';
 
 function TaskList({ tasks }) {
   const [position, setPosition] = useState({ x: 20, y: 20 });
-  const [size, setSize] = useState({ width: 300, height: 400 });
+  const [size, setSize] = useState({ width: 150, height: 200 });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -70,18 +70,18 @@ function TaskList({ tasks }) {
       const { corner } = resizeStart;
       
       if (corner.includes('right')) {
-        newWidth = Math.max(250, Math.min(800, resizeStart.width + deltaX));
+        newWidth = Math.max(125, Math.min(400, resizeStart.width + deltaX));
       }
       if (corner.includes('left')) {
-        newWidth = Math.max(250, Math.min(800, resizeStart.width - deltaX));
-        newX = Math.min(position.x + deltaX, position.x + resizeStart.width - 250);
+        newWidth = Math.max(125, Math.min(400, resizeStart.width - deltaX));
+        newX = Math.min(position.x + deltaX, position.x + resizeStart.width - 125);
       }
       if (corner.includes('bottom')) {
-        newHeight = Math.max(200, Math.min(600, resizeStart.height + deltaY));
+        newHeight = Math.max(100, Math.min(300, resizeStart.height + deltaY));
       }
       if (corner.includes('top')) {
-        newHeight = Math.max(200, Math.min(600, resizeStart.height - deltaY));
-        newY = Math.min(position.y + deltaY, position.y + resizeStart.height - 200);
+        newHeight = Math.max(100, Math.min(300, resizeStart.height - deltaY));
+        newY = Math.min(position.y + deltaY, position.y + resizeStart.height - 100);
       }
       
       setSize({ width: newWidth, height: newHeight });
