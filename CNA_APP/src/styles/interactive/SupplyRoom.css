@@ -1,24 +1,142 @@
-/* Pulsating animation for containers */
-@keyframes pulsate {
+/* Smooth glow hint animation for containers */
+@keyframes glow-hint {
   0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(0, 123, 255, 0));
   }
   50% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(255, 193, 7, 0.3);
+    transform: translateY(-2px);
+    filter: drop-shadow(0 0 15px rgba(0, 123, 255, 0.8)) drop-shadow(0 0 25px rgba(0, 123, 255, 0.4));
   }
   100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 20px rgba(255, 193, 7, 0);
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(0, 123, 255, 0));
   }
 }
 
-.pulsate-highlight {
-  animation: pulsate 2s ease-in-out 3;
-  border: 3px solid #ffc107 !important;
-  z-index: 1000;
-  position: relative;
+.glow-hint {
+  animation: glow-hint 3s ease-in-out 2;
+}
+
+/* Category-specific glow colors */
+.svg-button.linens.glow-hint {
+  animation: glow-hint-linens 3s ease-in-out 2;
+}
+
+.svg-button.hygiene.glow-hint {
+  animation: glow-hint-hygiene 3s ease-in-out 2;
+}
+
+.svg-button.medical.glow-hint {
+  animation: glow-hint-medical 3s ease-in-out 2;
+}
+
+.svg-button.misc.glow-hint {
+  animation: glow-hint-misc 3s ease-in-out 2;
+}
+
+.svg-button.paper-towel.glow-hint {
+  animation: glow-hint-paper-towel 3s ease-in-out 2;
+}
+
+.svg-button.sink.glow-hint {
+  animation: glow-hint-sink 3s ease-in-out 2;
+}
+
+/* Linens - Blue glow */
+@keyframes glow-hint-linens {
+  0% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(33, 150, 243, 0));
+  }
+  50% {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 0 15px rgba(33, 150, 243, 0.8)) drop-shadow(0 0 25px rgba(33, 150, 243, 0.4));
+  }
+  100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(33, 150, 243, 0));
+  }
+}
+
+/* Hygiene - Green glow */
+@keyframes glow-hint-hygiene {
+  0% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(76, 175, 80, 0));
+  }
+  50% {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 0 15px rgba(76, 175, 80, 0.8)) drop-shadow(0 0 25px rgba(76, 175, 80, 0.4));
+  }
+  100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(76, 175, 80, 0));
+  }
+}
+
+/* Medical - Orange glow */
+@keyframes glow-hint-medical {
+  0% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(255, 152, 0, 0));
+  }
+  50% {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 0 15px rgba(255, 152, 0, 0.8)) drop-shadow(0 0 25px rgba(255, 152, 0, 0.4));
+  }
+  100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(255, 152, 0, 0));
+  }
+}
+
+/* Misc - Purple glow */
+@keyframes glow-hint-misc {
+  0% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(156, 39, 176, 0));
+  }
+  50% {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 0 15px rgba(156, 39, 176, 0.8)) drop-shadow(0 0 25px rgba(156, 39, 176, 0.4));
+  }
+  100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(156, 39, 176, 0));
+  }
+}
+
+/* Paper Towel - Yellow glow */
+@keyframes glow-hint-paper-towel {
+  0% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(255, 193, 7, 0));
+  }
+  50% {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 0 15px rgba(255, 193, 7, 0.8)) drop-shadow(0 0 25px rgba(255, 193, 7, 0.4));
+  }
+  100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(255, 193, 7, 0));
+  }
+}
+
+/* Sink - Teal glow */
+@keyframes glow-hint-sink {
+  0% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(70, 130, 180, 0));
+  }
+  50% {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 0 15px rgba(70, 130, 180, 0.8)) drop-shadow(0 0 25px rgba(70, 130, 180, 0.4));
+  }
+  100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(70, 130, 180, 0));
+  }
 }
 
 /* Supply Room Container */
@@ -26,17 +144,25 @@
   width: 100%;
   height: 100%;
   min-height: 400px;
-  background-color: #f0f8ff;
+  background-color: #f5f5f5;
   border: 2px solid #ccc;
   border-radius: 8px;
   position: relative;
-  background-image: url('../../assets/svg/room.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   padding: 1rem;
   overflow: hidden;
   box-sizing: border-box;
+}
+
+/* Floor SVG - Base layer */
+.floor-svg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 25%;
+  z-index: 1;
+  object-fit: cover;
+  opacity: 0.9;
 }
 
 /* Fullscreen Supply Room */
@@ -53,8 +179,6 @@
 /* SVG Button Styles */
 .svg-button {
   position: absolute;
-  width: 60px;
-  height: 60px;
   cursor: pointer;
   transition: all 0.3s ease;
   filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
@@ -64,14 +188,53 @@
   border: none !important;
   background: transparent !important;
   outline: none;
+  z-index: 10;
 }
 
-/* Ensure specific SVG buttons have clean defaults */
-.svg-button.sink,
-.svg-button.paper-towel-standalone {
-  border: none !important;
-  background: transparent !important;
+/* Room Layout - Sink anchored to floor, others relative to sink */
+/* Sink positioned at center, floor-relative as anchor point */
+.svg-button.sink {
+  left: 45%; /* Center horizontally */
+  bottom: 30%; /* Counter height from floor - ANCHOR POINT */
+  width :150px;
 }
+
+/* All other SVGs positioned relative to sink location */
+/* Linens Cabinet - Large cabinet to the left of sink */
+.svg-button.linens {
+  left: 15%; /* 220px left of sink center */
+  bottom: 15%; /* Sits lower on floor */
+  height: 500px;
+}
+
+/* Hygiene Cabinet - Above sink */
+.svg-button.hygiene {
+  left: 43%; /* 10px left of sink center */
+  bottom: 65%; /* Above sink */
+  width: 180px;
+}
+
+/* Medical Cabinet - Right of sink */
+.svg-button.medical {
+  right: 17%; /* 140px right of sink center */
+  bottom: 55%; /* Slightly above sink level */
+  width: 160px;
+}
+
+/* Misc Cabinet - Below and right of sink */
+.svg-button.misc {
+  right: 15%; /* 120px right of sink center */
+  bottom: 15%; /* Below sink level */
+  width: 200px
+}
+
+/* Paper Towel - Close to right of sink */
+.svg-button.paper-towel {
+  right: 33%; /* 80px right of sink center */
+  bottom: 45%; /* Slightly above sink */
+  width: 90px;
+}
+
 
 .svg-button:hover {
   transform: scale(1.1);
@@ -104,7 +267,7 @@
   border: 2px solid #9C27B0;
 }
 
-.svg-button.paper-towel-standalone:hover {
+.svg-button.paper-towel:hover {
   background-color: rgba(255, 193, 7, 0.1);
   border: 2px solid #FFC107;
 }
@@ -123,148 +286,6 @@
   border: 2px solid #228B22;
 }
 
-/* Legacy cabinet styles - keeping for backward compatibility */
-.cabinet {
-  position: absolute;
-  width: 90px;
-  height: 70px;
-  background-color: #8B4513;
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 0.5rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-}
-
-.cabinet:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  border-color: #007bff;
-}
-
-/* Cabinet Category Colors */
-.cabinet.linens:hover { border-color: #2196F3; background-color: #e3f2fd; }
-.cabinet.cleaning:hover { border-color: #4CAF50; background-color: #e8f5e8; }
-.cabinet.medical:hover { border-color: #FF9800; background-color: #fff3e0; }
-.cabinet.supplies:hover { border-color: #9C27B0; background-color: #f3e5f5; }
-.cabinet.ppe:hover { border-color: #F44336; background-color: #ffebee; }
-
-.cabinet-label {
-  font-size: 0.75rem;
-  font-weight: bold;
-  color: #333;
-  text-align: center;
-  margin-bottom: 0.25rem;
-  line-height: 1.1;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-}
-
-.cabinet-icon {
-  font-size: 1.8rem;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* SVG Icon Styling */
-.svg-icon {
-  width: 32px;
-  height: 32px;
-  fill: currentColor;
-  transition: all 0.3s ease;
-}
-
-.cabinet:hover .svg-icon {
-  transform: scale(1.1);
-}
-
-/* Legacy Paper Towel Standalone Styling - for non-SVG versions */
-.paper-towel-standalone:not(.svg-button) {
-  position: absolute;
-  width: 90px;
-  height: 70px;
-  background: linear-gradient(135deg, #fff3e0, #ffcc80);
-  border: 2px solid #ff9800;
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 0.5rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.paper-towel-standalone:not(.svg-button):hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
-  background: linear-gradient(135deg, #ffcc80, #ffb74d);
-}
-
-.paper-towel-standalone:not(.svg-button) .cabinet-label {
-  font-size: 0.75rem;
-  font-weight: bold;
-  color: #333;
-  text-align: center;
-  margin-bottom: 0.25rem;
-  line-height: 1.1;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-}
-
-.paper-towel-standalone:not(.svg-button) .svg-icon {
-  width: 24px;
-  height: 24px;
-}
-
-/* Legacy Sink Styles - for non-SVG versions */
-.sink:not(.svg-button) {
-  position: absolute;
-  background-color: #ADD8E6;
-  border: 2px solid #4682B4;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  padding: 0.5rem;
-  font-size: 0.7rem;
-  font-weight: bold;
-  color: #2F4F4F;
-  text-align: center;
-}
-
-.sink:not(.svg-button):hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 15px rgba(70, 130, 180, 0.3);
-  background-color: #87CEEB;
-}
-
-.sink:not(.svg-button).sink-used {
-  background-color: #90EE90;
-  border-color: #32CD32;
-}
-
-.sink-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  font-size: 0.6rem;
-  font-weight: bold;
-}
-
-.sink-svg {
-  width: 20px;
-  height: 20px;
-  fill: currentColor;
-}
 
 /* Room Elements */
 .room-title {
@@ -283,11 +304,11 @@
   bottom: 10px;
   right: 10px;
   width: 200px;
-  background-color: rgba(255, 255, 255, 0.95);
-  border: 2px solid #007bff;
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 123, 255, 0.4);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
   z-index: 1000;
 }
 
@@ -417,66 +438,57 @@
     padding: 0.75rem;
   }
   
-  .cabinet {
-    width: 70px;
-    height: 55px;
-    font-size: 0.7rem;
-  }
   
-  /* Adjust positioning for SVG buttons - tablet */
+  /* Tablet responsive - maintain sink-relative positioning */
   .svg-button {
-    width: 45px;
-    height: 45px;
-    padding: 8px;
+    padding: 6px;
   }
   
-  .svg-button[style*="calc(50% - 120px)"] { left: calc(50% - 90px) !important; }
-  .svg-button[style*="calc(50% - 40px)"] { left: calc(50% - 30px) !important; }
-  .svg-button[style*="calc(50% + 40px)"] { left: calc(50% + 25px) !important; }
-  .svg-button[style*="calc(50% - 80px)"] { left: calc(50% - 60px) !important; }
-  .svg-button[style*="calc(50% - 30px)"] { left: calc(50% - 22px) !important; }
-  .svg-button[style*="calc(45% - 100px)"] { top: calc(45% - 75px) !important; }
-  .svg-button[style*="calc(45% + 80px)"] { top: calc(45% + 60px) !important; }
-  
-  /* Legacy cabinet positioning - tablet */
-  .cabinet[style*="calc(50% - 140px)"] { left: calc(50% - 110px) !important; }
-  .cabinet[style*="calc(50% - 45px)"] { left: calc(50% - 35px) !important; }
-  .cabinet[style*="calc(50% + 50px)"] { left: calc(50% + 30px) !important; }
-  .cabinet[style*="calc(45% - 90px)"] { top: calc(45% - 70px) !important; }
-  .cabinet[style*="calc(45% + 80px)"] { top: calc(45% + 60px) !important; }
-  
-  .paper-towel-standalone[style*="calc(45% + 80px)"] { top: calc(45% + 60px) !important; }
-  .paper-towel-standalone[style*="calc(50% + 50px)"] { left: calc(50% + 30px) !important; }
-  
-  .svg-icon {
-    width: 24px;
-    height: 24px;
+  .svg-button.sink {
+    left: calc(50% - 45px); /* Center, smaller sink */
+    bottom: 30%; /* Anchor to floor */
+    width: 90px;
+    height: 60px;
   }
   
-  .paper-towel-standalone .svg-icon {
-    width: 18px;
-    height: 18px;
+  .svg-button.linens {
+    left: calc(50% - 210px); /* Relative to sink */
+    bottom: 10%;
+    width: 135px;
+    height: 240px;
   }
   
-  .sink-svg {
-    width: 16px;
-    height: 16px;
+  .svg-button.hygiene {
+    left: calc(50% - 52px); /* Relative to sink */
+    bottom: calc(30% + 90px); /* Above sink */
+    width: 105px;
+    height: 75px;
   }
   
-  .cabinet-label {
-    font-size: 0.65rem;
-    line-height: 1;
-    margin-bottom: 0.1rem;
+  .svg-button.medical {
+    left: calc(50% + 60px); /* Relative to sink */
+    bottom: calc(30% + 30px); /* Above sink level */
+    width: 120px;
+    height: 135px;
   }
   
-  .cabinet-icon {
-    font-size: 1.4rem;
+  .svg-button.misc {
+    left: calc(50% + 45px); /* Relative to sink */
+    bottom: calc(30% - 45px); /* Below sink */
+    width: 105px;
+    height: 105px;
   }
   
-  .sink:not(.svg-button) {
-    width: 60px !important;
-    height: 45px !important;
-    font-size: 0.6rem;
+  .svg-button.paper-towel {
+    left: calc(50% + 15px); /* Relative to sink */
+    bottom: calc(30% + 22px); /* Above sink */
+    width: 40px;
+    height: 60px;
+  }
+  
+  /* Floor SVG responsive */
+  .floor-svg {
+    height: 20%;
   }
   
   .tip-window {
@@ -506,65 +518,55 @@
     padding: 0.5rem;
   }
   
-  .cabinet {
-    width: 60px;
-    height: 45px;
-    font-size: 0.6rem;
-  }
   
-  /* Adjust positioning for SVG buttons - mobile */
+  /* Mobile responsive - maintain sink-relative positioning */
   .svg-button {
-    width: 35px;
-    height: 35px;
-    padding: 6px;
+    padding: 4px;
   }
   
-  .svg-button[style*="calc(50% - 120px)"], .svg-button[style*="calc(50% - 90px)"] { left: calc(50% - 70px) !important; }
-  .svg-button[style*="calc(50% - 40px)"], .svg-button[style*="calc(50% - 30px)"] { left: calc(50% - 25px) !important; }
-  .svg-button[style*="calc(50% + 40px)"], .svg-button[style*="calc(50% + 25px)"] { left: calc(50% + 15px) !important; }
-  .svg-button[style*="calc(50% - 80px)"], .svg-button[style*="calc(50% - 60px)"] { left: calc(50% - 50px) !important; }
-  .svg-button[style*="calc(50% - 30px)"], .svg-button[style*="calc(50% - 22px)"] { left: calc(50% - 18px) !important; }
-  .svg-button[style*="calc(45% - 100px)"], .svg-button[style*="calc(45% - 75px)"] { top: calc(45% - 55px) !important; }
-  .svg-button[style*="calc(45% + 80px)"], .svg-button[style*="calc(45% + 60px)"] { top: calc(45% + 45px) !important; }
-  
-  /* Legacy cabinet positioning - mobile */
-  .cabinet[style*="calc(50% - 140px)"], .cabinet[style*="calc(50% - 110px)"] { left: calc(50% - 90px) !important; }
-  .cabinet[style*="calc(50% - 45px)"], .cabinet[style*="calc(50% - 35px)"] { left: calc(50% - 30px) !important; }
-  .cabinet[style*="calc(50% + 50px)"], .cabinet[style*="calc(50% + 30px)"] { left: calc(50% + 15px) !important; }
-  .cabinet[style*="calc(45% - 90px)"], .cabinet[style*="calc(45% - 70px)"] { top: calc(45% - 50px) !important; }
-  .cabinet[style*="calc(45% + 80px)"], .cabinet[style*="calc(45% + 60px)"] { top: calc(45% + 40px) !important; }
-  
-  .paper-towel-standalone[style*="calc(45% + 80px)"], .paper-towel-standalone[style*="calc(45% + 60px)"] { top: calc(45% + 40px) !important; }
-  .paper-towel-standalone[style*="calc(50% + 50px)"], .paper-towel-standalone[style*="calc(50% + 30px)"] { left: calc(50% + 15px) !important; }
-  
-  .svg-icon {
-    width: 20px;
-    height: 20px;
+  .svg-button.sink {
+    left: calc(50% - 30px); /* Center, mobile sink */
+    bottom: 10%; /* Anchor to floor */
+
   }
   
-  .paper-towel-standalone .svg-icon {
-    width: 16px;
-    height: 16px;
+  .svg-button.linens {
+    left: calc(50% - 140px); /* Relative to sink */
+    bottom: 15%;
+    width: 90px;
+    height: 160px;
   }
   
-  .sink-svg {
-    width: 14px;
-    height: 14px;
+  .svg-button.hygiene {
+    left: calc(50% - 35px); /* Relative to sink */
+    bottom: calc(25% + 60px); /* Above sink */
+    width: 70px;
+    height: 50px;
   }
   
-  .cabinet-label {
-    font-size: 0.55rem;
-    margin-bottom: 0.05rem;
+  .svg-button.medical {
+    left: calc(50% + 40px); /* Relative to sink */
+    bottom: calc(25% + 20px); /* Above sink level */
+    width: 80px;
+    height: 90px;
   }
   
-  .cabinet-icon {
-    font-size: 1.2rem;
+  .svg-button.misc {
+    left: calc(50% + 30px); /* Relative to sink */
+    bottom: calc(25% - 30px); /* Below sink */
+    width: 70px;
+    height: 70px;
   }
   
-  .sink:not(.svg-button) {
-    width: 50px !important;
-    height: 35px !important;
-    font-size: 0.5rem;
+  .svg-button.paper-towel {
+    left: calc(50% + 10px); /* Relative to sink */
+    bottom: calc(25% + 15px); /* Above sink */
+    width: 50px;
+  }
+  
+  /* Floor SVG responsive */
+  .floor-svg {
+    height: 22%;
   }
   
   .tip-window {

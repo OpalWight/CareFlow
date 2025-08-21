@@ -4,8 +4,8 @@ import DraggableItem from './DraggableItem';
 import '../../styles/interactive/DraggableSupplyCollection.css';
 
 function DraggableSupplyCollection({ collectedSupplies = [] }) {
-  const [position, setPosition] = useState({ x: window.innerWidth - 160, y: 20 }); // Top-right corner
-  const [size, setSize] = useState({ width: 160, height: 125 });
+  const [position, setPosition] = useState({ x: window.innerWidth - 120, y: 20 }); // Top-right corner
+  const [size, setSize] = useState({ width: 120, height: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -113,15 +113,14 @@ function DraggableSupplyCollection({ collectedSupplies = [] }) {
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
-        width: `${size.width}px`,
-        height: isMinimized ? 'auto' : `${size.height}px`
+        width: isMinimized ? '32px' : `${size.width}px`,
+        height: isMinimized ? '32px' : `${size.height}px`
       }}
       onMouseDown={handleMouseDown}
     >
       <div className="collection-header">
-        <span className="collection-title">📦 Supply Management</span>
+        <span className="collection-title">📦</span>
         <span className="supply-count">{collectedSupplies.length}</span>
-        <span className="drag-hint">Drag to move</span>
         <button 
           className="minimize-button"
           onClick={handleMinimizeClick}
@@ -137,21 +136,21 @@ function DraggableSupplyCollection({ collectedSupplies = [] }) {
             id="supply-collector"
             label="Drop supplies here"
             style={{
-              minHeight: '40px',
+              minHeight: '30px',
               backgroundColor: '#fff3cd',
               borderColor: '#ffc107'
             }}
           >
             <div className="collection-icon">📦</div>
             <div className="collection-text">
-              Drop supplies here
+              Drop here
             </div>
           </DropZone>
           
           {/* Collected Supplies Section */}
           <div className="collected-supplies-section">
             <div className="collected-supplies-header">
-              <span className="collected-title">Collected Items:</span>
+              <span className="collected-title">Items:</span>
             </div>
             
             {collectedSupplies.length > 0 ? (
@@ -167,7 +166,7 @@ function DraggableSupplyCollection({ collectedSupplies = [] }) {
               </div>
             ) : (
               <div className="no-supplies-message">
-                No supplies collected yet
+                Empty
               </div>
             )}
           </div>

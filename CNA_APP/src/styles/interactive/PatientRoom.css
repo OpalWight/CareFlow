@@ -1,24 +1,21 @@
-/* Pulsating animation for containers */
-@keyframes pulsate {
+/* Smooth glow hint animation for drop zones */
+@keyframes glow-hint {
   0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(0, 123, 255, 0));
   }
   50% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(255, 193, 7, 0.3);
+    transform: translateY(-2px);
+    filter: drop-shadow(0 0 15px rgba(0, 123, 255, 0.8)) drop-shadow(0 0 25px rgba(0, 123, 255, 0.4));
   }
   100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 20px rgba(255, 193, 7, 0);
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(0, 123, 255, 0));
   }
 }
 
-.pulsate-highlight {
-  animation: pulsate 2s ease-in-out 3;
-  border: 3px solid #ffc107 !important;
-  z-index: 1000;
-  position: relative;
+.glow-hint {
+  animation: glow-hint 3s ease-in-out 2;
 }
 
 .patient-room-container {

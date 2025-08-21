@@ -9,6 +9,7 @@ import MedicalSvg from '../../assets/svg/Medical.svg';
 import MiscSvg from '../../assets/svg/misc.svg';
 import PaperTowelSvg from '../../assets/svg/paperTowel.svg';
 import SinkSvg from '../../assets/svg/sink.svg';
+import FloorSvg from '../../assets/svg/Floor.svg';
 
 function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
   const [selectedCabinet, setSelectedCabinet] = useState(null);
@@ -162,7 +163,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
       } else if (targetSupplyId === 'sink') {
         pulsateElement('.svg-button.sink');
       } else if (targetSupplyId === 'paper-towel') {
-        pulsateElement('.svg-button.paper-towel-standalone');
+        pulsateElement('.svg-button.paper-towel');
       }
     };
 
@@ -184,19 +185,19 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
   const pulsateElement = (selector) => {
     const element = document.querySelector(selector);
     if (element) {
-      // Remove existing pulsate class if present
-      element.classList.remove('pulsate-highlight');
+      // Remove existing glow class if present
+      element.classList.remove('glow-hint');
       
       // Force reflow
       element.offsetHeight;
       
-      // Add pulsate class
-      element.classList.add('pulsate-highlight');
+      // Add glow class
+      element.classList.add('glow-hint');
       
       // Remove the class after animation completes
       setTimeout(() => {
-        element.classList.remove('pulsate-highlight');
-      }, 6000); // 2s * 3 iterations = 6s
+        element.classList.remove('glow-hint');
+      }, 6000); // 3s * 2 iterations = 6s
     }
   };
 
@@ -255,70 +256,60 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
   return (
     <div>
       <div className="supply-room-container">
-        {/* SVG Buttons arranged around sink */}
-        {/* Top Row - Above sink */}
+        {/* Floor SVG - Base layer with lowest z-index */}
+        <img 
+          src={FloorSvg}
+          className="floor-svg"
+          alt="Room Floor"
+        />
+        
+        {/* SVG Buttons positioned to match room.png layout */}
+        {/* Linens Cabinet */}
         <img 
           src={LinensSvg}
           className="svg-button linens"
           onClick={() => handleCabinetClick('linens')}
           title="Linens & Barriers"
           alt="Linens & Barriers"
-          style={{ 
-            top: 'calc(45% - 100px)',
-            left: 'calc(50% - 120px)'
-          }}        />
+        />
         
+        {/* Hygiene Cabinet */}
         <img 
           src={HygieneSvg}
           className="svg-button hygiene"
           onClick={() => handleCabinetClick('hygiene')}
           title="Cleaning & Hygiene"
           alt="Cleaning & Hygiene"
-          style={{ 
-            top: 'calc(45% - 100px)',
-            left: 'calc(50% - 40px)'
-          }}
         />
 
+        {/* Medical Cabinet */}
         <img 
           src={MedicalSvg}
           className="svg-button medical"
           onClick={() => handleCabinetClick('medical')}
           title="Medical Equipment"
           alt="Medical Equipment"
-          style={{ 
-            top: 'calc(45% - 100px)',
-            left: 'calc(50% + 40px)'
-          }}
         />
         
-        {/* Bottom Row - Below sink */}
+        {/* Misc Cabinet */}
         <img 
           src={MiscSvg}
           className="svg-button misc"
           onClick={() => handleCabinetClick('misc')}
           title="Misc"
           alt="Misc"
-          style={{ 
-            top: 'calc(45% + 80px)',
-            left: 'calc(50% - 80px)'
-          }}
         />
 
-        {/* Standalone Paper Towel */}
+        {/* Paper Towel Dispenser */}
         <img 
           src={PaperTowelSvg}
-          className="svg-button paper-towel-standalone"
+          className="svg-button paper-towel"
           onClick={handlePaperTowelClick}
           title="Paper Towel"
           alt="Paper Towel"
-          style={{ 
-            top: 'calc(45% + 80px)',
-            left: 'calc(50% + 40px)'
-          }}
         />
 
-        {/* Sink */}
+        {/* Sink - Center of layout */}
         {requiresSink && (
           <img 
             src={SinkSvg}
@@ -326,10 +317,6 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
             onClick={handleSinkClick}
             title={sinkUsed ? "Sink (Used)" : "Click to use sink"}
             alt={sinkUsed ? "Sink (Used)" : "Sink"}
-            style={{ 
-              top: '45%', 
-              left: 'calc(50% - 30px)'
-            }}
           />
         )}
 
