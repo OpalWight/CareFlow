@@ -34,3 +34,21 @@
     position: relative;
     z-index: 9998; /* Just below the footer's z-index */
 }
+
+/* Fullscreen mode - hide navbar and other UI elements */
+.fullscreen-mode nav,
+.fullscreen-mode .navHeader,
+.fullscreen-mode footer {
+    display: none !important;
+}
+
+.fullscreen-mode {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.fullscreen-mode .right-vert,
+.fullscreen-mode .left-vert,
+.fullscreen-mode .horizontalLine {
+    display: none !important;
+}
