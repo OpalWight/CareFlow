@@ -89,7 +89,7 @@ function PatientRoom({ collectedSupplies, skillId = 'hand-hygiene', onStepComple
       // Remove the class after animation completes
       setTimeout(() => {
         element.classList.remove('glow-hint');
-      }, 6000); // 3s * 2 iterations = 6s
+      }, 3600); // 1.2s * 3 iterations = 3.6s
     }
   };
 
