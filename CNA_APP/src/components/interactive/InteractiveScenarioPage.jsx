@@ -44,7 +44,7 @@ const SKILL_SUPPLIES = {
     { id: 'denture-brush', name: 'Denture Brush', found: false },
     { id: 'emesis-basin', name: 'Emesis Basin', found: false },
     { id: 'liner-towel', name: 'Liner Towel', found: false },
-    { id: 'barrier-paper-towel', name: 'Barrier Paper Towel', found: false },
+    { id: 'paper-towel', name: 'Paper Towel', found: false },
     { id: 'denture-container', name: 'Denture Container with Lid', found: false },
     { id: 'gloves', name: 'Gloves', found: false }
   ],
@@ -191,8 +191,30 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
       }
     };
 
+    const handleSupplyFound = (event) => {
+      const supplyId = event.detail.supplyId;
+      // Find the supply in our required supplies list
+      const foundSupply = supplies.find(s => s.id === supplyId);
+      
+      if (foundSupply && !foundSupply.found) {
+        setSupplies(prev => prev.map(s => 
+          s.id === supplyId ? { ...s, found: true } : s
+        ));
+        setCollectedSupplies(prev => {
+          if (!prev.some(p => p.id === supplyId)) {
+            return [...prev, { ...foundSupply, found: true }];
+          }
+          return prev;
+        });
+      }
+    };
+
     window.addEventListener('sinkUsed', handleSinkUsed);
-    return () => window.removeEventListener('sinkUsed', handleSinkUsed);
+    window.addEventListener('supplyFound', handleSupplyFound);
+    return () => {
+      window.removeEventListener('sinkUsed', handleSinkUsed);
+      window.removeEventListener('supplyFound', handleSupplyFound);
+    };
   }, [supplies, skillId]);
 
   const handleDragStart = (event) => {

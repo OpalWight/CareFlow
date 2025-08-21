@@ -15,6 +15,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
   const [selectedCabinet, setSelectedCabinet] = useState(null);
   const [sinkUsed, setSinkUsed] = useState(false);
   const [showTip, setShowTip] = useState(true);
+  const [showCabinetTip, setShowCabinetTip] = useState(true);
   const [pulsatingElement, setPulsatingElement] = useState(null);
 
   const cabinetCategories = {
@@ -32,8 +33,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
         { id: 'pillows', name: 'Pillows' },
         { id: 'shirts', name: 'Shirts (front-buttoned)' },
         { id: 'wash-towel', name: 'Wash Towel' },
-        { id: 'washcloth', name: 'Washcloth' },
-        { id: 'barrier-paper-towel', name: 'Barrier Paper Towel' }
+        { id: 'washcloth', name: 'Washcloth' }
       ]
     },
     hygiene: {
@@ -151,8 +151,16 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
           targetSupplyId = 'sink';
         }
         
-        // Special case for standalone paper towel
-        if (supplyName.includes('paper towel') || supplyName === 'paper-towel') {
+        // Special case for paper towel (all variations including barrier)
+        if (supplyName.includes('paper towel') || 
+            supplyName.includes('papertowel') || 
+            supplyName.includes('paper-towel') ||
+            supplyName === 'paper towel' ||
+            supplyName === 'paper-towel' ||
+            supplyName.includes('barrier') && supplyName.includes('towel') ||
+            supplyName.includes('barrier paper towel') ||
+            supplyName.includes('barrier-paper-towel') ||
+            (supplyName.includes('towel') && supplyName.includes('paper'))) {
           targetSupplyId = 'paper-towel';
         }
       }
@@ -243,9 +251,18 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
               })}
             </div>
             
-            <div className="cabinet-instructions">
-              <p>💡 Drag the supplies you need to the collection area</p>
-            </div>
+            {showCabinetTip && (
+              <div className="cabinet-instructions">
+                <button 
+                  className="cabinet-tip-close"
+                  onClick={() => setShowCabinetTip(false)}
+                  aria-label="Close tip"
+                >
+                  ✕
+                </button>
+                <p>💡 Drag the supplies you need to the collection area</p>
+              </div>
+            )}
           </div>
         </div>
       </>

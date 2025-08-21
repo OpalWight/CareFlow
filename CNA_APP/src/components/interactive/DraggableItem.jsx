@@ -6,7 +6,11 @@ const SUPPLY_ICONS = {
   gloves: '🧤',
   bandage: '🩹',
   antiseptic: '🧴',
-  gauze: '🏥'
+  gauze: '🏥',
+  'paper-towel': '🧻',
+  sink: '🚿',
+  soap: '🧼',
+  'warm-water': '💧'
 };
 
 function DraggableItem({ id, name, isDragging = false, isCollected = false }) {

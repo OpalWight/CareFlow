@@ -717,3 +717,26 @@
   color: #495057;
   text-align: center;
 }
+
+.cabinet-tip-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 0.9rem;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.cabinet-tip-close:hover {
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #495057;
+}

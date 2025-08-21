@@ -404,7 +404,7 @@ export const CNA_SKILL_SCENARIOS = {
       { id: 'explain-procedure', name: 'Explain procedure clearly to client', dropZone: 'client-interaction', requiredSupply: null },
       { id: 'provide-privacy', name: 'Provide privacy with curtain/screen', dropZone: 'privacy-area', requiredSupply: null },
       { id: 'put-on-gloves', name: 'Put on clean gloves', dropZone: 'ppe-area', requiredSupply: 'gloves' },
-      { id: 'line-sink', name: 'Line sink with barrier towel', dropZone: 'sink-prep', requiredSupply: 'barrier-paper-towel' },
+      { id: 'line-sink', name: 'Line sink with paper towel', dropZone: 'sink-prep', requiredSupply: 'paper-towel' },
       { id: 'fill-basin', name: 'Fill emesis basin with cool water', dropZone: 'water-prep', requiredSupply: 'emesis-basin' },
       { id: 'remove-denture', name: 'Remove denture from mouth', dropZone: 'patient-mouth', requiredSupply: null },
       { id: 'place-liner', name: 'Place liner towel in working area', dropZone: 'work-area', requiredSupply: 'liner-towel' },
