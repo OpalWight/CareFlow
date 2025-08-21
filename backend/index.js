@@ -93,6 +93,7 @@ app.use('/auth', authRoutes);
 app.use('/chat', chatRoutes);
 app.use('/progress', progressRoutes);
 
+
 // 🍪 COOKIE TEST ENDPOINT
 app.get('/test-cookie', (req, res) => {
   console.log('🧪 COOKIE TEST ENDPOINT CALLED');
