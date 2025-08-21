@@ -4,6 +4,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import EmbeddingService from './embeddingService.js';
 import KnowledgeBase from './knowledgeBase.js';
+import DynamicKnowledgeService from './dynamicKnowledgeService.js';
 
 class RAGVerificationService {
   constructor(googleApiKey, pineconeApiKey) {
@@ -13,6 +14,7 @@ class RAGVerificationService {
     // Initialize services
     this.embeddingService = new EmbeddingService(googleApiKey);
     this.knowledgeBase = new KnowledgeBase(pineconeApiKey);
+    this.dynamicKnowledgeService = new DynamicKnowledgeService();
     this.genAI = new GoogleGenerativeAI(googleApiKey);
     this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
@@ -25,6 +27,7 @@ class RAGVerificationService {
   async initialize() {
     try {
       await this.knowledgeBase.initialize();
+      await this.dynamicKnowledgeService.initialize();
       this.initialized = true;
       console.log('RAG Verification Service initialized successfully');
     } catch (error) {
@@ -106,31 +109,45 @@ class RAGVerificationService {
   }
 
   /**
-   * Retrieve relevant knowledge from vector database
+   * Retrieve relevant knowledge with dynamic priority
+   * Uses dynamic knowledge first, static as fallback
    * @param {string} queryContext - Query context
    * @param {string} skillId - Skill identifier
-   * @returns {Array} Relevant knowledge documents
+   * @returns {Array} Relevant knowledge documents with source info
    */
   async retrieveKnowledge(queryContext, skillId) {
     try {
-      const searchResults = await this.knowledgeBase.search(
+      // Use the combined knowledge retrieval from DynamicKnowledgeService
+      const combinedResults = await this.dynamicKnowledgeService.getCombinedKnowledge(
         queryContext,
-        (text) => this.embeddingService.createQueryEmbedding(text),
+        skillId,
         {
-          skillId: skillId,
           topK: 5,
-          minScore: 0.7,
-          criticality: null // Include all criticality levels
+          minScore: 0.7
         }
       );
 
-      return searchResults.documents.map(doc => ({
+      // Format results for compatibility with existing code
+      const formattedResults = combinedResults.documents.map(doc => ({
         content: doc.content,
         score: doc.score,
         source: doc.source,
+        source_type: doc.source_type, // 'dynamic' or 'static'
         criticality: doc.criticality,
-        tags: doc.tags
+        tags: doc.tags,
+        priority: doc.priority
       }));
+
+      // Log knowledge source information
+      console.log(`Knowledge retrieval for ${skillId}:`, {
+        totalResults: formattedResults.length,
+        dynamicCount: formattedResults.filter(r => r.source_type === 'dynamic').length,
+        staticCount: formattedResults.filter(r => r.source_type === 'static').length,
+        hasDynamic: combinedResults.hasDynamicContent,
+        hasStatic: combinedResults.hasStaticFallback
+      });
+
+      return formattedResults;
     } catch (error) {
       console.error('Error retrieving knowledge:', error);
       return []; // Return empty array if retrieval fails
@@ -183,16 +200,24 @@ class RAGVerificationService {
     } = stepData;
 
     const knowledgeContext = relevantKnowledge.length > 0
-      ? relevantKnowledge.map((doc, index) => 
-          `[Knowledge ${index + 1}] (Score: ${doc.score.toFixed(2)}, Source: ${doc.source})\n${doc.content}`
-        ).join('\n\n')
+      ? relevantKnowledge.map((doc, index) => {
+          const sourceInfo = doc.source_type === 'dynamic' 
+            ? `Dynamic (${doc.source})` 
+            : `Static (${doc.source})`;
+          return `[Knowledge ${index + 1}] (Score: ${doc.score.toFixed(2)}, Source: ${sourceInfo}, Priority: ${doc.priority})\n${doc.content}`;
+        }).join('\n\n')
       : 'No specific knowledge retrieved for this step.';
+
+    // Add knowledge source summary
+    const dynamicCount = relevantKnowledge.filter(doc => doc.source_type === 'dynamic').length;
+    const staticCount = relevantKnowledge.filter(doc => doc.source_type === 'static').length;
+    const knowledgeSourceSummary = `\nKNOWLEDGE SOURCES: ${dynamicCount} dynamic documents, ${staticCount} static fallback documents.`;
 
     return `
 You are an expert CNA (Certified Nursing Assistant) skills assessor evaluating student performance based on Credentia 2024 standards and OBRA regulations.
 
 RELEVANT KNOWLEDGE BASE INFORMATION:
-${knowledgeContext}
+${knowledgeContext}${knowledgeSourceSummary}
 
 STUDENT PERFORMANCE DATA:
 - CNA Skill: ${skillId}
@@ -270,6 +295,12 @@ Respond ONLY with valid JSON in this exact format:
         skillId: stepData.skillId,
         stepId: stepData.stepId,
         stepName: stepData.stepName
+      },
+      knowledgeSource: {
+        usedDynamicKnowledge: relevantKnowledge.some(doc => doc.source_type === 'dynamic'),
+        dynamicDocuments: relevantKnowledge.filter(doc => doc.source_type === 'dynamic').length,
+        staticFallbacks: relevantKnowledge.filter(doc => doc.source_type === 'static').length,
+        totalRetrieved: relevantKnowledge.length
       }
     };
   }
