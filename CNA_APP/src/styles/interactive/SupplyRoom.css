@@ -1,20 +1,20 @@
-/* Smooth glow hint animation for containers */
+/* Smooth glow hint animation for SVG containers */
 @keyframes glow-hint {
   0% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 0 rgba(0, 123, 255, 0));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
   }
   50% {
     transform: translateY(-2px);
-    filter: drop-shadow(0 0 15px rgba(0, 123, 255, 0.8)) drop-shadow(0 0 25px rgba(0, 123, 255, 0.4));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(0, 123, 255, 0.8)) drop-shadow(0 0 25px rgba(0, 123, 255, 0.4));
   }
   100% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 0 rgba(0, 123, 255, 0));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
   }
 }
 
-.glow-hint {
+.svg-button.glow-hint {
   animation: glow-hint 3s ease-in-out 2;
 }
 
@@ -47,15 +47,15 @@
 @keyframes glow-hint-linens {
   0% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 0 rgba(33, 150, 243, 0));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
   }
   50% {
     transform: translateY(-2px);
-    filter: drop-shadow(0 0 15px rgba(33, 150, 243, 0.8)) drop-shadow(0 0 25px rgba(33, 150, 243, 0.4));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(33, 150, 243, 0.8)) drop-shadow(0 0 25px rgba(33, 150, 243, 0.4));
   }
   100% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 0 rgba(33, 150, 243, 0));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
   }
 }
 
@@ -63,15 +63,15 @@
 @keyframes glow-hint-hygiene {
   0% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 0 rgba(76, 175, 80, 0));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
   }
   50% {
     transform: translateY(-2px);
-    filter: drop-shadow(0 0 15px rgba(76, 175, 80, 0.8)) drop-shadow(0 0 25px rgba(76, 175, 80, 0.4));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(76, 175, 80, 0.8)) drop-shadow(0 0 25px rgba(76, 175, 80, 0.4));
   }
   100% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 0 rgba(76, 175, 80, 0));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
   }
 }
 
@@ -79,15 +79,15 @@
 @keyframes glow-hint-medical {
   0% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 0 rgba(255, 152, 0, 0));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
   }
   50% {
     transform: translateY(-2px);
-    filter: drop-shadow(0 0 15px rgba(255, 152, 0, 0.8)) drop-shadow(0 0 25px rgba(255, 152, 0, 0.4));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(255, 152, 0, 0.8)) drop-shadow(0 0 25px rgba(255, 152, 0, 0.4));
   }
   100% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 0 rgba(255, 152, 0, 0));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
   }
 }
 
@@ -95,15 +95,15 @@
 @keyframes glow-hint-misc {
   0% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 0 rgba(156, 39, 176, 0));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
   }
   50% {
     transform: translateY(-2px);
-    filter: drop-shadow(0 0 15px rgba(156, 39, 176, 0.8)) drop-shadow(0 0 25px rgba(156, 39, 176, 0.4));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(156, 39, 176, 0.8)) drop-shadow(0 0 25px rgba(156, 39, 176, 0.4));
   }
   100% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 0 rgba(156, 39, 176, 0));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
   }
 }
 
@@ -111,15 +111,15 @@
 @keyframes glow-hint-paper-towel {
   0% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 0 rgba(255, 193, 7, 0));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
   }
   50% {
     transform: translateY(-2px);
-    filter: drop-shadow(0 0 15px rgba(255, 193, 7, 0.8)) drop-shadow(0 0 25px rgba(255, 193, 7, 0.4));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(255, 193, 7, 0.8)) drop-shadow(0 0 25px rgba(255, 193, 7, 0.4));
   }
   100% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 0 rgba(255, 193, 7, 0));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
   }
 }
 
@@ -127,15 +127,15 @@
 @keyframes glow-hint-sink {
   0% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 0 rgba(70, 130, 180, 0));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
   }
   50% {
     transform: translateY(-2px);
-    filter: drop-shadow(0 0 15px rgba(70, 130, 180, 0.8)) drop-shadow(0 0 25px rgba(70, 130, 180, 0.4));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(70, 130, 180, 0.8)) drop-shadow(0 0 25px rgba(70, 130, 180, 0.4));
   }
   100% {
     transform: translateY(0);
-    filter: drop-shadow(0 0 0 rgba(70, 130, 180, 0));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
   }
 }
 
@@ -236,9 +236,14 @@
 }
 
 
-.svg-button:hover {
+.svg-button:hover:not(.glow-hint) {
   transform: scale(1.1);
   filter: drop-shadow(4px 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+/* Prevent hover effects from interfering with glow animation */
+.svg-button.glow-hint:hover {
+  transform: translateY(-2px) scale(1.05);
 }
 
 .svg-button:active {
@@ -246,33 +251,33 @@
   transition: transform 0.1s ease;
 }
 
-/* Category-specific hover effects */
-.svg-button.linens:hover {
+/* Category-specific hover effects - only when not glowing */
+.svg-button.linens:hover:not(.glow-hint) {
   background-color: rgba(33, 150, 243, 0.1);
   border: 2px solid #2196F3;
 }
 
-.svg-button.hygiene:hover {
+.svg-button.hygiene:hover:not(.glow-hint) {
   background-color: rgba(76, 175, 80, 0.1);
   border: 2px solid #4CAF50;
 }
 
-.svg-button.medical:hover {
+.svg-button.medical:hover:not(.glow-hint) {
   background-color: rgba(255, 152, 0, 0.1);
   border: 2px solid #FF9800;
 }
 
-.svg-button.misc:hover {
+.svg-button.misc:hover:not(.glow-hint) {
   background-color: rgba(156, 39, 176, 0.1);
   border: 2px solid #9C27B0;
 }
 
-.svg-button.paper-towel:hover {
+.svg-button.paper-towel:hover:not(.glow-hint) {
   background-color: rgba(255, 193, 7, 0.1);
   border: 2px solid #FFC107;
 }
 
-.svg-button.sink:hover {
+.svg-button.sink:hover:not(.glow-hint) {
   background-color: rgba(70, 130, 180, 0.1);
   border: 2px solid #4682B4;
 }

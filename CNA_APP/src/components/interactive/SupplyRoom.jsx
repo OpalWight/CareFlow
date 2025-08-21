@@ -122,6 +122,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
   useEffect(() => {
     const handleTaskItemClick = (event) => {
       const { taskId, taskName, task } = event.detail;
+      console.log('🎯 Task clicked:', { taskId, taskName, task });
       
       // Map task to supply item and find which cabinet contains it
       let targetCabinetKey = null;
@@ -130,6 +131,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
       // Extract supply ID from task name (e.g., "Find Soap" -> "soap")
       if (taskName.startsWith('Find ')) {
         const supplyName = taskName.replace('Find ', '').toLowerCase();
+        console.log('🔍 Looking for supply:', supplyName);
         
         // Find which cabinet contains this supply
         for (const [cabinetKey, cabinet] of Object.entries(cabinetCategories)) {
@@ -140,6 +142,7 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
             supplyName.includes(s.id.toLowerCase())
           );
           if (supply) {
+            console.log(`✅ Found supply "${supply.name}" in ${cabinetKey} cabinet`);
             targetCabinetKey = cabinetKey;
             targetSupplyId = supply.id;
             break;
@@ -183,8 +186,12 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
   }, [selectedCabinet]);
 
   const pulsateElement = (selector) => {
+    console.log('🎯 Trying to animate element with selector:', selector);
     const element = document.querySelector(selector);
     if (element) {
+      console.log('✅ Found element:', element);
+      console.log('📋 Element classes before:', element.className);
+      
       // Remove existing glow class if present
       element.classList.remove('glow-hint');
       
@@ -193,11 +200,15 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
       
       // Add glow class
       element.classList.add('glow-hint');
+      console.log('📋 Element classes after:', element.className);
       
       // Remove the class after animation completes
       setTimeout(() => {
         element.classList.remove('glow-hint');
+        console.log('🕒 Animation finished, removed glow-hint class');
       }, 6000); // 3s * 2 iterations = 6s
+    } else {
+      console.log('❌ Element not found with selector:', selector);
     }
   };
 
