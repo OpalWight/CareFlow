@@ -1,74 +1,196 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Scenario = require('../models/Scenario');
+const DynamicKnowledgeService = require('../services/dynamicKnowledgeService');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Fallback scenarios for when database is not populated
-const fallbackScenarios = {
-    'hand-hygiene': {
-        skillId: "hand-hygiene",
-        skillName: "Hand Hygiene (Hand Washing)",
-        skillCategory: "infection-control",
-        patientName: "Mrs. Johnson",
-        patientAge: 72,
-        patientCondition: "post-operative care",
-        patientPersonality: "cooperative but anxious about cleanliness",
-        specificSymptoms: "You are concerned about infection and appreciate when staff wash their hands properly. You feel reassured when you see proper hygiene practices.",
-        scenarioContext: "You are in the hospital recovering from surgery and are very conscious about infection prevention. You notice and appreciate when healthcare workers follow proper hand hygiene.",
-        learningObjectives: [
-            "Knocks before entering resident's space",
-            "Introduces self",
-            "Addresses resident by name",
-            "Provides explanation to resident of care to be performed",
-            "Obtains permission from resident to perform care",
-            "Performs Hand washing before collecting supplies",
-            "Uses Standard Precautions throughout skill performance, including barriers",
-            "Ask resident about any comfort, preferences and or needs",
-            "Provides privacy to resident throughout skill performance",
-            "Provides safety measures throughout skill performance",
-            "Call light left in reach of resident at all times",
-            "Bed in low position",
-            "Wheelchair/Bed wheels locked",
-            "Side Rails in upright position if resident is at risk for falls",
-            "Non-slip footwear",
-            "Water temperature assessed for resident protection and comfort",
-            "Demonstrate proper hand washing technique",
-            "Follow infection control protocols",
-            "Maintain patient confidence through visible hygiene practices",
-            "Performs Hand Hygiene just before exiting the room and before documentation"
-        ],
-        specificSteps: [
-            "Address client by name and introduce self",
-            "Turn on water at sink",
-            "Wet hands and wrists thoroughly",
-            "Apply soap to hands",
-            "Lather for at least 20 seconds with friction",
-            "Clean fingernails against opposite palm",
-            "Rinse all surfaces, fingertips down",
-            "Dry with clean paper towel, fingertips first",
-            "Turn off faucet with paper towel"
-        ],
-        isActive: true
+// Initialize RAG service for dynamic scenario generation
+let dynamicKnowledgeService = null;
+const initializeRAGService = async () => {
+    if (!dynamicKnowledgeService) {
+        dynamicKnowledgeService = new DynamicKnowledgeService();
+        try {
+            await dynamicKnowledgeService.initialize();
+            console.log('RAG service initialized for scenario generation');
+        } catch (error) {
+            console.error('Failed to initialize RAG service:', error);
+        }
+    }
+    return dynamicKnowledgeService;
+};
+
+// Function to generate scenario from RAG knowledge using AI
+const generateScenarioFromKnowledge = async (skillId, knowledgeDocuments) => {
+    try {
+        console.log(`🤖 AI: Generating scenario for ${skillId} using ${knowledgeDocuments.length} knowledge documents`);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite-001" });
+        
+        // Build knowledge context from retrieved documents
+        const knowledgeContext = knowledgeDocuments.map((doc, index) => 
+            `[Knowledge ${index + 1}] (Score: ${doc.score?.toFixed(2) || 'N/A'}):\n${doc.content}`
+        ).join('\n\n');
+
+        const prompt = `
+You are an expert CNA trainer creating a realistic patient simulation scenario for the skill: "${skillId}".
+
+RETRIEVED KNOWLEDGE ABOUT THIS SKILL:
+${knowledgeContext}
+
+Based on this knowledge, create a realistic patient simulation scenario. Generate a JSON response with this exact structure:
+
+{
+  "skillId": "${skillId}",
+  "skillName": "descriptive name of the skill",
+  "skillCategory": "one of: infection-control, adl, mobility, measurement, range-motion",
+  "patientName": "realistic patient name (Mr./Mrs. [Last name])",
+  "patientAge": number between 65-85,
+  "patientCondition": "realistic medical condition requiring this skill",
+  "patientPersonality": "brief personality description affecting care interaction",
+  "specificSymptoms": "what the patient is experiencing that requires this skill",
+  "scenarioContext": "detailed scenario setup explaining why this skill is needed",
+  "learningObjectives": [
+    "list of 6-12 specific learning objectives from the knowledge",
+    "focus on key procedural steps and safety requirements",
+    "use action-oriented language (e.g., 'Performs hand hygiene before...', 'Demonstrates proper...')"
+  ],
+  "criticalSteps": [
+    {
+      "stepNumber": 1,
+      "description": "critical safety step",
+      "critical": true
+    }
+  ],
+  "commonMistakes": [
+    "list of 3-5 common mistakes students make with this skill"
+  ],
+  "isActive": true
+}
+
+REQUIREMENTS:
+- Create realistic, age-appropriate scenarios for elderly patients
+- Base learning objectives directly on the retrieved knowledge
+- Include safety-critical steps and infection control measures
+- Make the patient personality realistic and relevant to the skill
+- Ensure all information is consistent and professionally appropriate
+
+Respond ONLY with valid JSON, no other text.`;
+
+        console.log(`🤖 AI: Sending prompt to Gemini (${prompt.length} chars)`);
+        const result = await model.generateContent(prompt);
+        const responseText = result.response.text();
+        
+        console.log(`🤖 AI: Received response (${responseText.length} chars)`);
+        
+        // Parse JSON response
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            console.error(`❌ AI: No valid JSON found in response: ${responseText.substring(0, 500)}...`);
+            throw new Error('No valid JSON found in AI response');
+        }
+        
+        console.log(`🤖 AI: Parsing JSON response`);
+        const scenario = JSON.parse(jsonMatch[0]);
+        
+        // Ensure required fields are present
+        if (!scenario.skillId || !scenario.skillName || !scenario.patientName) {
+            console.error(`❌ AI: Generated scenario missing required fields:`, scenario);
+            throw new Error('Generated scenario missing required fields');
+        }
+        
+        // Set the skillId to ensure consistency
+        scenario.skillId = skillId;
+        
+        console.log(`✅ AI: Successfully generated scenario for ${skillId}: ${scenario.skillName}`);
+        return scenario;
+        
+    } catch (error) {
+        console.error('Error generating scenario from knowledge:', error);
+        throw error;
     }
 };
 
-// Function to get scenario from database by skillId
+// RAG-based scenario generation replaces hardcoded fallback scenarios
+
+// Function to generate scenario dynamically using RAG
 const getScenarioBySkillId = async (skillId) => {
     try {
-        const scenario = await Scenario.findOne({ skillId: skillId, isActive: true });
-        if (!scenario) {
-            // Use fallback scenario if specific one not found in database
-            console.warn(`Scenario not found in database for skillId: ${skillId}, using fallback`);
-            const fallbackScenario = fallbackScenarios[skillId] || fallbackScenarios['hand-hygiene'];
-            return fallbackScenario;
+        console.log(`Generating dynamic scenario for skillId: ${skillId}`);
+        
+        // Initialize RAG service
+        const ragService = await initializeRAGService();
+        if (!ragService) {
+            console.error('RAG service not available');
+            return null;
         }
+
+        // Query RAG system for knowledge about the skill with multiple query variations
+        console.log(`🔍 RAG: Searching knowledge for skillId: ${skillId}`);
+        
+        let knowledge = await ragService.getCombinedKnowledge(
+            `CNA skill ${skillId} procedures steps techniques safety requirements`,
+            skillId,
+            {
+                topK: 15,
+                minScore: 0.3  // Lowered from 0.6 to be more permissive
+            }
+        );
+
+        console.log(`🔍 RAG: Primary query found ${knowledge.documents?.length || 0} documents`);
+
+        // If no results, try alternative queries
+        if (!knowledge.documents || knowledge.documents.length === 0) {
+            console.log(`🔍 RAG: Trying alternative query for ${skillId}`);
+            
+            // Try broader query without skill prefix
+            knowledge = await ragService.getCombinedKnowledge(
+                `${skillId.replace(/-/g, ' ')} nursing procedure safety steps`,
+                skillId,
+                {
+                    topK: 15,
+                    minScore: 0.25  // Even more permissive for fallback
+                }
+            );
+            
+            console.log(`🔍 RAG: Alternative query found ${knowledge.documents?.length || 0} documents`);
+        }
+
+        // If still no results, try very broad query
+        if (!knowledge.documents || knowledge.documents.length === 0) {
+            console.log(`🔍 RAG: Trying broad query for ${skillId}`);
+            
+            knowledge = await ragService.getCombinedKnowledge(
+                skillId.replace(/-/g, ' '),
+                skillId,
+                {
+                    topK: 20,
+                    minScore: 0.2  // Very permissive for broad search
+                }
+            );
+            
+            console.log(`🔍 RAG: Broad query found ${knowledge.documents?.length || 0} documents`);
+        }
+
+        if (!knowledge.documents || knowledge.documents.length === 0) {
+            console.error(`❌ RAG: No knowledge found in RAG system for skillId: ${skillId} after all attempts`);
+            return null;
+        }
+
+        console.log(`✅ RAG: Successfully found ${knowledge.documents.length} documents for ${skillId}`);
+        
+        // Log document details for debugging
+        knowledge.documents.slice(0, 3).forEach((doc, i) => {
+            console.log(`📄 RAG Doc ${i+1}: Score=${doc.score?.toFixed(3)}, Content preview: ${doc.content?.substring(0, 100)}...`);
+        });
+
+        // Generate scenario using AI and retrieved knowledge
+        const scenario = await generateScenarioFromKnowledge(skillId, knowledge.documents);
+        
+        console.log(`Successfully generated dynamic scenario for ${skillId}`);
         return scenario;
+
     } catch (error) {
-        console.error('Error fetching scenario from database:', error);
-        // Use fallback scenarios when database is unavailable
-        console.log('Using fallback scenario due to database error');
-        const fallbackScenario = fallbackScenarios[skillId] || fallbackScenarios['hand-hygiene'];
-        return fallbackScenario;
+        console.error('Error generating scenario from RAG:', error);
+        return null;
     }
 };
 

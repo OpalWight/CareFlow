@@ -14,7 +14,7 @@ Add to your `.env.development` file (since you're using Vite):
 
 ```env
 VITE_GOOGLE_API_KEY=your_google_api_key_here
-VITE_PINECONE_API_KEY=pcsk_HBmFW_N9bgLBvhPFHHHvxAV23j8dbqJeXY5wybJRcB3MWLQp5L8wS48AfDHtKm8mYMnQG
+VITE_PINECONE_API_KEY=your_pinecone_api_key_here
 ```
 
 ✅ **Pinecone API key has been added to your .env.development file**

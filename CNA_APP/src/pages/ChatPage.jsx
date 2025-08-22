@@ -26,11 +26,11 @@ const ChatPage = () => {
 
     // Get skillId from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const skillId = urlParams.get('skillId') || 'hand-hygiene';
+    const skillId = urlParams.get('skillId');
 
     useEffect(() => {
         const startSession = async () => {
-            if (!user || !selectedEvaluationMode) return; // Don't start if there is no user or mode not selected
+            if (!user || !selectedEvaluationMode || !skillId) return; // Don't start if there is no user, mode not selected, or no skillId
 
             setIsLoading(true);
             try {
@@ -61,7 +61,18 @@ const ChatPage = () => {
                 }
             } catch (error) {
                 console.error("Failed to start chat session:", error);
-                setMessages([{ role: 'system', content: "Error: Could not start the chat session." }]);
+                let errorMessage = "Error: Could not start the chat session.";
+                
+                // Provide more specific error messages
+                if (error.response?.status === 404) {
+                    errorMessage = `Error: Skill "${skillId}" not found. Please select a valid skill.`;
+                } else if (error.response?.status === 400) {
+                    errorMessage = error.response?.data?.message || "Error: Invalid request parameters.";
+                } else if (error.response?.data?.message) {
+                    errorMessage = `Error: ${error.response.data.message}`;
+                }
+                
+                setMessages([{ role: 'system', content: errorMessage }]);
             }
             setIsLoading(false);
         };
@@ -187,6 +198,21 @@ const ChatPage = () => {
         setSelectedEvaluationMode(mode);
         setShowModeSelection(false);
     };
+
+    // Show error if no skillId is provided
+    if (!skillId) {
+        return (
+            <Layout className="chat-page">
+                <div className="error-container">
+                    <h2>No Skill Selected</h2>
+                    <p>Please select a skill to start the chat practice session.</p>
+                    <button onClick={() => window.location.href = '/skills'} className="back-to-skills-btn">
+                        Back to Skills
+                    </button>
+                </div>
+            </Layout>
+        );
+    }
 
     return (
         <Layout className="chat-page">

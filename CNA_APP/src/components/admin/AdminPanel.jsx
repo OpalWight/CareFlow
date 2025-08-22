@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../api/AuthContext';
 import KnowledgeDocumentEditor from './KnowledgeDocumentEditor';
 import KnowledgeDocumentList from './KnowledgeDocumentList';
-import DynamicKnowledgeService from '../../services/dynamicKnowledgeService';
+import RAGApiService from '../../services/ragApiService';
 import '../../styles/admin/AdminPanel.css';
 
 const AdminPanel = () => {
@@ -16,7 +16,7 @@ const AdminPanel = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [knowledgeService, setKnowledgeService] = useState(null);
+  const [knowledgeService, setKnowledgeService] = useState(new RAGApiService());
   const [stats, setStats] = useState({
     totalDocuments: 0,
     lastUpdated: null,
@@ -29,17 +29,25 @@ const AdminPanel = () => {
   useEffect(() => {
     const initializeService = async () => {
       try {
-        const service = new DynamicKnowledgeService();
-        await service.initialize();
-        setKnowledgeService(service);
+        // Check RAG service health
+        const healthStatus = await knowledgeService.checkHealth();
         
-        // Load existing documents
-        const documents = await service.getAllDocuments();
+        if (!healthStatus.success) {
+          throw new Error('RAG service is not available');
+        }
+        
+        // Load existing documents (this would need a new backend endpoint)
+        // For now, we'll skip this since we need to create the knowledge management API
+        const documents = [];
         setKnowledgeDocuments(documents);
         
         // Get stats
-        const systemStats = await service.getStats();
-        setStats(systemStats);
+        const systemStats = await knowledgeService.getKnowledgeStats();
+        setStats({
+          totalDocuments: systemStats.totalVectors || 0,
+          lastUpdated: new Date().toISOString(),
+          embeddingStatus: 'ready'
+        });
         
         setIsLoading(false);
       } catch (error) {

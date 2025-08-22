@@ -5,10 +5,15 @@ import DraggableAvailableActions from './DraggableAvailableActions';
 import CNA_SKILL_SCENARIOS from '../../data/cnaSkillScenarios';
 import '../../styles/interactive/PatientRoom.css';
 
-function PatientRoom({ collectedSupplies, skillId = 'hand-hygiene', onStepComplete, completedSkillSteps = [] }) {
+function PatientRoom({ collectedSupplies, skillId, onStepComplete, completedSkillSteps = [] }) {
   const [completedSteps, setCompletedSteps] = useState(completedSkillSteps);
   const [activeActions, setActiveActions] = useState({}); // Track active action buttons
-  const scenario = CNA_SKILL_SCENARIOS[skillId] || CNA_SKILL_SCENARIOS['hand-hygiene'];
+  const scenario = CNA_SKILL_SCENARIOS[skillId];
+  
+  if (!scenario) {
+    console.error(`No scenario found for skillId: ${skillId}`);
+    return <div className="error">Invalid skill ID: {skillId}</div>;
+  }
 
   // Sync with parent component's completed steps
   React.useEffect(() => {

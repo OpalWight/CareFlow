@@ -194,7 +194,8 @@ function LearnerHomeFinal(){
         if (skillId) {
             window.location.href = `/chat?skillId=${skillId}`;
         } else {
-            window.location.href = '/chat';
+            console.error(`No skillId found for skill: ${skill}`);
+            alert(`Error: Unable to find skill ID for "${skill}". Please try again or contact support.`);
         }
     };
 

@@ -41,7 +41,11 @@ exports.startChatSession = async (req, res) => {
 
     try {
         // Get the scenario from database based on skillId
-        const scenario = await getScenarioBySkillId(skillId || 'hand-hygiene'); // Default to hand-hygiene if no skillId provided
+        if (!skillId) {
+            return res.status(400).json({ message: "skillId is required to start a chat session." });
+        }
+        
+        const scenario = await getScenarioBySkillId(skillId);
         
         if (!scenario) {
             return res.status(404).json({ message: "Scenario not found for the specified skill." });
