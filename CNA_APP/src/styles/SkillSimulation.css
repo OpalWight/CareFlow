@@ -338,7 +338,172 @@
     margin-bottom: 0;
 }
 
+/* Instruction Screen Styles */
+.instruction-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 60vh;
+    padding: 40px 20px;
+}
+
+.instruction-heading {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.instruction-subtitle {
+    font-size: 1.2rem;
+    color: #6c757d;
+    margin-bottom: 40px;
+}
+
+/* Difficulty Options - Card Style */
+.difficulty-options {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.difficulty-option {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 24px;
+    flex: 1;
+    min-width: 280px;
+    max-width: 350px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    position: relative;
+}
+
+.difficulty-option:hover {
+    border-color: #007bff;
+    background: #f0f8ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 123, 255, 0.2);
+}
+
+.difficulty-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+
+.difficulty-option h3 {
+    color: #333;
+    margin-bottom: 12px;
+    font-size: 1.3rem;
+}
+
+.difficulty-option p {
+    color: #666;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.difficulty-option ul {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0;
+}
+
+.difficulty-option li {
+    color: #555;
+    margin-bottom: 8px;
+    padding-left: 20px;
+    position: relative;
+    font-size: 0.9rem;
+}
+
+.difficulty-option li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #28a745;
+    font-weight: bold;
+}
+
+.select-difficulty-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.select-difficulty-btn:hover {
+    background: #0056b3;
+}
+
+.instruction-buttons {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.instruction-button {
+    background-color: #ffc107;
+    color: #212529;
+    border: none;
+    padding: 20px 40px;
+    border-radius: 12px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    min-width: 180px;
+}
+
+.instruction-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.no-hints-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.no-hints-button:hover {
+    background-color: #c82333;
+}
+
+.normal-mode-button {
+    background-color: #28a745;
+    color: white;
+}
+
+.normal-mode-button:hover {
+    background-color: #218838;
+}
+
 /* Responsive design */
+@media (max-width: 900px) {
+    .difficulty-options {
+        gap: 16px;
+    }
+    
+    .difficulty-option {
+        min-width: 250px;
+        max-width: 300px;
+    }
+}
+
 @media (max-width: 768px) {
     .skill-simulation-container,
     .skill-simulation-page-container {
@@ -380,5 +545,41 @@
     
     .no-skill-selected h2 {
         font-size: 1.5rem;
+    }
+    
+    .instruction-heading {
+        font-size: 2rem;
+    }
+    
+    .instruction-subtitle {
+        font-size: 1.1rem;
+    }
+    
+    .instruction-buttons {
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+    }
+    
+    .instruction-button {
+        padding: 15px 30px;
+        font-size: 1.1rem;
+        min-width: 200px;
+    }
+}
+
+/* Stack on smaller screens */
+@media (max-width: 600px) {
+    .difficulty-options {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .difficulty-option {
+        max-width: 100%;
+        min-width: auto;
+        width: 100%;
+        flex: none;
     }
 }
