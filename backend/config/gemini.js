@@ -3,30 +3,72 @@ const Scenario = require('../models/Scenario');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// Fallback scenarios for when database is not populated
+const fallbackScenarios = {
+    'hand-hygiene': {
+        skillId: "hand-hygiene",
+        skillName: "Hand Hygiene (Hand Washing)",
+        skillCategory: "infection-control",
+        patientName: "Mrs. Johnson",
+        patientAge: 72,
+        patientCondition: "post-operative care",
+        patientPersonality: "cooperative but anxious about cleanliness",
+        specificSymptoms: "You are concerned about infection and appreciate when staff wash their hands properly. You feel reassured when you see proper hygiene practices.",
+        scenarioContext: "You are in the hospital recovering from surgery and are very conscious about infection prevention. You notice and appreciate when healthcare workers follow proper hand hygiene.",
+        learningObjectives: [
+            "Knocks before entering resident's space",
+            "Introduces self",
+            "Addresses resident by name",
+            "Provides explanation to resident of care to be performed",
+            "Obtains permission from resident to perform care",
+            "Performs Hand washing before collecting supplies",
+            "Uses Standard Precautions throughout skill performance, including barriers",
+            "Ask resident about any comfort, preferences and or needs",
+            "Provides privacy to resident throughout skill performance",
+            "Provides safety measures throughout skill performance",
+            "Call light left in reach of resident at all times",
+            "Bed in low position",
+            "Wheelchair/Bed wheels locked",
+            "Side Rails in upright position if resident is at risk for falls",
+            "Non-slip footwear",
+            "Water temperature assessed for resident protection and comfort",
+            "Demonstrate proper hand washing technique",
+            "Follow infection control protocols",
+            "Maintain patient confidence through visible hygiene practices",
+            "Performs Hand Hygiene just before exiting the room and before documentation"
+        ],
+        specificSteps: [
+            "Address client by name and introduce self",
+            "Turn on water at sink",
+            "Wet hands and wrists thoroughly",
+            "Apply soap to hands",
+            "Lather for at least 20 seconds with friction",
+            "Clean fingernails against opposite palm",
+            "Rinse all surfaces, fingertips down",
+            "Dry with clean paper towel, fingertips first",
+            "Turn off faucet with paper towel"
+        ],
+        isActive: true
+    }
+};
+
 // Function to get scenario from database by skillId
 const getScenarioBySkillId = async (skillId) => {
     try {
         const scenario = await Scenario.findOne({ skillId: skillId, isActive: true });
         if (!scenario) {
-            // Fallback to default scenario if specific one not found
-            console.warn(`Scenario not found for skillId: ${skillId}, using default`);
-            return await Scenario.findOne({ skillId: "hand-hygiene", isActive: true });
+            // Use fallback scenario if specific one not found in database
+            console.warn(`Scenario not found in database for skillId: ${skillId}, using fallback`);
+            const fallbackScenario = fallbackScenarios[skillId] || fallbackScenarios['hand-hygiene'];
+            return fallbackScenario;
         }
         return scenario;
     } catch (error) {
-        console.error('Error fetching scenario:', error);
-        // Return a basic fallback scenario
-        return {
-            skillId: "default",
-            skillName: "General Care",
-            patientName: "Mrs. Smith",
-            patientAge: 75,
-            patientCondition: "general care needs",
-            patientPersonality: "cooperative and friendly",
-            specificSymptoms: "You are a patient who needs general care assistance. You are cooperative and appreciate when caregivers are gentle and professional.",
-            scenarioContext: "You are receiving general nursing care and appreciate professional, compassionate assistance.",
-            learningObjectives: ["Provide compassionate care", "Maintain professionalism", "Follow proper procedures"]
-        };
+        console.error('Error fetching scenario from database:', error);
+        // Use fallback scenarios when database is unavailable
+        console.log('Using fallback scenario due to database error');
+        const fallbackScenario = fallbackScenarios[skillId] || fallbackScenarios['hand-hygiene'];
+        return fallbackScenario;
     }
 };
 

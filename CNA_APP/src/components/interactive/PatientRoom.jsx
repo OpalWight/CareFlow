@@ -77,19 +77,19 @@ function PatientRoom({ collectedSupplies, skillId = 'hand-hygiene', onStepComple
   const pulsateElement = (selector) => {
     const element = document.querySelector(selector);
     if (element) {
-      // Remove existing pulsate class if present
-      element.classList.remove('pulsate-highlight');
+      // Remove existing glow class if present
+      element.classList.remove('glow-hint');
       
       // Force reflow
       element.offsetHeight;
       
-      // Add pulsate class
-      element.classList.add('pulsate-highlight');
+      // Add glow class
+      element.classList.add('glow-hint');
       
       // Remove the class after animation completes
       setTimeout(() => {
-        element.classList.remove('pulsate-highlight');
-      }, 6000); // 2s * 3 iterations = 6s
+        element.classList.remove('glow-hint');
+      }, 3600); // 1.2s * 3 iterations = 3.6s
     }
   };
 
@@ -152,9 +152,6 @@ function PatientRoom({ collectedSupplies, skillId = 'hand-hygiene', onStepComple
 
   return (
     <div>
-      <h2 id="patient-room-h2">{scenario.patientRoomTitle}</h2>
-      <p id="patient-room-p">{scenario.description}</p>
-      
       <div className="patient-room-container">
         {/* Hospital bed - always present */}
         <div className="hospital-bed">

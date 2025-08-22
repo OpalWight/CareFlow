@@ -3,17 +3,26 @@ import DraggableItem from './DraggableItem';
 import DropZone from './DropZone';
 import DraggableSupplyCollection from './DraggableSupplyCollection';
 import '../../styles/interactive/SupplyRoom.css';
+import HygieneSvg from '../../assets/svg/Hygiene.svg';
+import LinensSvg from '../../assets/svg/Linens.svg';
+import MedicalSvg from '../../assets/svg/Medical.svg';
+import MiscSvg from '../../assets/svg/misc.svg';
+import PaperTowelSvg from '../../assets/svg/paperTowel.svg';
+import SinkSvg from '../../assets/svg/sink.svg';
+import FloorSvg from '../../assets/svg/Floor.svg';
 
 function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlightedSupply }) {
   const [selectedCabinet, setSelectedCabinet] = useState(null);
   const [sinkUsed, setSinkUsed] = useState(false);
   const [showTip, setShowTip] = useState(true);
+  const [showCabinetTip, setShowCabinetTip] = useState(true);
   const [pulsatingElement, setPulsatingElement] = useState(null);
 
   const cabinetCategories = {
     linens: {
       title: "Linens & Barriers",
       color: "#e3f2fd",
+      svg: LinensSvg,
       supplies: [
         { id: 'bath-towel', name: 'Bath Towel' },
         { id: 'cloth-protector', name: 'Cloth Protector' },
@@ -21,17 +30,16 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
         { id: 'disposable-bed-protector', name: 'Disposable Bed Protector' },
         { id: 'gown', name: 'Gown' },
         { id: 'liner-towel', name: 'Liner Towel' },
-        { id: 'paper-towel', name: 'Paper Towel' },
         { id: 'pillows', name: 'Pillows' },
         { id: 'shirts', name: 'Shirts (front-buttoned)' },
         { id: 'wash-towel', name: 'Wash Towel' },
-        { id: 'washcloth', name: 'Washcloth' },
-        { id: 'barrier-paper-towel', name: 'Barrier Paper Towel' }
+        { id: 'washcloth', name: 'Washcloth' }
       ]
     },
-    cleaning: {
-      title: "Cleaning & Hygiene Products",
+    hygiene: {
+      title: "Cleaning & Hygiene",
       color: "#e8f5e8",
+      svg: HygieneSvg,
       supplies: [
         { id: 'alcohol-wipes', name: 'Alcohol Wipes' },
         { id: 'antiseptic', name: 'Antiseptic' },
@@ -45,8 +53,9 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
       ]
     },
     medical: {
-      title: "Medical Devices & Equipment",
+      title: "Medical Equipment",
       color: "#fff3e0",
+      svg: MedicalSvg,
       supplies: [
         { id: 'bandage', name: 'Bandage' },
         { id: 'bed-pan', name: 'Bed Pan' },
@@ -60,32 +69,21 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
         { id: 'standing-scale', name: 'Standing Scale' },
         { id: 'stethoscope', name: 'Stethoscope (Trainer)' },
         { id: 'transfer-belt', name: 'Transfer/Gait Belt' },
-        { id: 'wheelchair', name: 'Wheelchair' }
+        { id: 'wheelchair', name: 'Wheelchair' },
+        { id: 'gloves', name: 'Gloves' }
       ]
     },
-    containers: {
-      title: "Containers & Utensils",
+    misc: {
+      title: "Misc",
       color: "#f3e5f5",
+      svg: MiscSvg,
       supplies: [
         { id: 'basin', name: 'Basin' },
         { id: 'cup-water', name: 'Cup of Water' },
         { id: 'denture-container', name: 'Denture Container with Lid' },
         { id: 'fork', name: 'Fork' },
         { id: 'food-tray', name: 'Tray (for food)' },
-        { id: 'trashcan', name: 'Trashcan' }
-      ]
-    },
-    ppe: {
-      title: "Personal Protective Equipment (PPE)",
-      color: "#ffebee",
-      supplies: [
-        { id: 'gloves', name: 'Gloves' }
-      ]
-    },
-    misc: {
-      title: "Miscellaneous",
-      color: "#fafafa",
-      supplies: [
+        { id: 'trashcan', name: 'Trashcan' },
         { id: 'diet-card', name: 'Diet Card' },
         { id: 'magazine', name: 'Magazine/TV Remote' },
         { id: 'non-skid-socks', name: 'Non-skid Socks' },
@@ -117,6 +115,12 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
       const event = new CustomEvent('sinkUsed', { detail: { supplyId: 'sink' } });
       window.dispatchEvent(event);
     }
+  };
+
+  const handlePaperTowelClick = () => {
+    // Dispatch a custom event to notify parent component that paper towel was found
+    const event = new CustomEvent('supplyFound', { detail: { supplyId: 'paper-towel' } });
+    window.dispatchEvent(event);
   };
 
   // Check if current skill requires sink
@@ -153,13 +157,28 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
         if (supplyName.includes('sink') || supplyName.includes('water')) {
           targetSupplyId = 'sink';
         }
+        
+        // Special case for paper towel (all variations including barrier)
+        if (supplyName.includes('paper towel') || 
+            supplyName.includes('papertowel') || 
+            supplyName.includes('paper-towel') ||
+            supplyName === 'paper towel' ||
+            supplyName === 'paper-towel' ||
+            supplyName.includes('barrier') && supplyName.includes('towel') ||
+            supplyName.includes('barrier paper towel') ||
+            supplyName.includes('barrier-paper-towel') ||
+            (supplyName.includes('towel') && supplyName.includes('paper'))) {
+          targetSupplyId = 'paper-towel';
+        }
       }
       
       // Apply pulsating effect
       if (targetCabinetKey) {
-        pulsateElement(`.cabinet.${targetCabinetKey}`);
+        pulsateElement(`.svg-button.${targetCabinetKey}`);
       } else if (targetSupplyId === 'sink') {
-        pulsateElement('.sink');
+        pulsateElement('.svg-button.sink');
+      } else if (targetSupplyId === 'paper-towel') {
+        pulsateElement('.svg-button.paper-towel');
       }
     };
 
@@ -181,19 +200,19 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
   const pulsateElement = (selector) => {
     const element = document.querySelector(selector);
     if (element) {
-      // Remove existing pulsate class if present
-      element.classList.remove('pulsate-highlight');
+      // Remove existing glow class if present
+      element.classList.remove('glow-hint');
       
       // Force reflow
       element.offsetHeight;
       
-      // Add pulsate class
-      element.classList.add('pulsate-highlight');
+      // Add glow class
+      element.classList.add('glow-hint');
       
       // Remove the class after animation completes
       setTimeout(() => {
-        element.classList.remove('pulsate-highlight');
-      }, 6000); // 2s * 3 iterations = 6s
+        element.classList.remove('glow-hint');
+      }, 3600); // 1.2s * 3 iterations = 3.6s
     }
   };
 
@@ -239,9 +258,18 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
               })}
             </div>
             
-            <div className="cabinet-instructions">
-              <p>💡 Drag the supplies you need to the collection area</p>
-            </div>
+            {showCabinetTip && (
+              <div className="cabinet-instructions">
+                <button 
+                  className="cabinet-tip-close"
+                  onClick={() => setShowCabinetTip(false)}
+                  aria-label="Close tip"
+                >
+                  ✕
+                </button>
+                <p>💡 Drag the supplies you need to the collection area</p>
+              </div>
+            )}
           </div>
         </div>
       </>
@@ -251,25 +279,18 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
 
   return (
     <div>
-      <h2>Supply Room</h2>
-      <p>Click on cabinets and shelves to explore their contents. Find and collect all required supplies.</p>
-      
       <div className="supply-room-container">
+
         {/* Cabinets arranged around sink with 10px gaps */}
         {/* Top Row - Above sink */}
         <div 
           className={`cabinet linens ${supplyToCabinetMap[highlightedSupply] === 'linens' ? 'cabinet-pulsating' : ''}`}
+
           onClick={() => handleCabinetClick('linens')}
           title="Linens & Barriers"
-          style={{ 
-            top: 'calc(45% - 80px)', // Sink top minus 60px height minus 10px gap minus 70px cabinet height
-            left: 'calc(50% - 150px)' // Left of sink with increased gap
-          }}
-        >
-          <div className="cabinet-label">Linens & Barriers</div>
-          <div className="cabinet-icon">🛏️</div>
-        </div>
-        
+          alt="Linens & Barriers"
+        />
+
         <div 
           className={`cabinet cleaning ${supplyToCabinetMap[highlightedSupply] === 'cleaning' ? 'cabinet-pulsating' : ''}`}
           onClick={() => handleCabinetClick('cleaning')}
@@ -285,17 +306,13 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
 
         <div 
           className={`cabinet medical ${supplyToCabinetMap[highlightedSupply] === 'medical' ? 'cabinet-pulsating' : ''}`}
+
           onClick={() => handleCabinetClick('medical')}
-          title="Medical Devices & Equipment"
-          style={{ 
-            top: 'calc(45% - 80px)', // Above sink
-            left: 'calc(50% + 60px)' // Right of sink with increased gap
-          }}
-        >
-          <div className="cabinet-label">Medical Equipment</div>
-          <div className="cabinet-icon">🩺</div>
-        </div>
+          title="Medical Equipment"
+          alt="Medical Equipment"
+        />
         
+
         {/* Bottom Row - Below sink */}
         <div 
           className={`cabinet containers ${supplyToCabinetMap[highlightedSupply] === 'containers' ? 'cabinet-pulsating' : ''}`}
@@ -325,32 +342,30 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlight
         
         <div 
           className={`cabinet misc ${supplyToCabinetMap[highlightedSupply] === 'misc' ? 'cabinet-pulsating' : ''}`}
-          onClick={() => handleCabinetClick('misc')}
-          title="Miscellaneous"
-          style={{ 
-            top: 'calc(45% + 70px)', // Below sink
-            left: 'calc(50% + 60px)' // Right of sink with increased gap
-          }}
-        >
-          <div className="cabinet-label">Miscellaneous</div>
-          <div className="cabinet-icon">📋</div>
-        </div>
 
-        {/* Sink */}
+          onClick={() => handleCabinetClick('misc')}
+          title="Misc"
+          alt="Misc"
+        />
+
+        {/* Paper Towel Dispenser */}
+        <img 
+          src={PaperTowelSvg}
+          className="svg-button paper-towel"
+          onClick={handlePaperTowelClick}
+          title="Paper Towel"
+          alt="Paper Towel"
+        />
+
+        {/* Sink - Center of layout */}
         {requiresSink && (
-          <div 
-            className={`sink ${sinkUsed ? 'sink-used' : ''}`}
+          <img 
+            src={SinkSvg}
+            className={`svg-button sink ${sinkUsed ? 'sink-used' : ''}`}
             onClick={handleSinkClick}
-            title="Click to use sink"
-            style={{ 
-              top: '45%', 
-              left: 'calc(50% - 40px)',
-              width: '80px', 
-              height: '60px'
-            }}
-          >
-            <div>{sinkUsed ? '✅ Sink Used' : '🚿 Sink'}</div>
-          </div>
+            title={sinkUsed ? "Sink (Used)" : "Click to use sink"}
+            alt={sinkUsed ? "Sink (Used)" : "Sink"}
+          />
         )}
 
         <div className="room-title">

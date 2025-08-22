@@ -199,10 +199,7 @@ function LearnerHomeFinal(){
     };
 
     const handleSkillSimulation = (skill) => {
-        const skillId = getSkillId(skill);
-        if (skillId) {
-            window.location.href = `/skill-simulation?skill=${encodeURIComponent(skill)}&skillId=${skillId}`;
-        }
+        window.location.href = `/skill-simulation?skill=${encodeURIComponent(skill)}`;
     };
 
     const scrollToSkill = (skillName) => {

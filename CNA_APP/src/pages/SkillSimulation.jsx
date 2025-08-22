@@ -10,6 +10,9 @@ function SkillSimulation() {
     const [selectedSkill, setSelectedSkill] = useState('');
     const [skillId, setSkillId] = useState('');
     const [simulationStarted, setSimulationStarted] = useState(false);
+    const [showInstructionScreen, setShowInstructionScreen] = useState(false);
+    const [showHints, setShowHints] = useState(true);
+    const [difficultyMode, setDifficultyMode] = useState('normal'); // 'normal', 'hard', 'extraHard'
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -26,6 +29,7 @@ function SkillSimulation() {
         } else if (skill) {
             const convertedId = getSkillId(decodeURIComponent(skill));
             setSkillId(convertedId);
+            setShowInstructionScreen(true);
         }
     }, [location]);
 
@@ -68,6 +72,27 @@ function SkillSimulation() {
         }
     };
 
+    const handleEasyMode = () => {
+        setShowHints(true);
+        setDifficultyMode('easy');
+        setShowInstructionScreen(false);
+        setSimulationStarted(true);
+    };
+
+    const handleHardMode = () => {
+        setShowHints(true);
+        setDifficultyMode('hard');
+        setShowInstructionScreen(false);
+        setSimulationStarted(true);
+    };
+
+    const handleExtraHardMode = () => {
+        setShowHints(false);
+        setDifficultyMode('extraHard');
+        setShowInstructionScreen(false);
+        setSimulationStarted(true);
+    };
+
     const handleBackToSelection = () => {
         navigate('/learner-home-final');
     };
@@ -106,14 +131,16 @@ function SkillSimulation() {
 
     const skillCategory = selectedSkill ? getSkillCategory(selectedSkill) : null;
 
-    // If skillId is provided directly in URL or simulation is started, render full-screen InteractiveScenarioPage
-    if ((simulationStarted || skillId) && selectedSkill) {
+    // If simulation is started or skillId is provided directly in URL, render full-screen InteractiveScenarioPage
+    if (simulationStarted && selectedSkill && skillId) {
         return (
             <InteractiveScenarioPage 
                 skillId={skillId} 
                 onBackToHub={handleBackToSelection}
                 skillName={selectedSkill}
                 skillCategory={skillCategory}
+                showHints={showHints}
+                difficultyMode={difficultyMode}
             />
         );
     }
@@ -145,6 +172,68 @@ function SkillSimulation() {
                         >
                             Go to Learning Hub
                         </button>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    // Show instruction screen when skill is selected but simulation hasn't started
+    if (showInstructionScreen && selectedSkill) {
+        return (
+            <Layout>
+                <div className="skill-simulation-container">
+                    <button 
+                        className="back-button"
+                        onClick={handleBackToHome}
+                    >
+                        ← Back to Learning Hub
+                    </button>
+
+                    <div className="instruction-screen">
+                        <h1 className="instruction-heading">Choose Your Difficulty Mode</h1>
+                        <p className="instruction-subtitle">Select how you want to practice this skill:</p>
+                        
+                        <div className="difficulty-options">
+                            <div className="difficulty-option" onClick={handleEasyMode}>
+                                <div className="difficulty-icon">😊</div>
+                                <h3>Easy Mode</h3>
+                                <p>Practice with full guidance and visible task checklist.</p>
+                                <ul>
+                                    <li>Step-by-step hints</li>
+                                    <li>Visible checklist</li>
+                                    <li>Guided practice</li>
+                                    <li>Beginner friendly</li>
+                                </ul>
+                                <button className="select-difficulty-btn">Select Easy Mode</button>
+                            </div>
+
+                            <div className="difficulty-option" onClick={handleHardMode}>
+                                <div className="difficulty-icon">📝</div>
+                                <h3>Hard Mode</h3>
+                                <p>Practice with hints and visible task checklist, but more challenging scenarios.</p>
+                                <ul>
+                                    <li>Step-by-step hints</li>
+                                    <li>Visible checklist</li>
+                                    <li>More complex scenarios</li>
+                                    <li>Intermediate level</li>
+                                </ul>
+                                <button className="select-difficulty-btn">Select Hard Mode</button>
+                            </div>
+
+                            <div className="difficulty-option" onClick={handleExtraHardMode}>
+                                <div className="difficulty-icon">🔥</div>
+                                <h3>Extra Hard Mode</h3>
+                                <p>Practice with no hints and no visible checklist. Test your knowledge!</p>
+                                <ul>
+                                    <li>No hints or guidance</li>
+                                    <li>No visible checklist</li>
+                                    <li>Memory-based execution</li>
+                                    <li>Expert level challenge</li>
+                                </ul>
+                                <button className="select-difficulty-btn">Select Extra Hard Mode</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </Layout>
