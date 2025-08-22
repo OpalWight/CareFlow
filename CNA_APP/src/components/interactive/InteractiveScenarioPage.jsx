@@ -7,9 +7,7 @@ import DraggableItem from './DraggableItem';
 import StepFeedback from './StepFeedback';
 import CNA_SKILL_SCENARIOS from '../../data/cnaSkillScenarios';
 import progressService from '../../api/progressService';
-import RAGVerificationService from '../../services/ragVerificationService';
-import { CNA_KNOWLEDGE_DOCUMENTS } from '../../data/cnaKnowledgeBase';
-import EmbeddingService from '../../services/embeddingService';
+import RAGApiService from '../../services/ragApiService';
 import '../../styles/interactive/InteractiveScenarioPage.css';
 
 const SCENARIO_STEPS = {
@@ -144,12 +142,9 @@ const SKILL_SUPPLIES = {
   ]
 };
 
-// Default to hand hygiene skill for demo
-const DEFAULT_SKILL = 'hand-hygiene';
-
-function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillName, skillCategory, showHints = true, isFullscreen = false, onToggleFullscreen }) {
+function InteractiveScenarioPage({ skillId, onBackToHub, skillName, skillCategory, showHints = true, isFullscreen = false, onToggleFullscreen }) {
   const [currentStep, setCurrentStep] = useState(SCENARIO_STEPS.GATHERING_SUPPLIES);
-  const [supplies, setSupplies] = useState(SKILL_SUPPLIES[skillId] || SKILL_SUPPLIES[DEFAULT_SKILL]);
+  const [supplies, setSupplies] = useState(SKILL_SUPPLIES[skillId] || []);
   const [collectedSupplies, setCollectedSupplies] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [skillScenario, setSkillScenario] = useState(null);
@@ -159,7 +154,7 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
   const [userProgress, setUserProgress] = useState(null);
   
   // RAG-related state
-  const [ragService, setRagService] = useState(null);
+  const [ragService, setRagService] = useState(new RAGApiService());
   const [ragInitialized, setRagInitialized] = useState(false);
   const [stepFeedback, setStepFeedback] = useState({});
   const [stepStartTimes, setStepStartTimes] = useState({});
@@ -170,7 +165,11 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
 
   useEffect(() => {
     // Initialize skill scenario and progress tracking
-    const scenario = CNA_SKILL_SCENARIOS[skillId] || CNA_SKILL_SCENARIOS[DEFAULT_SKILL];
+    const scenario = CNA_SKILL_SCENARIOS[skillId];
+    if (!scenario) {
+      console.error(`No scenario found for skillId: ${skillId}`);
+      return;
+    }
     setSkillScenario(scenario);
     setStartTime(Date.now());
     
@@ -193,37 +192,18 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
         setIsInitializingRAG(true);
         setRagError(null);
         
-        // Check if API keys are available (you would set these in environment variables)
-        const googleApiKey = import.meta.env.VITE_GOOGLE_API_KEY;
-        const pineconeApiKey = import.meta.env.VITE_PINECONE_API_KEY;
+        // Check backend RAG service health
+        const healthStatus = await ragService.checkHealth();
         
-        if (!googleApiKey || !pineconeApiKey) {
-          console.warn('RAG API keys not configured, using fallback verification');
+        if (healthStatus.success) {
+          setRagInitialized(true);
+          console.log('RAG service connected successfully');
+        } else {
+          console.warn('RAG service unavailable, using fallback verification');
           setRagInitialized(false);
-          setIsInitializingRAG(false);
-          return;
         }
-        
-        const ragServiceInstance = new RAGVerificationService(googleApiKey, pineconeApiKey);
-        
-        // Initialize the service
-        await ragServiceInstance.initialize();
-        
-        // Check if knowledge base needs to be populated
-        const stats = await ragServiceInstance.getKnowledgeBaseStats();
-        console.log('Knowledge base stats:', stats);
-        
-        // If knowledge base is empty, populate it
-        if (stats.totalVectors === 0) {
-          console.log('Populating knowledge base...');
-          await populateKnowledgeBase(ragServiceInstance);
-        }
-        
-        setRagService(ragServiceInstance);
-        setRagInitialized(true);
-        console.log('RAG service initialized successfully');
       } catch (error) {
-        console.error('Error initializing RAG service:', error);
+        console.error('Error connecting to RAG service:', error);
         setRagError(error.message);
         setRagInitialized(false);
       } finally {
@@ -289,23 +269,6 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
     };
   }, [supplies, skillId]);
 
-  // Helper function to populate knowledge base
-  const populateKnowledgeBase = async (ragServiceInstance) => {
-    try {
-      const embeddingService = new EmbeddingService(import.meta.env.VITE_GOOGLE_API_KEY);
-      
-      console.log('Creating embeddings for knowledge documents...');
-      const embeddings = await embeddingService.createEmbeddingsBatch(CNA_KNOWLEDGE_DOCUMENTS, 5, 2000);
-      
-      console.log(`Created ${embeddings.length} embeddings, adding to knowledge base...`);
-      await ragServiceInstance.knowledgeBase.addDocuments(embeddings);
-      
-      console.log('Knowledge base populated successfully');
-    } catch (error) {
-      console.error('Error populating knowledge base:', error);
-      throw error;
-    }
-  };
 
   // Enhanced step completion with RAG verification
   const handleStepCompleteWithRAG = async (stepId, dropZone, supplyId = null) => {

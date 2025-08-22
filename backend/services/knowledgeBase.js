@@ -1,13 +1,12 @@
 // Pinecone-based Knowledge Base for CNA Skills Verification
 // Handles vector storage, retrieval, and management of CNA skill knowledge
 
-import { Pinecone } from '@pinecone-database/pinecone';
+const { Pinecone } = require('@pinecone-database/pinecone');
 
 class KnowledgeBase {
-  constructor(apiKey, environment = 'us-east1-gcp') {
+  constructor(apiKey) {
     this.pinecone = new Pinecone({
-      apiKey: apiKey,
-      environment: environment
+      apiKey: apiKey
     });
     this.index = null;
     this.indexName = 'cna-skills-knowledge';
@@ -287,4 +286,4 @@ class KnowledgeBase {
   }
 }
 
-export default KnowledgeBase;
+module.exports = KnowledgeBase;

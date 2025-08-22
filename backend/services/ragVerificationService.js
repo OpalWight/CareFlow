@@ -1,10 +1,10 @@
 // RAG Verification Service using Gemini Pro for CNA Skills Assessment
 // Combines retrieved knowledge with AI assessment for intelligent skill verification
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import EmbeddingService from './embeddingService.js';
-import KnowledgeBase from './knowledgeBase.js';
-import DynamicKnowledgeService from './dynamicKnowledgeService.js';
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const EmbeddingService = require('./embeddingService.js');
+const KnowledgeBase = require('./knowledgeBase.js');
+const DynamicKnowledgeService = require('./dynamicKnowledgeService.js');
 
 class RAGVerificationService {
   constructor(googleApiKey, pineconeApiKey) {
@@ -69,7 +69,7 @@ class RAGVerificationService {
       const verification = await this.getAIVerification(stepData, relevantKnowledge);
       
       // 4. Post-process and enhance results
-      const enhancedResults = this.enhanceVerificationResults(verification, stepData);
+      const enhancedResults = this.enhanceVerificationResults(verification, stepData, relevantKnowledge);
       
       return enhancedResults;
     } catch (error) {
@@ -109,11 +109,10 @@ class RAGVerificationService {
   }
 
   /**
-   * Retrieve relevant knowledge with dynamic priority
-   * Uses dynamic knowledge first, static as fallback
+   * Retrieve relevant knowledge from RAG system
    * @param {string} queryContext - Query context
    * @param {string} skillId - Skill identifier
-   * @returns {Array} Relevant knowledge documents with source info
+   * @returns {Array} Relevant knowledge documents from vector database
    */
   async retrieveKnowledge(queryContext, skillId) {
     try {
@@ -139,12 +138,10 @@ class RAGVerificationService {
       }));
 
       // Log knowledge source information
-      console.log(`Knowledge retrieval for ${skillId}:`, {
+      console.log(`RAG knowledge retrieval for ${skillId}:`, {
         totalResults: formattedResults.length,
-        dynamicCount: formattedResults.filter(r => r.source_type === 'dynamic').length,
-        staticCount: formattedResults.filter(r => r.source_type === 'static').length,
-        hasDynamic: combinedResults.hasDynamicContent,
-        hasStatic: combinedResults.hasStaticFallback
+        vectorResults: formattedResults.filter(r => r.source_type === 'dynamic').length,
+        ragSuccessful: combinedResults.hasDynamicContent
       });
 
       return formattedResults;
@@ -271,9 +268,10 @@ Respond ONLY with valid JSON in this exact format:
    * Enhance verification results with additional processing
    * @param {Object} verification - Raw AI verification
    * @param {Object} stepData - Original step data
+   * @param {Array} relevantKnowledge - Retrieved knowledge
    * @returns {Object} Enhanced verification results
    */
-  enhanceVerificationResults(verification, stepData) {
+  enhanceVerificationResults(verification, stepData, relevantKnowledge) {
     // Calculate overall performance category
     const performanceCategory = this.getPerformanceCategory(verification.score);
     
@@ -297,10 +295,10 @@ Respond ONLY with valid JSON in this exact format:
         stepName: stepData.stepName
       },
       knowledgeSource: {
-        usedDynamicKnowledge: relevantKnowledge.some(doc => doc.source_type === 'dynamic'),
-        dynamicDocuments: relevantKnowledge.filter(doc => doc.source_type === 'dynamic').length,
-        staticFallbacks: relevantKnowledge.filter(doc => doc.source_type === 'static').length,
-        totalRetrieved: relevantKnowledge.length
+        ragSystemUsed: true,
+        vectorDocuments: relevantKnowledge.length,
+        totalRetrieved: relevantKnowledge.length,
+        ragSuccessful: relevantKnowledge.length > 0
       }
     };
   }
@@ -445,4 +443,4 @@ Respond ONLY with valid JSON in this exact format:
   }
 }
 
-export default RAGVerificationService;
+module.exports = RAGVerificationService;

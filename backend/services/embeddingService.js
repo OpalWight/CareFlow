@@ -173,4 +173,4 @@ class EmbeddingService {
   }
 }
 
-export default EmbeddingService;
+module.exports = EmbeddingService;

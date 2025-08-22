@@ -28,6 +28,7 @@ const requestRoutes = require('./routes/request');
 const oauthRoutes = require('./routes/oauth');
 const authRoutes = require('./routes/auth');
 const progressRoutes = require('./routes/progress');
+const ragRoutes = require('./routes/rag');
 
 // ✅ IMPORTANT: Add this before your routes
 app.use(cookieParser());
@@ -92,6 +93,7 @@ app.use('/oauth', oauthRoutes);
 app.use('/auth', authRoutes);
 app.use('/chat', chatRoutes);
 app.use('/progress', progressRoutes);
+app.use('/api/rag', ragRoutes);
 
 
 // 🍪 COOKIE TEST ENDPOINT
