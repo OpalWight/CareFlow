@@ -11,7 +11,10 @@ import '../styles/Layout.css';
 
 function NavBar() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  
+  // Check if user is admin
+  const isAdmin = user?.role === 'admin' || user?.isAdmin === true;
 
   return (
     <>
@@ -27,6 +30,11 @@ function NavBar() {
           <>
             <span className="button" onClick={() => navigate('/help')}>Help</span>
             <span className="button" onClick={() => navigate('/settings')}>Settings</span>
+            {isAdmin && (
+              <span className="button admin-button" onClick={() => navigate('/admin')}>
+                🛠️ Admin
+              </span>
+            )}
             <button className="profile-button" onClick={() => navigate('/dashboard')}>
               <img src={redBalloonPfp} alt="Profile" />
             </button>

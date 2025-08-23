@@ -11,7 +11,7 @@ import API_URL from '../config/apiConfig.js';
  * @param {string} evaluationMode - The evaluation mode ('broad' or 'specific').
  * @returns {Promise<object>} - A promise that resolves to the session ID and initial patient message.
  */
-export const startChatSession = async (userId, skillId = 'hand-hygiene', evaluationMode = 'broad') => {
+export const startChatSession = async (userId, skillId, evaluationMode = 'broad') => {
   try {
     // Use withCredentials to ensure the browser sends the http-only cookie
     const response = await axios.post(`${API_URL}/chat/start`, { userId, skillId, evaluationMode }, { withCredentials: true });

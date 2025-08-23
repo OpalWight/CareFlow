@@ -14,9 +14,10 @@ export default defineConfig(({ command, mode }) => {
   console.log('  - Working Directory:', process.cwd())
   console.log('  - Loaded VITE_ vars:', Object.keys(env).filter(key => key.startsWith('VITE_')))
   
-  // Log VITE environment variables
+  // Log VITE environment variables (masking sensitive keys)
   Object.keys(env).filter(key => key.startsWith('VITE_')).forEach(key => {
-    console.log(`    ${key}:`, env[key])
+    const value = key.includes('API_KEY') ? '[HIDDEN]' : env[key]
+    console.log(`    ${key}:`, value)
   })
 
   return {
