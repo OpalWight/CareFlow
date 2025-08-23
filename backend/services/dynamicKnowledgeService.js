@@ -214,16 +214,29 @@ class DynamicKnowledgeService {
     }
 
     try {
-      // Search vector database for relevant knowledge
-      const searchResults = await this.knowledgeBase.search(
+      // First try: Search with ID pattern matching (e.g., "elastic-stocking" in ID)
+      let searchResults = await this.knowledgeBase.search(
         queryText,
         (text) => this.embeddingService.createQueryEmbedding(text),
         {
-          skillId: skillId,
+          idPattern: skillId,
           topK: options.topK || 5,
           minScore: options.minScore || 0.7
         }
       );
+      
+      // If no results with ID pattern, try semantic search without filters
+      if (!searchResults.documents || searchResults.documents.length === 0) {
+        console.log(`🔍 RAG: No results for ID pattern "${skillId}", trying semantic search without filters`);
+        searchResults = await this.knowledgeBase.search(
+          queryText,
+          (text) => this.embeddingService.createQueryEmbedding(text),
+          {
+            topK: options.topK || 15, // Increased topK for broader search
+            minScore: options.minScore || 0.5 // Lower threshold for broader matching
+          }
+        );
+      }
       
       // Format results
       const documents = searchResults.documents.map(doc => ({
