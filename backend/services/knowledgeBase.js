@@ -122,6 +122,7 @@ class KnowledgeBase {
 
     const {
       skillId = null,
+      idPattern = null,
       topK = 5,
       includeMetadata = true,
       minScore = 0.7,
@@ -151,9 +152,16 @@ class KnowledgeBase {
       const results = await this.index.query(queryRequest);
 
       // Filter results by minimum score
-      const filteredMatches = results.matches?.filter(match => 
+      let filteredMatches = results.matches?.filter(match => 
         match.score >= minScore
       ) || [];
+
+      // If idPattern is specified, filter by ID pattern
+      if (idPattern && filteredMatches.length > 0) {
+        filteredMatches = filteredMatches.filter(match => 
+          match.id && match.id.includes(idPattern)
+        );
+      }
 
       return {
         matches: filteredMatches,
