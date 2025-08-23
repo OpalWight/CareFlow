@@ -152,6 +152,7 @@ function InteractiveScenarioPage({ skillId, onBackToHub, skillName, skillCategor
   const [startTime, setStartTime] = useState(null);
   const [sessionDuration, setSessionDuration] = useState(0);
   const [userProgress, setUserProgress] = useState(null);
+
   
   // RAG-related state
   const [ragService, setRagService] = useState(new RAGApiService());
@@ -162,6 +163,7 @@ function InteractiveScenarioPage({ skillId, onBackToHub, skillName, skillCategor
   const [isInitializingRAG, setIsInitializingRAG] = useState(true);
   const [currentFeedback, setCurrentFeedback] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
+
 
   useEffect(() => {
     // Initialize skill scenario and progress tracking
@@ -528,7 +530,7 @@ function InteractiveScenarioPage({ skillId, onBackToHub, skillName, skillCategor
   const renderCurrentStep = () => {
     switch (currentStep) {
       case SCENARIO_STEPS.GATHERING_SUPPLIES:
-        return <SupplyRoom supplies={supplies} selectedSkill={skillId} collectedSupplies={collectedSupplies} />;
+        return <SupplyRoom supplies={supplies} selectedSkill={skillId} collectedSupplies={collectedSupplies} highlightedSupply={highlightedSupply} />;
       case SCENARIO_STEPS.PERFORMING_SKILL:
         return <PatientRoom 
           collectedSupplies={collectedSupplies} 
@@ -607,7 +609,22 @@ function InteractiveScenarioPage({ skillId, onBackToHub, skillName, skillCategor
         </div>
 
         {/* Floating Components */}
-        {showHints && <TaskList tasks={getCurrentTasks()} />}
+
+        <TaskList
+          tasks={getCurrentTasks()}
+          title={currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES ? '📦 Item Checklist' : '📋 Task Checklist'}
+          onTaskClick={
+            currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES
+              ? (supplyId) => {
+                  console.log(`Highlighting supply: ${supplyId}`);
+                  setHighlightedSupply(supplyId);
+                  // Clear the highlight after 3 seconds to stop the pulsation
+                  setTimeout(() => setHighlightedSupply(null), 3000);
+                }
+              : null // No click action needed during other phases
+          }
+        />
+
 
         {/* Floating Footer Actions */}
         <div className="scenario-footer-overlay">
