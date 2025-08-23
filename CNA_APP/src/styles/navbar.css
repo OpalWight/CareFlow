@@ -115,3 +115,24 @@
 .button:hover::after {
     width: 100%;
 }
+
+.admin-button {
+    background: linear-gradient(45deg, #ff6b35, #f7931e);
+    color: white !important;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.admin-button:hover {
+    background: linear-gradient(45deg, #e55a2b, #d4811a);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.admin-button::after {
+    display: none;
+}

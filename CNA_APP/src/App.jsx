@@ -15,6 +15,7 @@ import Settings from './pages/Settings';
 import LearnerHomeFinal from './pages/LearnerHomeFinal';
 import SkillSimulation from './pages/SkillSimulation';
 import AuthCallbackHandler from './components/AuthCallbackHandler';
+import AdminPanel from './components/admin/AdminPanel';
 
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
         <Route path = "/settings" element={<Settings />} />
         <Route path = "/learner-home-final" element={<LearnerHomeFinal />} />
         <Route path = "/skill-simulation" element={<SkillSimulation />} />
+        <Route path = "/admin" element={<AdminPanel />} />
       </Routes>
     </Router>
     </AuthProvider>

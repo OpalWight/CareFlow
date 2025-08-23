@@ -4,8 +4,10 @@ import SupplyRoom from './SupplyRoom';
 import PatientRoom from './PatientRoom';
 import TaskList from './TaskList';
 import DraggableItem from './DraggableItem';
+import StepFeedback from './StepFeedback';
 import CNA_SKILL_SCENARIOS from '../../data/cnaSkillScenarios';
 import progressService from '../../api/progressService';
+import RAGApiService from '../../services/ragApiService';
 import '../../styles/interactive/InteractiveScenarioPage.css';
 
 const SCENARIO_STEPS = {
@@ -140,12 +142,9 @@ const SKILL_SUPPLIES = {
   ]
 };
 
-// Default to hand hygiene skill for demo
-const DEFAULT_SKILL = 'hand-hygiene';
-
-function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillName, skillCategory, showHints = true }) {
+function InteractiveScenarioPage({ skillId, onBackToHub, skillName, skillCategory, showHints = true, isFullscreen = false, onToggleFullscreen }) {
   const [currentStep, setCurrentStep] = useState(SCENARIO_STEPS.GATHERING_SUPPLIES);
-  const [supplies, setSupplies] = useState(SKILL_SUPPLIES[skillId] || SKILL_SUPPLIES[DEFAULT_SKILL]);
+  const [supplies, setSupplies] = useState(SKILL_SUPPLIES[skillId] || []);
   const [collectedSupplies, setCollectedSupplies] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [skillScenario, setSkillScenario] = useState(null);
@@ -153,11 +152,26 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
   const [startTime, setStartTime] = useState(null);
   const [sessionDuration, setSessionDuration] = useState(0);
   const [userProgress, setUserProgress] = useState(null);
-  const [highlightedSupply, setHighlightedSupply] = useState(null);
+
+  
+  // RAG-related state
+  const [ragService, setRagService] = useState(new RAGApiService());
+  const [ragInitialized, setRagInitialized] = useState(false);
+  const [stepFeedback, setStepFeedback] = useState({});
+  const [stepStartTimes, setStepStartTimes] = useState({});
+  const [ragError, setRagError] = useState(null);
+  const [isInitializingRAG, setIsInitializingRAG] = useState(true);
+  const [currentFeedback, setCurrentFeedback] = useState(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+
 
   useEffect(() => {
     // Initialize skill scenario and progress tracking
-    const scenario = CNA_SKILL_SCENARIOS[skillId] || CNA_SKILL_SCENARIOS[DEFAULT_SKILL];
+    const scenario = CNA_SKILL_SCENARIOS[skillId];
+    if (!scenario) {
+      console.error(`No scenario found for skillId: ${skillId}`);
+      return;
+    }
     setSkillScenario(scenario);
     setStartTime(Date.now());
     
@@ -174,7 +188,33 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
       }
     };
     
+    // Initialize RAG service
+    const initializeRAG = async () => {
+      try {
+        setIsInitializingRAG(true);
+        setRagError(null);
+        
+        // Check backend RAG service health
+        const healthStatus = await ragService.checkHealth();
+        
+        if (healthStatus.success) {
+          setRagInitialized(true);
+          console.log('RAG service connected successfully');
+        } else {
+          console.warn('RAG service unavailable, using fallback verification');
+          setRagInitialized(false);
+        }
+      } catch (error) {
+        console.error('Error connecting to RAG service:', error);
+        setRagError(error.message);
+        setRagInitialized(false);
+      } finally {
+        setIsInitializingRAG(false);
+      }
+    };
+    
     initializeProgress();
+    initializeRAG();
     
     const handleSinkUsed = (event) => {
       const supplyId = event.detail.supplyId;
@@ -210,19 +250,101 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
       }
     };
 
+    // Keyboard shortcut for fullscreen toggle
+    const handleKeyDown = (event) => {
+      if (event.key === 'F11' || (event.key === 'f' && event.ctrlKey)) {
+        event.preventDefault();
+        if (onToggleFullscreen) {
+          onToggleFullscreen();
+        }
+      }
+    };
+
     window.addEventListener('sinkUsed', handleSinkUsed);
     window.addEventListener('supplyFound', handleSupplyFound);
+    document.addEventListener('keydown', handleKeyDown);
+    
     return () => {
       window.removeEventListener('sinkUsed', handleSinkUsed);
       window.removeEventListener('supplyFound', handleSupplyFound);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [supplies, skillId]);
+
+
+  // Enhanced step completion with RAG verification
+  const handleStepCompleteWithRAG = async (stepId, dropZone, supplyId = null) => {
+    const step = skillScenario?.steps.find(s => s.id === stepId);
+    if (!step) return false;
+
+    // Record step start time if not already recorded
+    if (!stepStartTimes[stepId]) {
+      setStepStartTimes(prev => ({ ...prev, [stepId]: Date.now() }));
+    }
+
+    const stepStartTime = stepStartTimes[stepId] || Date.now();
+    const stepTiming = Math.floor((Date.now() - stepStartTime) / 1000);
+
+    let verification = null;
+    
+    // Try RAG verification if available
+    if (ragInitialized && ragService) {
+      try {
+        const stepData = {
+          skillId,
+          stepId,
+          stepName: step.name,
+          userAction: `Dropped ${supplyId || 'item'} onto ${dropZone}`,
+          supplies: collectedSupplies.map(s => s.name),
+          timing: stepTiming,
+          sequence: completedSkillSteps.length + 1,
+          dropZone,
+          requiredSupply: step.requiredSupply
+        };
+
+        verification = await ragService.verifySkillStep(stepData);
+        
+        // Store verification feedback
+        setStepFeedback(prev => ({
+          ...prev,
+          [stepId]: verification
+        }));
+        
+        // Show feedback to user
+        setCurrentFeedback(verification);
+        setShowFeedback(true);
+        
+        console.log(`RAG verification for step ${stepId}:`, verification);
+      } catch (error) {
+        console.error('RAG verification failed, using fallback:', error);
+        verification = null;
+      }
+    }
+
+    // Fallback verification or use RAG results
+    const isStepCorrect = verification ? verification.isCorrect : true;
+    const stepScore = verification ? verification.score : 85;
+
+    // Complete step if verification passes (score >= 70 or fallback)
+    if (isStepCorrect || stepScore >= 70) {
+      setCompletedSkillSteps(prev => [...prev, stepId]);
+      return true;
+    }
+
+    return false;
+  };
+
+  // Handle closing feedback
+  const handleCloseFeedback = () => {
+    setShowFeedback(false);
+    setCurrentFeedback(null);
+  };
 
   const handleDragStart = (event) => {
     setActiveId(event.active.id);
   };
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = async (event) => {
     const { active, over } = event;
     setActiveId(null);
 
@@ -254,12 +376,23 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
         );
         
         if (validStep && !completedSkillSteps.includes(validStep.id)) {
-          setCompletedSkillSteps(prev => [...prev, validStep.id]);
-          console.log(`Step completed: ${validStep.name}`);
+          // Record step start time for timing analysis
+          if (!stepStartTimes[validStep.id]) {
+            setStepStartTimes(prev => ({ ...prev, [validStep.id]: Date.now() }));
+          }
           
-          // Call the drop zone's onDropSuccess callback if it exists
-          if (over.data?.current?.onDropSuccess) {
-            over.data.current.onDropSuccess(supplyId);
+          // Use RAG verification for step completion
+          const stepCompleted = await handleStepCompleteWithRAG(validStep.id, dropZoneId, supplyId);
+          
+          if (stepCompleted) {
+            console.log(`Step completed with RAG verification: ${validStep.name}`);
+            
+            // Call the drop zone's onDropSuccess callback if it exists
+            if (over.data?.current?.onDropSuccess) {
+              over.data.current.onDropSuccess(supplyId);
+            }
+          } else {
+            console.log(`Step failed RAG verification: ${validStep.name}`);
           }
         } else {
           console.log(`Invalid drop: ${supplyId} on ${dropZoneId}`);
@@ -458,15 +591,17 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className={`interactive-scenario-container fullscreen ${currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES ? 'gathering-supplies' : ''}`}>
-        {/* Overlaid Exit Button */}
-        <button 
-          onClick={handleBackToHub}
-          className="exit-button-overlay"
-          title="Exit Simulation"
-        >
-          exit scenario
-        </button>
+      <div className={`interactive-scenario-container ${isFullscreen ? 'fullscreen' : ''} ${currentStep === SCENARIO_STEPS.GATHERING_SUPPLIES ? 'gathering-supplies' : ''}`}>
+        {/* Overlaid Control Buttons */}
+        <div className="control-buttons-overlay">
+          <button 
+            onClick={onToggleFullscreen}
+            className="fullscreen-toggle-button"
+            title={isFullscreen ? "Exit Fullscreen (F11 or Ctrl+F)" : "Enter Fullscreen (F11 or Ctrl+F)"}
+          >
+            {isFullscreen ? '⤦' : '⛶'}
+          </button>
+        </div>
 
         {/* Main Content - Fullscreen */}
         <div className="scenario-main-content fullscreen">
@@ -522,6 +657,33 @@ function InteractiveScenarioPage({ skillId = DEFAULT_SKILL, onBackToHub, skillNa
           />
         ) : null}
       </DragOverlay>
+
+      {/* RAG Feedback Modal */}
+      {showFeedback && currentFeedback && (
+        <StepFeedback
+          feedback={currentFeedback}
+          stepName={currentFeedback.stepData?.stepName || 'Step Completed'}
+          onClose={handleCloseFeedback}
+        />
+      )}
+
+      {/* RAG Initialization Status */}
+      {isInitializingRAG && (
+        <div className="rag-initialization-overlay">
+          <div className="rag-init-message">
+            <div className="loading-spinner"></div>
+            <p>Initializing AI Assessment System...</p>
+          </div>
+        </div>
+      )}
+
+      {/* RAG Error Display */}
+      {ragError && !isInitializingRAG && (
+        <div className="rag-error-notification">
+          <p>⚠️ AI Assessment unavailable: {ragError}</p>
+          <p>Using standard verification.</p>
+        </div>
+      )}
     </DndContext>
   );
 }

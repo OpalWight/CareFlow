@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import NavBar from '../components/NavBar';
 import InteractiveScenarioPage from '../components/interactive/InteractiveScenarioPage';
 import '../styles/SkillSimulation.css';
 
@@ -13,6 +14,10 @@ function SkillSimulation() {
     const [showInstructionScreen, setShowInstructionScreen] = useState(false);
     const [showHints, setShowHints] = useState(true);
     const [difficultyMode, setDifficultyMode] = useState('normal'); // 'normal', 'hard', 'extraHard'
+    const [isFullscreen, setIsFullscreen] = useState(() => {
+        // Load fullscreen preference from localStorage
+        return localStorage.getItem('skillSimulationFullscreen') === 'true';
+    });
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -97,6 +102,13 @@ function SkillSimulation() {
         navigate('/learner-home-final');
     };
 
+    const handleToggleFullscreen = () => {
+        const newFullscreenState = !isFullscreen;
+        setIsFullscreen(newFullscreenState);
+        // Save preference to localStorage
+        localStorage.setItem('skillSimulationFullscreen', newFullscreenState.toString());
+    };
+
     const getSkillCategory = (skill) => {
         const infectionControl = ['Hand Hygiene (Hand Washing)', 'Donning and Removing PPE (Gown and Gloves)'];
         const adl = [
@@ -131,17 +143,29 @@ function SkillSimulation() {
 
     const skillCategory = selectedSkill ? getSkillCategory(selectedSkill) : null;
 
-    // If simulation is started or skillId is provided directly in URL, render full-screen InteractiveScenarioPage
+    // If simulation is started or skillId is provided directly in URL, render InteractiveScenarioPage
     if (simulationStarted && selectedSkill && skillId) {
         return (
-            <InteractiveScenarioPage 
-                skillId={skillId} 
-                onBackToHub={handleBackToSelection}
-                skillName={selectedSkill}
-                skillCategory={skillCategory}
-                showHints={showHints}
-                difficultyMode={difficultyMode}
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+                {!isFullscreen && <NavBar />}
+                <div style={{ 
+                    flex: 1, 
+                    position: 'relative', 
+                    backgroundColor: isFullscreen ? 'transparent' : '#e9ecef',
+                    background: isFullscreen ? 'none' : 'linear-gradient(135deg, #e9ecef 0%, #f8f9fa 50%, #dee2e6 100%)'
+                }}>
+                    <InteractiveScenarioPage 
+                        skillId={skillId} 
+                        onBackToHub={handleBackToSelection}
+                        skillName={selectedSkill}
+                        skillCategory={skillCategory}
+                        showHints={showHints}
+                        difficultyMode={difficultyMode}
+                        isFullscreen={isFullscreen}
+                        onToggleFullscreen={handleToggleFullscreen}
+                    />
+                </div>
+            </div>
         );
     }
 
