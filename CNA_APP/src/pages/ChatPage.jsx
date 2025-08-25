@@ -4,6 +4,8 @@ import { startChatSession, sendChatMessage } from '../api/chatApi';
 import progressService from '../api/progressService';
 import '../styles/ChatPage.css';
 import Layout from '../components/Layout';
+import useTextToSpeech from '../hooks/useTextToSpeech';
+import useSpeechRecognition from '../hooks/useSpeechRecognition';
 
 const ChatPage = () => {
     const { user } = useAuth(); // Get the authenticated user
@@ -22,7 +24,21 @@ const ChatPage = () => {
     const [showSpecificObjectives, setShowSpecificObjectives] = useState(false);
     const [showModeSelection, setShowModeSelection] = useState(true);
     const [selectedEvaluationMode, setSelectedEvaluationMode] = useState(null);
+    const [autoSpeakEnabled, setAutoSpeakEnabled] = useState(true);
     const chatContainerRef = useRef(null);
+    
+    // Voice functionality
+    const { autoSpeak, isSpeaking, isPaused, pause, resume, stop } = useTextToSpeech();
+    const {
+        isListening,
+        transcript,
+        fullTranscript,
+        isSupported: speechSupported,
+        error: speechError,
+        startListening,
+        stopListening,
+        resetTranscript
+    } = useSpeechRecognition();
 
     // Get skillId from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -106,6 +122,11 @@ const ChatPage = () => {
             const { patientResponse, completedObjectives: updatedObjectives, relevanceCheck } = response;
             const modelMessage = { role: 'model', content: patientResponse };
             setMessages(prev => [...prev, modelMessage]);
+            
+            // Auto-speak the AI response if enabled
+            if (autoSpeakEnabled && patientResponse) {
+                autoSpeak(patientResponse);
+            }
             
             // Store relevance check for feedback display
             if (relevanceCheck) {
@@ -198,6 +219,35 @@ const ChatPage = () => {
         setSelectedEvaluationMode(mode);
         setShowModeSelection(false);
     };
+
+    // Voice functionality handlers
+    const handleMicrophoneClick = () => {
+        if (isListening) {
+            stopListening();
+        } else {
+            resetTranscript();
+            startListening();
+        }
+    };
+
+    const handleSpeakerClick = () => {
+        if (isSpeaking) {
+            if (isPaused) {
+                resume();
+            } else {
+                pause();
+            }
+        } else {
+            stop();
+        }
+    };
+
+    // Update input with transcript in real-time
+    useEffect(() => {
+        if (fullTranscript) {
+            setInput(fullTranscript);
+        }
+    }, [fullTranscript]);
 
     // Show error if no skillId is provided
     if (!skillId) {
@@ -384,15 +434,46 @@ const ChatPage = () => {
             
             {!isSessionComplete && (
                 <form onSubmit={handleSendMessage} className="chat-input-form">
-                    <input
-                        id="chat-page-input"
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Type your message..."
-                        disabled={isLoading || !sessionId}
-                    />
-                    <button id="chat-page-send-button" type="submit" disabled={isLoading || !sessionId}>Send</button>
+                    <div className="input-with-voice">
+                        {speechSupported && (
+                            <button
+                                type="button"
+                                className={`voice-button microphone-button ${isListening ? 'recording' : ''}`}
+                                onClick={handleMicrophoneClick}
+                                title={isListening ? 'Stop recording' : 'Start voice input'}
+                                disabled={!!speechError}
+                            >
+                                {isListening ? '🎤' : '🎙️'}
+                            </button>
+                        )}
+                        <input
+                            id="chat-page-input"
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Type your message or use voice input..."
+                            disabled={isLoading || !sessionId}
+                        />
+                        <button
+                            type="button"
+                            className={`voice-button speaker-button ${isSpeaking ? 'speaking' : ''}`}
+                            onClick={handleSpeakerClick}
+                            title={isSpeaking ? (isPaused ? 'Resume' : 'Pause') : 'Stop all speech'}
+                        >
+                            {isSpeaking ? (isPaused ? '▶️' : '⏸️') : '🔊'}
+                        </button>
+                        <button id="chat-page-send-button" type="submit" disabled={isLoading || !sessionId}>Send</button>
+                    </div>
+                    {isListening && (
+                        <div className="voice-status">
+                            <span className="status-text">🎤 Listening... Speak your message</span>
+                        </div>
+                    )}
+                    {speechError && (
+                        <div className="voice-status">
+                            <span className="status-text error">{speechError}</span>
+                        </div>
+                    )}
                 </form>
             )}
             
