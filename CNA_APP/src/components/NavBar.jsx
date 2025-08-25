@@ -22,8 +22,17 @@ function NavBar() {
       <div className="rightHeader">
         <img className="homeLogo" src={logo} alt="logo" onClick={() => navigate('/')} style={{cursor: 'pointer'}}/>
         <span className="button" onClick={() => navigate('/about-us')}>about us</span>
-        <span className="button" onClick={() => navigate('/resources')}>resources</span>
-        <span className="button" onClick={() => navigate('/learner-home-final')}>learner home</span>
+        {isAuthenticated ? (
+          <>
+            <span className="button" onClick={() => navigate('/resources')}>resources</span>
+            <span className="button" onClick={() => navigate('/learner-home-final')}>learner home</span>
+          </>
+        ) : (
+          <>
+            <span className="button" onClick={() => navigate('/signup')}>resources</span>
+            <span className="button" onClick={() => navigate('/signup')}>learner home</span>
+          </>
+        )}
       </div>
       <div className="leftHeader">
         {isAuthenticated ? (
