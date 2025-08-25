@@ -208,31 +208,164 @@
 
 .chat-input-form {
     display: flex;
+    flex-direction: column;
     padding: 10px;
     border-top: 1px solid #ccc;
     background-color: #fff;
 }
 
-.chat-input-form input {
-    flex-grow: 1;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 20px;
-    margin-right: 10px;
+.input-with-voice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.chat-input-form button {
+.chat-input-form input {
+    flex-grow: 1;
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.chat-input-form input:focus {
+    border-color: #007bff;
+}
+
+/* Voice buttons in input bar */
+.voice-button {
+    background: #fff;
+    border: 2px solid #dee2e6;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    outline: none;
+}
+
+.voice-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.voice-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Microphone button */
+.microphone-button {
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.microphone-button.recording {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: white;
+    animation: microphonePulse 1.5s ease-in-out infinite;
+}
+
+/* Speaker button */
+.speaker-button {
+    border-color: #007bff;
+    color: #007bff;
+}
+
+.speaker-button.speaking {
+    background: #007bff;
+    border-color: #007bff;
+    color: white;
+    animation: speakerPulse 2s ease-in-out infinite;
+}
+
+/* Send button */
+#chat-page-send-button {
     padding: 10px 20px;
     border: none;
     background-color: #007bff;
     color: white;
     border-radius: 20px;
     cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
 }
 
-.chat-input-form button:disabled {
+#chat-page-send-button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+#chat-page-send-button:disabled {
     background-color: #a0c8f0;
     cursor: not-allowed;
+}
+
+/* Voice status */
+.voice-status {
+    margin-top: 8px;
+    text-align: center;
+}
+
+.status-text {
+    font-size: 12px;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.status-text.error {
+    color: #dc3545;
+}
+
+/* Animations */
+@keyframes microphonePulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+@keyframes speakerPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .input-with-voice {
+        gap: 8px;
+    }
+    
+    .voice-button {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+    
+    .chat-input-form input {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    
+    #chat-page-send-button {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
 }
 
 /* Learning Objectives Right-Side Tab */
