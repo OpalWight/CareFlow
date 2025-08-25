@@ -18,6 +18,7 @@ import AuthCallbackHandler from './components/AuthCallbackHandler';
 import AdminPanel from './components/admin/AdminPanel';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
+import QuizPage from './pages/QuizPage';
 
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
           <Route path="/resources" element={<ProtectedRoute><Resources /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/learner-home-final" element={<ProtectedRoute><LearnerHomeFinal /></ProtectedRoute>} />
+          <Route path="/quiz" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
           
           <Route path="/flashcards" element={<Flashcards />} />
           <Route path = "/dashboard" element={<Dashboard />} />

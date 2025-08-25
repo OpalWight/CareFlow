@@ -15,7 +15,10 @@ import "../styles/LandingPage.css";
 function LandingPage() {
   const navigate = useNavigate();
   return (
-    <Layout>
+    <Layout 
+      enableVerticalLinesToggle={true}
+      verticalLinesDefaultVisible={true}
+    >
       <main>
         <div className="mascotPitchContianer">
           <div className="cloudMascotContainer">

@@ -88,6 +88,10 @@ const userProgressSchema = new mongoose.Schema({
         min: 1,
         max: 5
       },
+      feedback: {
+        type: String,
+        default: ''
+      },
       completedAt: {
         type: Date,
         default: Date.now
@@ -180,11 +184,12 @@ userProgressSchema.methods.updatePatientSimProgress = function(completedSteps, s
 };
 
 // Method to update chat simulation progress
-userProgressSchema.methods.updateChatSimProgress = function(sessionId, rating, duration) {
+userProgressSchema.methods.updateChatSimProgress = function(sessionId, rating, duration, feedback = '') {
   // Add new chat session
   this.chatSimProgress.chatSessions.push({
     sessionId,
     rating,
+    feedback,
     completedAt: new Date(),
     duration
   });

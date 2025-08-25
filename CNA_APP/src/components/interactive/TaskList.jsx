@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import '../../styles/interactive/TaskList.css';
 
 function TaskList({ tasks }) {
+  // Initialize with safe default position, will be updated by useEffect
   const [position, setPosition] = useState({ x: 20, y: 20 });
   const [size, setSize] = useState({ width: 150, height: 200 });
   const [isDragging, setIsDragging] = useState(false);
@@ -48,13 +49,25 @@ function TaskList({ tasks }) {
       const newX = e.clientX - dragStart.x;
       const newY = e.clientY - dragStart.y;
       
-      // Constrain to viewport bounds
-      const maxX = window.innerWidth - size.width;
-      const maxY = window.innerHeight - size.height;
+      // Get supply room container bounds
+      const supplyRoomContainer = document.querySelector('.supply-room-container');
+      let maxX, maxY, minX = 0, minY = 0;
+      
+      if (supplyRoomContainer) {
+        const rect = supplyRoomContainer.getBoundingClientRect();
+        minX = rect.left;
+        minY = rect.top;
+        maxX = rect.right - size.width;
+        maxY = rect.bottom - size.height;
+      } else {
+        // Fallback to viewport bounds if supply room container not found
+        maxX = window.innerWidth - size.width;
+        maxY = window.innerHeight - size.height;
+      }
       
       setPosition({
-        x: Math.max(0, Math.min(newX, maxX)),
-        y: Math.max(0, Math.min(newY, maxY))
+        x: Math.max(minX, Math.min(newX, maxX)),
+        y: Math.max(minY, Math.min(newY, maxY))
       });
     }
     
@@ -84,6 +97,22 @@ function TaskList({ tasks }) {
         newY = Math.min(position.y + deltaY, position.y + resizeStart.height - 100);
       }
       
+      // Ensure resized component stays within supply room bounds
+      const supplyRoomContainer = document.querySelector('.supply-room-container');
+      if (supplyRoomContainer) {
+        const rect = supplyRoomContainer.getBoundingClientRect();
+        const maxResizeX = rect.right - newWidth;
+        const maxResizeY = rect.bottom - newHeight;
+        newX = Math.max(rect.left, Math.min(newX, maxResizeX));
+        newY = Math.max(rect.top, Math.min(newY, maxResizeY));
+      } else {
+        // Fallback to viewport bounds
+        const maxResizeX = window.innerWidth - newWidth;
+        const maxResizeY = window.innerHeight - newHeight;
+        newX = Math.max(0, Math.min(newX, maxResizeX));
+        newY = Math.max(0, Math.min(newY, maxResizeY));
+      }
+      
       setSize({ width: newWidth, height: newHeight });
       setPosition({ x: newX, y: newY });
     }
@@ -93,6 +122,26 @@ function TaskList({ tasks }) {
     setIsDragging(false);
     setIsResizing(false);
   };
+
+  // Position component within supply room bounds after component mounts
+  useEffect(() => {
+    const positionWithinSupplyRoom = () => {
+      const supplyRoomContainer = document.querySelector('.supply-room-container');
+      if (supplyRoomContainer) {
+        const rect = supplyRoomContainer.getBoundingClientRect();
+        const newPosition = {
+          x: rect.left + 20, // 20px from left edge of supply room
+          y: rect.top + 20   // 20px from top edge of supply room
+        };
+        setPosition(newPosition);
+      }
+    };
+
+    // Small delay to ensure DOM is fully rendered
+    const timeoutId = setTimeout(positionWithinSupplyRoom, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, []); // Run once on mount
 
   useEffect(() => {
     if (isDragging || isResizing) {
