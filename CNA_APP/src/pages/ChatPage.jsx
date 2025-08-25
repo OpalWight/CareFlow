@@ -4,6 +4,8 @@ import { startChatSession, sendChatMessage } from '../api/chatApi';
 import progressService from '../api/progressService';
 import '../styles/ChatPage.css';
 import Layout from '../components/Layout';
+import VoiceControls from '../components/VoiceControls';
+import useTextToSpeech from '../hooks/useTextToSpeech';
 
 const ChatPage = () => {
     const { user } = useAuth(); // Get the authenticated user
@@ -22,7 +24,11 @@ const ChatPage = () => {
     const [showSpecificObjectives, setShowSpecificObjectives] = useState(false);
     const [showModeSelection, setShowModeSelection] = useState(true);
     const [selectedEvaluationMode, setSelectedEvaluationMode] = useState(null);
+    const [autoSpeakEnabled, setAutoSpeakEnabled] = useState(true);
     const chatContainerRef = useRef(null);
+    
+    // Voice functionality
+    const { autoSpeak } = useTextToSpeech();
 
     // Get skillId from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -106,6 +112,11 @@ const ChatPage = () => {
             const { patientResponse, completedObjectives: updatedObjectives, relevanceCheck } = response;
             const modelMessage = { role: 'model', content: patientResponse };
             setMessages(prev => [...prev, modelMessage]);
+            
+            // Auto-speak the AI response if enabled
+            if (autoSpeakEnabled && patientResponse) {
+                autoSpeak(patientResponse);
+            }
             
             // Store relevance check for feedback display
             if (relevanceCheck) {
@@ -197,6 +208,22 @@ const ChatPage = () => {
     const handleModeSelection = (mode) => {
         setSelectedEvaluationMode(mode);
         setShowModeSelection(false);
+    };
+
+    // Voice functionality handlers
+    const handleTranscriptChange = (transcript) => {
+        setInput(transcript);
+    };
+
+    const handleVoiceMessage = (message) => {
+        setInput(message);
+        // Auto-submit the voice message
+        const submitEvent = { preventDefault: () => {} };
+        handleSendMessage(submitEvent);
+    };
+
+    const handleAutoSpeakToggle = (enabled) => {
+        setAutoSpeakEnabled(enabled);
     };
 
     // Show error if no skillId is provided
@@ -383,17 +410,25 @@ const ChatPage = () => {
             </div>
             
             {!isSessionComplete && (
-                <form onSubmit={handleSendMessage} className="chat-input-form">
-                    <input
-                        id="chat-page-input"
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Type your message..."
-                        disabled={isLoading || !sessionId}
+                <>
+                    <VoiceControls
+                        onTranscriptChange={handleTranscriptChange}
+                        onNewMessage={handleVoiceMessage}
+                        autoSpeakEnabled={autoSpeakEnabled}
+                        showSettings={true}
                     />
-                    <button id="chat-page-send-button" type="submit" disabled={isLoading || !sessionId}>Send</button>
-                </form>
+                    <form onSubmit={handleSendMessage} className="chat-input-form">
+                        <input
+                            id="chat-page-input"
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Type your message or use voice input..."
+                            disabled={isLoading || !sessionId}
+                        />
+                        <button id="chat-page-send-button" type="submit" disabled={isLoading || !sessionId}>Send</button>
+                    </form>
+                </>
             )}
             
             {isSessionComplete && (
