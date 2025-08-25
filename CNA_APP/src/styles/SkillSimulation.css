@@ -347,6 +347,8 @@
     text-align: center;
     min-height: 60vh;
     padding: 40px 20px;
+    position: relative;
+    z-index: 2000;
 }
 
 .instruction-heading {
@@ -371,6 +373,8 @@
     flex-wrap: wrap;
     max-width: 1200px;
     margin: 0 auto;
+    position: relative;
+    z-index: 2000;
 }
 
 .difficulty-option {

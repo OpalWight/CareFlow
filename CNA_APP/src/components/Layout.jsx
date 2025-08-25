@@ -2,6 +2,7 @@ import React from 'react';
 import NavBar from './NavBar';
 import Footer from './Footer';
 import HorizontalLine from './HorizontalLine';
+import VerticalLinesOverlay from './VerticalLinesOverlay';
 
 import GridLines from './GridLines';
 import logo from '../assets/svg/logo.svg';
@@ -11,8 +12,9 @@ import '../styles/Layout.css'
 const Layout = ({ children, className, showVerticalLines = [], showHorizontalLines = [], ...props }) => {
   const navigate = useNavigate();
   return (
-    <div className={className} {...props}>
+    <div className={`layout-container ${className || ''}`} {...props}>
       <NavBar /> 
+      <VerticalLinesOverlay />
       <GridLines 
         showVerticalLines={showVerticalLines} 
         showHorizontalLines={showHorizontalLines} 
