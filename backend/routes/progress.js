@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const UserProgress = require('../models/UserProgress');
 const auth = require('../middleware/authMiddleware');
+const adminMiddleware = require('../middleware/adminMiddleware');
 const { body, validationResult } = require('express-validator');
 
 // Get user's progress summary
@@ -124,7 +125,8 @@ router.post('/skill/:skillId/chat-sim', [
   auth,
   body('sessionId').isMongoId().withMessage('Invalid session ID'),
   body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
-  body('duration').isInt({ min: 0 }).withMessage('Duration must be a non-negative integer')
+  body('duration').isInt({ min: 0 }).withMessage('Duration must be a non-negative integer'),
+  body('feedback').optional().isString().withMessage('Feedback must be a string')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -134,14 +136,15 @@ router.post('/skill/:skillId/chat-sim', [
     }
 
     const { skillId } = req.params;
-    const { sessionId, rating, duration } = req.body;
+    const { sessionId, rating, duration, feedback = '' } = req.body;
 
     console.log('Chat progress update request:', {
       userId: req.user.id,
       skillId,
       sessionId,
       rating,
-      duration
+      duration,
+      feedback: feedback ? '[has feedback]' : '[no feedback]'
     });
 
     // Find existing progress or create new one
@@ -161,7 +164,7 @@ router.post('/skill/:skillId/chat-sim', [
     }
 
     // Update chat simulation progress
-    await progress.updateChatSimProgress(sessionId, rating, duration);
+    await progress.updateChatSimProgress(sessionId, rating, duration, feedback);
 
     console.log('Chat progress updated successfully for user:', req.user.id, 'skill:', skillId);
     res.json(progress);
@@ -276,10 +279,118 @@ router.get('/leaderboard/:skillId', auth, async (req, res) => {
   }
 });
 
-// Get aggregate statistics for all users (admin only)
-router.get('/stats', auth, async (req, res) => {
+// Get all user feedback (admin only)
+router.get('/feedback/all', auth, adminMiddleware, async (req, res) => {
   try {
-    // This should check for admin role in production
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skill = req.query.skill;
+    const minRating = req.query.minRating ? parseInt(req.query.minRating) : null;
+    const maxRating = req.query.maxRating ? parseInt(req.query.maxRating) : null;
+    const startDate = req.query.startDate ? new Date(req.query.startDate) : null;
+    const endDate = req.query.endDate ? new Date(req.query.endDate) : null;
+
+    const skip = (page - 1) * limit;
+
+    // Build aggregation pipeline
+    const pipeline = [
+      // Lookup user information
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $unwind: '$user'
+      },
+      // Unwind chat sessions to get individual feedback entries
+      {
+        $unwind: '$chatSimProgress.chatSessions'
+      },
+      // Filter out sessions without feedback
+      {
+        $match: {
+          'chatSimProgress.chatSessions.feedback': { $ne: '' }
+        }
+      }
+    ];
+
+    // Add optional filters
+    const matchConditions = {};
+    
+    if (skill) {
+      matchConditions.skillId = skill;
+    }
+    
+    if (minRating || maxRating) {
+      matchConditions['chatSimProgress.chatSessions.rating'] = {};
+      if (minRating) matchConditions['chatSimProgress.chatSessions.rating'].$gte = minRating;
+      if (maxRating) matchConditions['chatSimProgress.chatSessions.rating'].$lte = maxRating;
+    }
+    
+    if (startDate || endDate) {
+      matchConditions['chatSimProgress.chatSessions.completedAt'] = {};
+      if (startDate) matchConditions['chatSimProgress.chatSessions.completedAt'].$gte = startDate;
+      if (endDate) matchConditions['chatSimProgress.chatSessions.completedAt'].$lte = endDate;
+    }
+
+    if (Object.keys(matchConditions).length > 0) {
+      pipeline.push({ $match: matchConditions });
+    }
+
+    // Project the fields we want
+    pipeline.push({
+      $project: {
+        _id: 0,
+        userId: '$userId',
+        userName: '$user.name',
+        userEmail: '$user.email',
+        skillId: '$skillId',
+        sessionId: '$chatSimProgress.chatSessions.sessionId',
+        feedback: '$chatSimProgress.chatSessions.feedback',
+        rating: '$chatSimProgress.chatSessions.rating',
+        submittedAt: '$chatSimProgress.chatSessions.completedAt',
+        duration: '$chatSimProgress.chatSessions.duration'
+      }
+    });
+
+    // Sort by most recent first
+    pipeline.push({
+      $sort: { submittedAt: -1 }
+    });
+
+    // Get total count for pagination
+    const countPipeline = [...pipeline, { $count: 'total' }];
+    const totalResult = await UserProgress.aggregate(countPipeline);
+    const total = totalResult.length > 0 ? totalResult[0].total : 0;
+
+    // Add pagination
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limit });
+
+    const feedback = await UserProgress.aggregate(pipeline);
+
+    res.json({
+      feedback,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalEntries: total,
+        limit
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching all feedback:', error);
+    res.status(500).json({ message: 'Server error while fetching feedback' });
+  }
+});
+
+// Get aggregate statistics for all users (admin only)
+router.get('/stats', auth, adminMiddleware, async (req, res) => {
+  try {
     const stats = await UserProgress.aggregate([
       {
         $group: {

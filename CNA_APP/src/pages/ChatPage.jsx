@@ -17,6 +17,7 @@ const ChatPage = () => {
     const [sessionStartTime, setSessionStartTime] = useState(null);
     const [showRatingModal, setShowRatingModal] = useState(false);
     const [sessionRating, setSessionRating] = useState(0);
+    const [sessionFeedback, setSessionFeedback] = useState('');
     const [isSessionComplete, setIsSessionComplete] = useState(false);
     const [completedObjectives, setCompletedObjectives] = useState([]);
     const [allObjectivesComplete, setAllObjectivesComplete] = useState(false);
@@ -180,10 +181,11 @@ const ChatPage = () => {
                 skillId,
                 sessionId,
                 sessionRating,
-                duration
+                duration,
+                feedback: sessionFeedback
             });
             
-            await progressService.updateChatSimProgress(skillId, sessionId, sessionRating, duration);
+            await progressService.updateChatSimProgress(skillId, sessionId, sessionRating, duration, sessionFeedback);
             
             // Award star for completing chat session
             try {
@@ -211,8 +213,8 @@ const ChatPage = () => {
     };
 
     const handleBackToHub = () => {
-        // Navigate back to learning hub or skills page
-        window.location.href = '/skills';
+        // Navigate back to learner home
+        window.location.href = '/learner-home-final';
     };
 
     const handleModeSelection = (mode) => {
@@ -256,8 +258,8 @@ const ChatPage = () => {
                 <div className="error-container">
                     <h2>No Skill Selected</h2>
                     <p>Please select a skill to start the chat practice session.</p>
-                    <button onClick={() => window.location.href = '/skills'} className="back-to-skills-btn">
-                        Back to Skills
+                    <button onClick={() => window.location.href = '/learner-home-final'} className="back-to-skills-btn">
+                        Back to Learner Home
                     </button>
                 </div>
             </Layout>
@@ -502,6 +504,17 @@ const ChatPage = () => {
                                     ⭐
                                 </button>
                             ))}
+                        </div>
+                        <div className="feedback-section">
+                            <label htmlFor="session-feedback">Additional Feedback (Optional)</label>
+                            <textarea
+                                id="session-feedback"
+                                className="feedback-textarea"
+                                value={sessionFeedback}
+                                onChange={(e) => setSessionFeedback(e.target.value)}
+                                placeholder="Share your thoughts about this simulation session..."
+                                rows="4"
+                            />
                         </div>
                         <div className="rating-actions">
                             <button onClick={() => setShowRatingModal(false)} className="cancel-btn">

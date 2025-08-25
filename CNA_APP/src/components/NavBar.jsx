@@ -24,13 +24,11 @@ function NavBar() {
         <span className="button" onClick={() => navigate('/about-us')}>about us</span>
         {isAuthenticated ? (
           <>
-            <span className="button" onClick={() => navigate('/resources')}>resources</span>
-            <span className="button" onClick={() => navigate('/learner-home-final')}>learner home</span>
+            <span className="button" onClick={() => navigate('/quiz')}>quiz mode</span>
           </>
         ) : (
           <>
-            <span className="button" onClick={() => navigate('/signup')}>resources</span>
-            <span className="button" onClick={() => navigate('/signup')}>learner home</span>
+            <span className="button" onClick={() => navigate('/signup')}>get started</span>
           </>
         )}
       </div>
