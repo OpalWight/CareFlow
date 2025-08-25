@@ -1,0 +1,30 @@
+.vertical-lines-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.vertical-line {
+  position: absolute;
+  top: 0;
+  width: 1.5px;
+  height: 100%;
+  background-image: linear-gradient(to bottom, #799ACA 0%, #799ACA 50%, transparent 50%, transparent 100%);
+  background-size: 1.5px 10px;
+  margin: 0;
+  padding: 0;
+}
+
+.vertical-line-first {
+  /* Position between logo and about us button */
+  left: calc(4vw + 196px + 1.5vw);
+}
+
+.vertical-line-second {
+  /* Position constant distance from last button on right */
+  right: calc(9vw - 1.5vw);
+}
