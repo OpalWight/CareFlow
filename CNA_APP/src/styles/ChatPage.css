@@ -114,6 +114,44 @@
     margin-bottom: 24px;
 }
 
+.feedback-section {
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.feedback-section label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.feedback-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+    resize: vertical;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.feedback-textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.feedback-textarea::placeholder {
+    color: #aaa;
+    font-style: italic;
+}
+
 .star {
     background: none;
     border: none;

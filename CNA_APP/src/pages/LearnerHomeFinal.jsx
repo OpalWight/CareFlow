@@ -9,7 +9,6 @@ function LearnerHomeFinal(){
     const [openDropdowns, setOpenDropdowns] = useState({});
     const [allLessonsOpen, setAllLessonsOpen] = useState(false);
     const [progressSummary, setProgressSummary] = useState(null);
-    const [starCount, setStarCount] = useState(0);
 
     const allSkills = [
         'Hand Hygiene (Hand Washing)',
@@ -53,100 +52,22 @@ function LearnerHomeFinal(){
 
     const fetchProgressData = async () => {
         try {
-            const [summary, stars] = await Promise.all([
-                progressService.getProgressSummary(),
-                progressService.getStarCount()
-            ]);
+            const summary = await progressService.getProgressSummary();
             setProgressSummary(summary);
-            setStarCount(stars.totalStars || 0);
-            
-            // Check if we need to sync stars with existing progress
-            await syncStarsWithExistingProgress(summary, stars.totalStars || 0);
         } catch (error) {
             console.error('Error fetching progress data:', error);
         }
     };
 
-    const syncStarsWithExistingProgress = async (summary, currentStars) => {
-        try {
-            if (!summary) return;
-            
-            console.log('Starting star sync process...', { summary, currentStars });
-            
-            // Always perform client-side sync to ensure accuracy
-            // This will calculate stars based on actual skill completion data
-            await performClientSideSync(summary, currentStars);
-            
-        } catch (error) {
-            console.error('Error syncing stars with existing progress:', error);
-        }
-    };
-
-    const performClientSideSync = async (summary, currentStars) => {
-        try {
-            let starsAwarded = 0;
-            
-            console.log('Starting client-side sync for', allSkills.length, 'skills');
-            
-            // Get all skills that have been completed
-            for (const skill of allSkills) {
-                const skillId = getSkillId(skill);
-                if (!skillId) continue;
-                
-                try {
-                    const skillProgress = await progressService.getSkillProgress(skillId);
-                    console.log(`Checking progress for ${skill} (${skillId}):`, {
-                        chatCompleted: skillProgress.chatSimProgress?.isCompleted,
-                        chatSessions: skillProgress.chatSimProgress?.sessionsCompleted,
-                        patientSimCompleted: skillProgress.patientSimProgress?.isCompleted
-                    });
-                    
-                    // Award star for completed chat sessions
-                    if (skillProgress.chatSimProgress?.isCompleted || skillProgress.chatSimProgress?.sessionsCompleted > 0) {
-                        try {
-                            console.log(`Awarding chat star for ${skillId}`);
-                            await progressService.awardStar(skillId, 'chat');
-                            starsAwarded++;
-                        } catch (error) {
-                            // Star might already exist, continue
-                            console.log(`Chat star for ${skillId} might already exist`);
-                        }
-                    }
-                    
-                    // Award star for completed simulations
-                    if (skillProgress.patientSimProgress?.isCompleted) {
-                        try {
-                            console.log(`Awarding simulation star for ${skillId}`);
-                            await progressService.awardStar(skillId, 'simulation');
-                            starsAwarded++;
-                        } catch (error) {
-                            // Star might already exist, continue
-                            console.log(`Simulation star for ${skillId} might already exist`);
-                        }
-                    }
-                } catch (error) {
-                    // Skill progress might not exist, continue
-                    console.log(`No progress found for ${skillId}:`, error.message);
-                    continue;
-                }
-            }
-            
-            console.log(`Sync complete. Attempted to award ${starsAwarded} stars`);
-            if (starsAwarded > 0) {
-                console.log(`Awarded ${starsAwarded} missing stars`);
-                // Refetch star count
-                const updatedStars = await progressService.getStarCount();
-                setStarCount(updatedStars.totalStars || 0);
-            }
-        } catch (error) {
-            console.error('Error performing client-side star sync:', error);
-        }
-    };
-
     const calculateCompletionPercentage = () => {
-        const totalPossibleStars = allSkills.length * 2; // Each skill has 2 modes (chat + simulation) = 2 stars per skill
-        const currentStars = starCount || 0;
-        return Math.round((currentStars / totalPossibleStars) * 100);
+        if (!progressSummary) return 0;
+        
+        // Calculate based on actual skill completion data from progressSummary
+        const totalSkills = allSkills.length;
+        if (totalSkills === 0) return 0;
+        
+        // Use the averageCompletionPercentage from the progress summary
+        return Math.round(progressSummary.averageCompletionPercentage || 0);
     };
 
     const getSkillId = (skillName) => {
@@ -212,7 +133,10 @@ function LearnerHomeFinal(){
     };
 
     return (
-        <Layout showVerticalLines={[20, 92]}>
+        <Layout 
+            enableVerticalLinesToggle={true}
+            verticalLinesDefaultVisible={true}
+        >
             <div className="learner-home-final-container">
                 {/* Left sidebar with All Lessons dropdown */}
                 <div className="left-sidebar">
@@ -259,10 +183,11 @@ function LearnerHomeFinal(){
                                         ></div>
                                     </div>
                                 </div>
-                                <div className="stars-display">
-                                    <span className="stars-icon">⭐</span>
-                                    <span className="stars-count">{starCount} Stars</span>
-                                </div>
+                                {progressSummary && (
+                                    <div className="progress-stats">
+                                        <span className="completed-skills">{progressSummary.completedSkills || 0} of {progressSummary.totalSkills || 0} skills completed</span>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
