@@ -11,7 +11,7 @@ import PaperTowelSvg from '../../assets/svg/paperTowel.svg';
 import SinkSvg from '../../assets/svg/sink.svg';
 import FloorSvg from '../../assets/svg/Floor.svg';
 
-function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
+function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [], highlightedSupply }) {
   const [selectedCabinet, setSelectedCabinet] = useState(null);
   const [sinkUsed, setSinkUsed] = useState(false);
   const [showTip, setShowTip] = useState(true);
@@ -91,6 +91,13 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
       ]
     }
   };
+
+  const supplyToCabinetMap = Object.entries(cabinetCategories).reduce((acc, [cabinet, { supplies }]) => {
+    supplies.forEach(supply => {
+      acc[supply.id] = cabinet;
+    });
+    return acc;
+  }, {});
 
   const handleCabinetClick = (cabinetKey) => {
     setSelectedCabinet(cabinetKey);
@@ -273,45 +280,69 @@ function SupplyRoom({ supplies, selectedSkill, collectedSupplies = [] }) {
   return (
     <div>
       <div className="supply-room-container">
-        {/* Floor SVG - Base layer with lowest z-index */}
-        <img 
-          src={FloorSvg}
-          className="floor-svg"
-          alt="Room Floor"
-        />
-        
-        {/* SVG Buttons positioned to match room.png layout */}
-        {/* Linens Cabinet */}
-        <img 
-          src={LinensSvg}
-          className="svg-button linens"
+
+        {/* Cabinets arranged around sink with 10px gaps */}
+        {/* Top Row - Above sink */}
+        <div 
+          className={`cabinet linens ${supplyToCabinetMap[highlightedSupply] === 'linens' ? 'cabinet-pulsating' : ''}`}
+
           onClick={() => handleCabinetClick('linens')}
           title="Linens & Barriers"
           alt="Linens & Barriers"
         />
-        
-        {/* Hygiene Cabinet */}
-        <img 
-          src={HygieneSvg}
-          className="svg-button hygiene"
-          onClick={() => handleCabinetClick('hygiene')}
-          title="Cleaning & Hygiene"
-          alt="Cleaning & Hygiene"
-        />
 
-        {/* Medical Cabinet */}
-        <img 
-          src={MedicalSvg}
-          className="svg-button medical"
+        <div 
+          className={`cabinet cleaning ${supplyToCabinetMap[highlightedSupply] === 'cleaning' ? 'cabinet-pulsating' : ''}`}
+          onClick={() => handleCabinetClick('cleaning')}
+          title="Cleaning & Hygiene Products"
+          style={{ 
+            top: 'calc(45% - 80px)', // Above sink
+            left: 'calc(50% - 45px)' // Center aligned with sink
+          }}
+        >
+          <div className="cabinet-label">Cleaning & Hygiene</div>
+          <div className="cabinet-icon">🧼</div>
+        </div>
+
+        <div 
+          className={`cabinet medical ${supplyToCabinetMap[highlightedSupply] === 'medical' ? 'cabinet-pulsating' : ''}`}
+
           onClick={() => handleCabinetClick('medical')}
           title="Medical Equipment"
           alt="Medical Equipment"
         />
         
-        {/* Misc Cabinet */}
-        <img 
-          src={MiscSvg}
-          className="svg-button misc"
+
+        {/* Bottom Row - Below sink */}
+        <div 
+          className={`cabinet containers ${supplyToCabinetMap[highlightedSupply] === 'containers' ? 'cabinet-pulsating' : ''}`}
+          onClick={() => handleCabinetClick('containers')}
+          title="Containers & Utensils"
+          style={{ 
+            top: 'calc(45% + 70px)', // Sink bottom plus 60px height plus 10px gap
+            left: 'calc(50% - 150px)' // Left of sink with increased gap
+          }}
+        >
+          <div className="cabinet-label">Containers & Utensils</div>
+          <div className="cabinet-icon">🍽️</div>
+        </div>
+        
+        <div 
+          className={`cabinet ppe ${supplyToCabinetMap[highlightedSupply] === 'ppe' ? 'cabinet-pulsating' : ''}`}
+          onClick={() => handleCabinetClick('ppe')}
+          title="Personal Protective Equipment"
+          style={{ 
+            top: 'calc(45% + 70px)', // Below sink
+            left: 'calc(50% - 45px)' // Center aligned with sink
+          }}
+        >
+          <div className="cabinet-label">PPE</div>
+          <div className="cabinet-icon">🧤</div>
+        </div>
+        
+        <div 
+          className={`cabinet misc ${supplyToCabinetMap[highlightedSupply] === 'misc' ? 'cabinet-pulsating' : ''}`}
+
           onClick={() => handleCabinetClick('misc')}
           title="Misc"
           alt="Misc"
