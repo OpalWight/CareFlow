@@ -30,6 +30,7 @@ const authRoutes = require('./routes/auth');
 const progressRoutes = require('./routes/progress');
 const ragRoutes = require('./routes/rag');
 const quizRoutes = require('./routes/quiz');
+const skillProgressRoutes = require('./routes/skillProgressRoutes');
 
 // ✅ IMPORTANT: Add this before your routes
 app.use(cookieParser());
@@ -96,6 +97,7 @@ app.use('/chat', chatRoutes);
 app.use('/progress', progressRoutes);
 app.use('/api/rag', ragRoutes);
 app.use('/quiz', quizRoutes);
+app.use('/api/skill-progress', skillProgressRoutes);
 
 
 // 🍪 COOKIE TEST ENDPOINT

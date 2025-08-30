@@ -127,7 +127,8 @@ class KnowledgeBase {
       includeMetadata = true,
       minScore = 0.7,
       tags = null,
-      criticality = null
+      criticality = null,
+      namespace = null
     } = options;
 
     try {
@@ -149,7 +150,9 @@ class KnowledgeBase {
         queryRequest.filter = filter;
       }
 
-      const results = await this.index.query(queryRequest);
+      // Use namespace if specified, otherwise query default namespace
+      const indexToQuery = namespace ? this.index.namespace(namespace) : this.index;
+      const results = await indexToQuery.query(queryRequest);
 
       // Filter results by minimum score
       let filteredMatches = results.matches?.filter(match => 
@@ -177,7 +180,7 @@ class KnowledgeBase {
    * Search for relevant knowledge based on text query
    * @param {string} queryText - Text query
    * @param {Function} embeddingFunction - Function to create embeddings
-   * @param {Object} options - Query options
+   * @param {Object} options - Query options (including namespace)
    * @returns {Object} Search results with content
    */
   async search(queryText, embeddingFunction, options = {}) {
@@ -283,6 +286,33 @@ class KnowledgeBase {
       console.error(`Error updating document ${documentId}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Search quiz content specifically from the quiz-content namespace
+   * @param {string} queryText - Text query
+   * @param {Function} embeddingFunction - Function to create embeddings
+   * @param {Object} options - Query options
+   * @returns {Object} Search results with content
+   */
+  async searchQuizContent(queryText, embeddingFunction, options = {}) {
+    return await this.search(queryText, embeddingFunction, {
+      ...options,
+      namespace: 'quiz-content'
+    });
+  }
+
+  /**
+   * Query quiz content namespace directly with embedding
+   * @param {Array} queryEmbedding - Query embedding vector
+   * @param {Object} options - Query options
+   * @returns {Object} Query results
+   */
+  async queryQuizContent(queryEmbedding, options = {}) {
+    return await this.query(queryEmbedding, {
+      ...options,
+      namespace: 'quiz-content'
+    });
   }
 
   /**
