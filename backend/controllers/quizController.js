@@ -854,3 +854,91 @@ exports.retakeQuiz = async (req, res) => {
         res.status(500).json({ message: 'Error setting up quiz retake' });
     }
 };
+
+// Get detailed quiz results for review
+exports.getQuizResults = async (req, res) => {
+    try {
+        const { quizId } = req.params;
+        const userId = req.user.id;
+        
+        const quiz = await QuizResult.findOne({ _id: quizId, userId });
+        
+        if (!quiz) {
+            return res.status(404).json({ message: 'Quiz results not found' });
+        }
+        
+        // Format questions for detailed results view
+        const detailedQuestions = quiz.questions.map((question, index) => ({
+            questionNumber: index + 1,
+            question: question.question,
+            options: question.options,
+            userAnswer: question.userAnswer,
+            correctAnswer: question.correctAnswer,
+            isCorrect: question.isCorrect,
+            competencyArea: question.competencyArea,
+            explanation: question.explanation || 'No explanation available for this question.'
+        }));
+        
+        // Calculate competency area performance
+        const competencyPerformance = {};
+        quiz.questions.forEach(question => {
+            const area = question.competencyArea;
+            if (!competencyPerformance[area]) {
+                competencyPerformance[area] = {
+                    total: 0,
+                    correct: 0,
+                    percentage: 0,
+                    questions: []
+                };
+            }
+            competencyPerformance[area].total++;
+            if (question.isCorrect) {
+                competencyPerformance[area].correct++;
+            }
+            competencyPerformance[area].questions.push({
+                questionNumber: quiz.questions.indexOf(question) + 1,
+                isCorrect: question.isCorrect
+            });
+        });
+        
+        // Calculate percentages
+        Object.keys(competencyPerformance).forEach(area => {
+            const performance = competencyPerformance[area];
+            performance.percentage = Math.round((performance.correct / performance.total) * 100);
+        });
+        
+        // Get user's quiz statistics for context
+        const userStats = await QuizResult.getUserStats(userId);
+        
+        res.json({
+            quizId: quiz._id,
+            summary: {
+                score: quiz.score,
+                totalQuestions: quiz.totalQuestions,
+                percentage: quiz.percentage,
+                timeStarted: quiz.timeStarted,
+                timeCompleted: quiz.timeCompleted,
+                durationMinutes: quiz.durationMinutes,
+                isRetake: quiz.isRetake,
+                completedAt: quiz.createdAt
+            },
+            questions: detailedQuestions,
+            competencyPerformance,
+            userStats: {
+                totalAttempts: userStats?.totalAttempts || 0,
+                averageScore: userStats?.averageScore || 0,
+                bestScore: userStats?.bestScore || 0,
+                improvementTrend: userStats?.improvementTrend || 'No data'
+            },
+            filters: {
+                totalQuestions: detailedQuestions.length,
+                correctAnswers: detailedQuestions.filter(q => q.isCorrect).length,
+                incorrectAnswers: detailedQuestions.filter(q => !q.isCorrect).length
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error getting quiz results:', error);
+        res.status(500).json({ message: 'Error retrieving quiz results' });
+    }
+};

@@ -103,3 +103,21 @@ export const retakeQuiz = async (quizId) => {
     throw error;
   }
 };
+
+/**
+ * Gets detailed quiz results for review
+ * @param {String} quizId - ID of the quiz to get results for
+ * @returns {Promise<Object>} - Detailed quiz results with questions, answers, and analysis
+ */
+export const getQuizResults = async (quizId) => {
+  try {
+    const response = await axios.get(`${API_URL}/quiz/${quizId}/results`, {
+      withCredentials: true
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error getting quiz results:', error.response?.data?.message || error.message);
+    throw error;
+  }
+};

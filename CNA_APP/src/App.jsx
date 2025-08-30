@@ -19,6 +19,7 @@ import AdminPanel from './components/admin/AdminPanel';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import QuizPage from './pages/QuizPage';
+import QuizResultsPage from './pages/QuizResultsPage';
 
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/learner-home-final" element={<ProtectedRoute><LearnerHomeFinal /></ProtectedRoute>} />
           <Route path="/quiz" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
+          <Route path="/quiz/results/:quizId" element={<ProtectedRoute><QuizResultsPage /></ProtectedRoute>} />
           
           <Route path="/flashcards" element={<Flashcards />} />
           <Route path = "/dashboard" element={<Dashboard />} />

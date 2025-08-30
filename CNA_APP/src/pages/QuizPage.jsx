@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../api/AuthContext';
 import Layout from '../components/Layout';
 import { generateQuizQuestions, submitQuizResults, getQuizHistory, retakeQuiz } from '../api/quizApi';
@@ -6,6 +7,7 @@ import '../styles/QuizPage.css';
 
 const QuizPage = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState({});
@@ -242,6 +244,12 @@ const QuizPage = () => {
                                     </div>
                                     <div className="history-actions">
                                         <button 
+                                            onClick={() => navigate(`/quiz/results/${quiz.id}`)} 
+                                            className="view-results-btn"
+                                        >
+                                            📋 View Results
+                                        </button>
+                                        <button 
                                             onClick={() => startRetake(quiz.id)} 
                                             className="retake-btn"
                                             disabled={isLoading}
@@ -351,6 +359,14 @@ const QuizPage = () => {
                         )}
                         
                         <div className="quiz-actions">
+                            {resultData && resultData.quizId && (
+                                <button 
+                                    onClick={() => navigate(`/quiz/results/${resultData.quizId}`)} 
+                                    className="view-details-btn"
+                                >
+                                    📋 View Detailed Results
+                                </button>
+                            )}
                             <button onClick={resetQuiz} className="retake-quiz-btn">
                                 Take New Quiz
                             </button>
