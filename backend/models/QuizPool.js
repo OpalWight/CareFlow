@@ -90,7 +90,17 @@ const QuizPoolSchema = new mongoose.Schema({
             default: Date.now
         },
         score: Number,
-        percentage: Number
+        percentage: Number,
+        // Add last used timestamp for compatibility
+        lastUsedAt: {
+            type: Date,
+            default: Date.now
+        },
+        // Add attempt timestamp for when the quiz was actually attempted
+        attemptedAt: {
+            type: Date,
+            default: Date.now
+        }
     }],
     
     // Quiz status
@@ -157,19 +167,31 @@ QuizPoolSchema.methods.hasUserTaken = function(userId) {
     return this.usedBy.some(usage => usage.userId.toString() === userId.toString());
 };
 
+// Method to check if user can take this quiz (no cooldown, immediate availability)
+QuizPoolSchema.methods.canUserTake = function(userId) {
+    // User can always take any quiz - retakes are handled by the retake functionality
+    // This method is kept for potential future use but always returns true
+    return true;
+};
+
 // Method to mark quiz as used by a user
-QuizPoolSchema.methods.markAsUsed = function(userId, score, percentage, completionTime) {
-    // Don't add duplicate usage
-    if (this.hasUserTaken(userId)) {
-        return this;
-    }
+QuizPoolSchema.methods.markAsUsed = function(userId, score, percentage, completionTime, attemptedAt = null) {
+    const now = new Date();
+    const attemptTime = attemptedAt || now;
     
+    // Always add a new usage record for each attempt (allows retakes to be tracked separately)
     this.usedBy.push({
         userId,
-        usedAt: new Date(),
+        usedAt: now,
+        lastUsedAt: now,
+        attemptedAt: attemptTime,
         score,
         percentage
     });
+    
+    console.log(`[DEBUG] Added usage record for user ${userId} on quiz ${this.quizId} - attempt at ${attemptTime} (score: ${score}/${percentage}%)`);
+    
+    // Remove this comment but keep the logic simple - each attempt gets its own record
     
     // Update usage statistics
     this.usageStats.totalUses++;
@@ -199,21 +221,33 @@ QuizPoolSchema.methods.retire = function(reason = 'Quality threshold not met') {
     return this.save();
 };
 
-// Static method to find available quizzes for a user
+// Static method to find available quizzes for a user (no cooldown - immediate availability)
 QuizPoolSchema.statics.findAvailableForUser = async function(userId, difficulty = null, limit = 10) {
+    console.log(`[DEBUG] Finding available quiz for userId: ${userId}, difficulty: ${difficulty}`);
+    
     const query = {
         isActive: true,
-        retiredAt: { $exists: false },
-        'usedBy.userId': { $ne: userId }
+        retiredAt: { $exists: false }
+        // Remove the usedBy exclusion - users can take any available quiz (retakes are allowed)
     };
     
     if (difficulty) {
         query['metadata.difficulty'] = difficulty;
     }
     
-    return this.find(query)
-        .sort({ createdAt: 1 })  // Oldest first to ensure fair distribution
-        .limit(limit);
+    console.log('[DEBUG] MongoDB Query:', JSON.stringify(query, null, 2));
+    
+    try {
+        const quizzes = await this.find(query)
+            .sort({ createdAt: 1 })  // Oldest first to ensure fair distribution
+            .limit(limit);
+            
+        console.log(`[DEBUG] Found ${quizzes.length} available quizzes (retakes allowed)`);
+        return quizzes;
+    } catch (error) {
+        console.error('[DEBUG] Error fetching available quizzes:', error);
+        throw error;
+    }
 };
 
 // Static method to get quiz pool statistics

@@ -19,6 +19,10 @@ const UserQuizHistorySchema = new mongoose.Schema({
             type: Date,
             default: Date.now
         },
+        attemptedAt: {
+            type: Date,
+            default: Date.now
+        },
         score: Number,
         percentage: Number,
         durationMinutes: Number,
@@ -150,22 +154,35 @@ UserQuizHistorySchema.methods.hasTakenQuiz = function(quizId) {
 
 // Method to add completed quiz
 UserQuizHistorySchema.methods.addCompletedQuiz = function(quizData) {
-    const { quizId, score, percentage, durationMinutes, quizResultId } = quizData;
+    const { quizId, score, percentage, durationMinutes, quizResultId, attemptedAt } = quizData;
     
-    // Don't add if already exists
-    if (this.hasTakenQuiz(quizId)) {
+    console.log(`[DEBUG] Adding completed quiz to history. userId: ${this.userId}, quizId: ${quizId}`);
+
+    // Don't add if already exists (check for exact same quizResultId to allow retakes)
+    const existingQuiz = this.completedQuizzes.find(quiz => 
+        quiz.quizResultId && quiz.quizResultId.toString() === quizResultId?.toString()
+    );
+    
+    if (existingQuiz) {
+        console.log(`[DEBUG] Quiz result ${quizResultId} already exists in history. Skipping.`);
         return this;
     }
+    
+    const now = new Date();
+    const attemptTime = attemptedAt || now;
     
     // Add to completed quizzes
     this.completedQuizzes.push({
         quizId,
-        completedAt: new Date(),
+        completedAt: now,
+        attemptedAt: attemptTime,
         score,
         percentage,
         durationMinutes,
         quizResultId
     });
+    
+    console.log(`[DEBUG] Added quiz ${quizId} to completedQuizzes array.`);
     
     // Update statistics
     this.stats.totalQuizzesTaken++;

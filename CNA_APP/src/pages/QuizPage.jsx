@@ -24,6 +24,7 @@ const QuizPage = () => {
     const [isRetake, setIsRetake] = useState(false);
     const [originalQuizId, setOriginalQuizId] = useState(null);
     const [resultData, setResultData] = useState(null);
+    const [currentQuizId, setCurrentQuizId] = useState(null);
 
     // Load quiz history on component mount
     useEffect(() => {
@@ -45,8 +46,9 @@ const QuizPage = () => {
     const startQuiz = async () => {
         setIsLoading(true);
         try {
-            const generatedQuestions = await generateQuizQuestions();
-            setQuestions(generatedQuestions);
+            const quizData = await generateQuizQuestions();
+            setQuestions(quizData.questions);
+            setCurrentQuizId(quizData.quizId);
             setQuizStarted(true);
             setTimeStarted(new Date());
             setIsRetake(false);
@@ -62,6 +64,7 @@ const QuizPage = () => {
         try {
             const retakeData = await retakeQuiz(quizId);
             setQuestions(retakeData.questions);
+            setCurrentQuizId(`retake_${quizId}_${Date.now()}`);
             setQuizStarted(true);
             setTimeStarted(new Date());
             setIsRetake(true);
@@ -97,7 +100,7 @@ const QuizPage = () => {
         try {
             const results = await submitQuizResults(
                 selectedAnswers,
-                questions,
+                currentQuizId,
                 timeStarted,
                 isRetake ? originalQuizId : null
             );
@@ -141,6 +144,7 @@ const QuizPage = () => {
         setIsRetake(false);
         setOriginalQuizId(null);
         setResultData(null);
+        setCurrentQuizId(null);
         setShowHistory(false);
     };
 

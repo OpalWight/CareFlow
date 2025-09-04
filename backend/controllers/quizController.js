@@ -164,7 +164,8 @@ Generate exactly ${questionCount} questions. Return ONLY the JSON array, no othe
     }
 }
 
-// Helper function for fallback AI generation (original method)
+
+
 async function generateFallbackAIQuestions(model, questionCount, physicalCareCount, psychosocialCount, nurseAideRoleCount) {
     const prompt = `Generate exactly ${questionCount} CNA (Certified Nursing Assistant) certification exam questions following the official exam distribution.
 
@@ -222,7 +223,7 @@ Generate exactly ${questionCount} questions. Return ONLY the JSON array, no othe
             console.error('❌ JSON Parse Error in fallback generation:', parseError);
             // Try to fix common JSON issues
             let fixedText = generatedText
-                .replace(/([^,\]\}])\s*\n\s*([{\[])/g, '$1,$2')
+                .replace(/([^,\]}])\s*\n\s*([{\[])/g, '$1,$2')
                 .replace(/,\s*\]/g, ']')
                 .replace(/,\s*\}/g, '}');
             
@@ -230,7 +231,7 @@ Generate exactly ${questionCount} questions. Return ONLY the JSON array, no othe
                 questions = JSON.parse(fixedText);
             } catch (secondParseError) {
                 console.error('❌ Failed to fix JSON in fallback. Using hardcoded fallback questions...');
-                return generateFallbackQuestions(questionCount);
+                return [];
             }
         }
         
@@ -238,46 +239,16 @@ Generate exactly ${questionCount} questions. Return ONLY the JSON array, no othe
             return questions.slice(0, questionCount);
         } else {
             console.error('❌ Invalid questions array from fallback AI generation');
-            return generateFallbackQuestions(questionCount);
+            return [];
         }
     } catch (error) {
         console.error('❌ Error in fallback AI generation:', error);
-        return generateFallbackQuestions(questionCount);
+        return [];
     }
 }
+exports.generateFallbackAIQuestions = generateFallbackAIQuestions;
 
-// Direct quiz generation (fallback when pool system unavailable)
-async function generateQuizDirect(questionCount, difficulty) {
-    const services = await initializeServices();
-    let questions = [];
-    
-    if (services.quizRAGService && services.quizRAGService.initialized) {
-        try {
-            const domainContent = await services.quizRAGService.getAllDomainContent(questionCount);
-            questions = await generateRAGEnhancedQuestions(
-                genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite-001" }),
-                domainContent,
-                services.quizRAGService
-            );
-        } catch (error) {
-            console.warn('⚠️ RAG generation failed in direct mode:', error);
-        }
-    }
-    
-    if (!questions || questions.length < questionCount) {
-        const fallbackQuestions = generateFallbackQuestions(questionCount);
-        questions = [...(questions || []), ...fallbackQuestions].slice(0, questionCount);
-    }
-    
-    return {
-        questions,
-        metadata: {
-            totalQuestions: questions.length,
-            difficulty,
-            generationMethod: 'direct'
-        }
-    };
-}
+
 
 // Generate CNA quiz questions using quiz pool system
 exports.generateQuizQuestions = async (req, res) => {
@@ -297,6 +268,7 @@ exports.generateQuizQuestions = async (req, res) => {
         if (services.quizPoolService) {
             try {
                 quiz = await services.quizPoolService.getQuizForUser(userId, { difficulty, questionCount });
+                console.log(`[DEBUG] Quiz fetched from pool: ${quiz ? quiz.quizId : 'null'}`);
                 if (quiz) {
                     fromPool = true;
                     console.log(`✅ Retrieved quiz ${quiz.quizId} from pool`);
@@ -317,19 +289,12 @@ exports.generateQuizQuestions = async (req, res) => {
                         difficulty 
                     });
                     fromPool = false;
+                    console.log(`[DEBUG] Generated new quiz with ID: ${quiz.quizId}`);
                     console.log(`✅ Generated new quiz ${quiz.quizId} and added to pool`);
                 } catch (error) {
                     console.warn('⚠️ Error generating quiz for pool:', error.message);
                 }
             }
-        }
-        
-        // Fallback to old system if pool system fails
-        if (!quiz) {
-            console.log('🔄 Falling back to direct generation...');
-            quiz = await generateQuizDirect(questionCount, difficulty);
-            quiz.quizId = 'direct_' + Date.now();
-            fromPool = false;
         }
         
         // Return quiz questions (without answers for active quiz)
@@ -363,7 +328,7 @@ exports.generateQuizQuestions = async (req, res) => {
         
         // Return fallback questions on error
         try {
-            const fallbackQuestions = generateFallbackQuestions(req.body.questionCount || 30);
+            const fallbackQuestions = await generateFallbackAIQuestions(req.body.questionCount || 30);
             const fallbackQuizId = 'fallback_' + Date.now();
             
             res.status(200).json({
@@ -403,18 +368,46 @@ exports.submitQuizResults = async (req, res) => {
         const { answers, quizId, timeStarted, originalQuizId } = req.body;
         const userId = req.user.id;
         
-        if (!answers || !quizId) {
-            return res.status(400).json({ message: 'Invalid quiz submission data' });
+        console.log(`[DEBUG] Submitting quiz results for quizId: ${quizId}, userId: ${userId}`);
+
+        // Enhanced validation with specific error messages
+        if (!answers) {
+            return res.status(400).json({ 
+                message: 'Missing quiz answers', 
+                error: 'MISSING_ANSWERS' 
+            });
         }
         
-        // Get quiz questions from session or database
+        if (!quizId) {
+            return res.status(400).json({ 
+                message: 'Missing quiz ID', 
+                error: 'MISSING_QUIZ_ID' 
+            });
+        }
+        
+        if (!Array.isArray(answers) && typeof answers !== 'object') {
+            return res.status(400).json({ 
+                message: 'Invalid answers format - must be array or object', 
+                error: 'INVALID_ANSWERS_FORMAT' 
+            });
+        }
+        
+        // Convert answers to array if it's an object (legacy support)
+        const answersArray = Array.isArray(answers) ? answers : Object.values(answers);
+        
+        // Get quiz questions from session or database with enhanced error handling
         let questions = null;
         const sessionQuiz = req.session?.currentQuiz;
         
+        console.log(`[DEBUG] Session quiz check: ${sessionQuiz ? 'found' : 'not found'}`);
+        console.log(`[DEBUG] Session quizId: ${sessionQuiz?.quizId}, Submitted quizId: ${quizId}`);
+        
         if (sessionQuiz && sessionQuiz.quizId === quizId) {
             questions = sessionQuiz.fullQuestions;
+            console.log(`[DEBUG] Retrieved questions from session: ${questions?.length || 0} questions`);
         } else {
             // Try to get questions from quiz pool
+            console.log(`[DEBUG] Attempting to retrieve quiz from pool...`);
             const services = await initializeServices();
             if (services.quizPoolService) {
                 try {
@@ -422,6 +415,9 @@ exports.submitQuizResults = async (req, res) => {
                     const quizFromPool = await QuizPool.findOne({ quizId });
                     if (quizFromPool) {
                         questions = quizFromPool.questions;
+                        console.log(`[DEBUG] Retrieved questions from pool: ${questions?.length || 0} questions`);
+                    } else {
+                        console.log(`[DEBUG] Quiz not found in pool: ${quizId}`);
                     }
                 } catch (error) {
                     console.warn('⚠️ Could not retrieve quiz from pool:', error);
@@ -430,7 +426,30 @@ exports.submitQuizResults = async (req, res) => {
         }
         
         if (!questions || !Array.isArray(questions)) {
-            return res.status(400).json({ message: 'Quiz not found or expired' });
+            console.error(`[ERROR] Questions not found or invalid format. QuizId: ${quizId}, Questions: ${questions}`);
+            return res.status(400).json({ 
+                message: 'Quiz not found, expired, or invalid format', 
+                error: 'QUIZ_NOT_FOUND',
+                details: {
+                    quizId,
+                    hasSession: !!sessionQuiz,
+                    sessionQuizId: sessionQuiz?.quizId,
+                    questionsFound: !!questions,
+                    questionsArray: Array.isArray(questions)
+                }
+            });
+        }
+        
+        // Validate answers count matches questions count
+        if (answersArray.length !== questions.length) {
+            return res.status(400).json({ 
+                message: `Answer count mismatch: expected ${questions.length}, received ${answersArray.length}`, 
+                error: 'ANSWER_COUNT_MISMATCH',
+                details: {
+                    expectedAnswers: questions.length,
+                    receivedAnswers: answersArray.length
+                }
+            });
         }
         
         // Calculate score and detailed results
@@ -438,7 +457,7 @@ exports.submitQuizResults = async (req, res) => {
         const processedQuestions = [];
         
         questions.forEach((question, index) => {
-            const userAnswer = answers[index];
+            const userAnswer = answersArray[index];
             const isCorrect = userAnswer === question.correctAnswer;
             
             if (isCorrect) {
@@ -461,6 +480,7 @@ exports.submitQuizResults = async (req, res) => {
         const timeCompleted = new Date();
         const startTime = timeStarted ? new Date(timeStarted) : new Date(timeCompleted.getTime() - 30 * 60 * 1000); // Default 30 min if not provided
         const durationMinutes = Math.round((timeCompleted - startTime) / (1000 * 60));
+        const attemptedAt = startTime; // Use the actual start time as the attempt time
         
         // Generate competency analysis
         const competencyAnalysis = analyzeCompetencyPerformance(processedQuestions.map((q, index) => ({
@@ -508,7 +528,8 @@ exports.submitQuizResults = async (req, res) => {
                     score,
                     percentage,
                     durationMinutes,
-                    quizResultId: quizResult._id
+                    quizResultId: quizResult._id,
+                    attemptedAt
                 });
             }
             
@@ -530,11 +551,20 @@ exports.submitQuizResults = async (req, res) => {
                     quizId: quizResult._id.toString()
                 };
                 
-                await skillProgressService.updateSkillProgress(userId, quizResultData);
+                // Use timeout to prevent hanging on skill progress updates
+                await Promise.race([
+                    skillProgressService.updateSkillProgress(userId, quizResultData),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Skill progress update timeout')), 10000))
+                ]);
+                
                 console.log(`✅ Updated skill progress for user ${userId}`);
             }
         } catch (skillUpdateError) {
             console.warn('⚠️ Could not update skill progress:', skillUpdateError.message);
+            console.warn('⚠️ Skill progress error stack:', skillUpdateError.stack);
+            
+            // Don't fail the entire quiz submission if skill progress update fails
+            // The quiz result has already been saved successfully
         }
         
         // Generate comparison with previous attempts
@@ -564,8 +594,17 @@ exports.submitQuizResults = async (req, res) => {
         });
         
     } catch (error) {
-        console.error('Error submitting quiz results:', error);
-        res.status(500).json({ message: 'Error processing quiz results' });
+        console.error('❌ Error submitting quiz results:', error);
+        console.error(`[ERROR DETAILS] User: ${req.user?.id}, QuizId: ${req.body?.quizId}, Stack: ${error.stack}`);
+        
+        res.status(500).json({ 
+            message: 'Error processing quiz results',
+            error: 'INTERNAL_SERVER_ERROR',
+            ...(process.env.NODE_ENV === 'development' && { 
+                details: error.message,
+                stack: error.stack 
+            })
+        });
     }
 };
 
@@ -598,134 +637,7 @@ function analyzeCompetencyPerformance(results) {
     return competencyStats;
 }
 
-// Fallback questions in case AI generation fails
-function generateFallbackQuestions(count) {
-    // Calculate distribution for fallback questions
-    const physicalCareCount = Math.round(count * 0.64);
-    const psychosocialCount = Math.round(count * 0.10);
-    const nurseAideRoleCount = count - physicalCareCount - psychosocialCount;
 
-    const fallbackQuestions = {
-        "Physical Care Skills": [
-            {
-                question: "What is the most important step before providing any care to a resident?",
-                options: {
-                    A: "Check the care plan",
-                    B: "Wash your hands",
-                    C: "Introduce yourself and explain the procedure", 
-                    D: "Put on gloves"
-                },
-                correctAnswer: "B",
-                competencyArea: "Physical Care Skills",
-                difficulty: "intermediate",
-                explanation: "Hand hygiene is the most important infection control measure and should be done before any patient contact."
-            },
-            {
-                question: "When assisting with feeding, you should:",
-                options: {
-                    A: "Feed the resident as quickly as possible",
-                    B: "Only offer liquids",
-                    C: "Allow the resident to eat at their own pace",
-                    D: "Force the resident to finish everything"
-                },
-                correctAnswer: "C",
-                competencyArea: "Physical Care Skills",
-                difficulty: "intermediate",
-                explanation: "Residents should be allowed to eat at their own comfortable pace to prevent choking and promote dignity."
-            },
-            {
-                question: "What is the proper way to lift a heavy object?",
-                options: {
-                    A: "Bend at the waist and lift with your back",
-                    B: "Use your legs and keep your back straight",
-                    C: "Twist your body while lifting",
-                    D: "Lift as quickly as possible"
-                },
-                correctAnswer: "B",
-                competencyArea: "Physical Care Skills",
-                difficulty: "intermediate", 
-                explanation: "Proper body mechanics require using leg muscles and keeping the back straight to prevent injury."
-            }
-        ],
-        "Psychosocial Care Skills": [
-            {
-                question: "When a resident seems confused and agitated, what is the best approach?",
-                options: {
-                    A: "Ignore the behavior",
-                    B: "Speak loudly to get their attention",
-                    C: "Use a calm, reassuring voice and redirect gently",
-                    D: "Restrain the resident immediately"
-                },
-                correctAnswer: "C",
-                competencyArea: "Psychosocial Care Skills",
-                difficulty: "intermediate",
-                explanation: "A calm, reassuring approach helps reduce agitation in confused residents."
-            }
-        ],
-        "Role of the Nurse Aide": [
-            {
-                question: "When should a CNA report changes in a resident's condition?",
-                options: {
-                    A: "Only during shift change",
-                    B: "At the end of the week",
-                    C: "Immediately when noticed",
-                    D: "Only if the family asks"
-                },
-                correctAnswer: "C",
-                competencyArea: "Role of the Nurse Aide",
-                difficulty: "intermediate",
-                explanation: "Any changes in a resident's condition should be reported immediately to ensure prompt medical attention."
-            },
-            {
-                question: "A resident has the right to:",
-                options: {
-                    A: "Only basic care",
-                    B: "Privacy and dignity",
-                    C: "Limited visitors",
-                    D: "No personal belongings"
-                },
-                correctAnswer: "B",
-                competencyArea: "Role of the Nurse Aide",
-                difficulty: "intermediate",
-                explanation: "All residents have the fundamental right to privacy and dignity in their care."
-            }
-        ]
-    };
-    
-    const questions = [];
-    
-    // Add Physical Care Skills questions (64%)
-    const physicalQuestions = fallbackQuestions["Physical Care Skills"];
-    for (let i = 0; i < physicalCareCount; i++) {
-        const baseQuestion = physicalQuestions[i % physicalQuestions.length];
-        questions.push({
-            ...baseQuestion,
-            question: `${baseQuestion.question}${i >= physicalQuestions.length ? ` (Question ${questions.length + 1})` : ''}`
-        });
-    }
-    
-    // Add Psychosocial Care Skills questions (10%)
-    const psychosocialQuestions = fallbackQuestions["Psychosocial Care Skills"];
-    for (let i = 0; i < psychosocialCount; i++) {
-        const baseQuestion = psychosocialQuestions[i % psychosocialQuestions.length];
-        questions.push({
-            ...baseQuestion,
-            question: `${baseQuestion.question}${i >= psychosocialQuestions.length ? ` (Question ${questions.length + 1})` : ''}`
-        });
-    }
-    
-    // Add Role of the Nurse Aide questions (26%)
-    const roleQuestions = fallbackQuestions["Role of the Nurse Aide"];
-    for (let i = 0; i < nurseAideRoleCount; i++) {
-        const baseQuestion = roleQuestions[i % roleQuestions.length];
-        questions.push({
-            ...baseQuestion,
-            question: `${baseQuestion.question}${i >= roleQuestions.length ? ` (Question ${questions.length + 1})` : ''}`
-        });
-    }
-    
-    return questions.slice(0, count);
-}
 
 // Get user's quiz history
 exports.getQuizHistory = async (req, res) => {

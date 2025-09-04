@@ -58,10 +58,13 @@ class QuizPoolService {
                 }
             }
             
-            // Find available quizzes for the user
+            // Find available quizzes for the user (immediate availability)
             const difficulty = options.difficulty || userHistory.preferences.preferredDifficulty || 'intermediate';
+            console.log(`[DEBUG] Searching for quiz with difficulty: ${difficulty}`);
             const availableQuizzes = await QuizPool.findAvailableForUser(userId, difficulty === 'adaptive' ? null : difficulty, 10);
             
+            console.log(`[DEBUG] availableQuizzes from DB query: ${availableQuizzes ? availableQuizzes.length : 'null'}`);
+
             if (availableQuizzes.length > 0) {
                 // Select the oldest quiz to ensure fair distribution
                 const selectedQuiz = availableQuizzes[0];
@@ -69,6 +72,7 @@ class QuizPoolService {
                 // Assign this quiz to the user
                 await userHistory.assignQuiz(selectedQuiz.quizId, 24); // 24 hour expiration
                 
+                console.log(`[DEBUG] Assigned quiz ${selectedQuiz.quizId} to user ${userId}`);
                 console.log(`✅ Assigned existing quiz ${selectedQuiz.quizId} to user ${userId}`);
                 return this._formatQuizForUser(selectedQuiz);
             }
@@ -169,22 +173,28 @@ class QuizPoolService {
      */
     async markQuizAsUsed(userId, quizId, results) {
         try {
-            const { score, percentage, durationMinutes } = results;
+            console.log(`[DEBUG] Marking quiz as used. userId: ${userId}, quizId: ${quizId}, attemptedAt: ${results.attemptedAt}`);
+            const { score, percentage, durationMinutes, attemptedAt } = results;
             
             // Update quiz pool entry
             const quizPoolEntry = await QuizPool.findOne({ quizId });
             if (quizPoolEntry) {
-                await quizPoolEntry.markAsUsed(userId, score, percentage, durationMinutes);
+                console.log(`[DEBUG] Found quizPoolEntry for quizId: ${quizId}`);
+                await quizPoolEntry.markAsUsed(userId, score, percentage, durationMinutes, attemptedAt);
+            } else {
+                console.log(`[DEBUG] No quizPoolEntry found for quizId: ${quizId}`);
             }
             
             // Update user's quiz history
             const userHistory = await UserQuizHistory.findOrCreateForUser(userId);
+            console.log(`[DEBUG] Found or created userHistory for userId: ${userId}`);
             await userHistory.addCompletedQuiz({
                 quizId,
                 score,
                 percentage,
                 durationMinutes,
-                quizResultId: results.quizResultId
+                quizResultId: results.quizResultId,
+                attemptedAt
             });
             
             console.log(`✅ Marked quiz ${quizId} as used by user ${userId}`);
@@ -532,9 +542,23 @@ Generate exactly ${questionCount} questions. Return ONLY the JSON array, no othe
      * Generate questions with AI fallback (no RAG)
      */
     async _generateQuestionsWithAI(questionCount, difficulty) {
-        // Use existing fallback generation logic
-        const { generateFallbackQuestions } = require('../controllers/quizController');
-        return generateFallbackQuestions(questionCount);
+        const { generateFallbackAIQuestions } = require('../controllers/quizController');
+        const { GoogleGenerativeAI } = require('@google/generative-ai');
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite-001" });
+
+        // Calculate distribution
+        const physicalCareCount = Math.round(questionCount * 0.64);
+        const psychosocialCount = Math.round(questionCount * 0.10);
+        const nurseAideRoleCount = questionCount - physicalCareCount - psychosocialCount;
+
+        return await generateFallbackAIQuestions(
+            model,
+            questionCount,
+            physicalCareCount,
+            psychosocialCount,
+            nurseAideRoleCount
+        );
     }
 
     /**
@@ -572,7 +596,21 @@ Generate exactly ${questionCount} questions. Return ONLY the JSON array, no othe
             });
         }, 6 * 60 * 60 * 1000);
         
-        console.log('🔧 Started background maintenance tasks');
+        // Log pool health every hour
+        setInterval(async () => {
+            try {
+                const stats = await this.getPoolStats();
+                console.log(`📊 Pool Health Check: ${stats.totalActiveQuizzes} quizzes, health: ${stats.poolHealth.status} (${stats.poolHealth.score}/100)`);
+                
+                if (stats.needsGeneration) {
+                    console.log(`⚠️ Pool needs generation: only ${stats.totalActiveQuizzes} quizzes available`);
+                }
+            } catch (error) {
+                console.error('❌ Pool health check failed:', error);
+            }
+        }, 60 * 60 * 1000); // Every hour
+        
+        console.log('🔧 Started background maintenance and monitoring tasks');
     }
 }
 

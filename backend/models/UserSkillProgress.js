@@ -241,7 +241,42 @@ UserSkillProgressSchema.methods.updateWithQuizData = function(quizData) {
     
     this.lastUpdated = new Date();
     
-    return this.save();
+    // Use retry logic to handle version conflicts
+    return this.saveWithRetry();
+};
+
+// Method to save with retry logic to handle version conflicts
+UserSkillProgressSchema.methods.saveWithRetry = async function(maxRetries = 3) {
+    let retries = 0;
+    
+    while (retries < maxRetries) {
+        try {
+            return await this.save();
+        } catch (error) {
+            if (error.name === 'VersionError' && retries < maxRetries - 1) {
+                console.log(`[RETRY] Version conflict detected for UserSkillProgress ${this._id}, retry ${retries + 1}/${maxRetries}`);
+                
+                // Reload the document from database to get the latest version
+                const fresh = await this.constructor.findById(this._id);
+                if (!fresh) {
+                    throw new Error('Document no longer exists');
+                }
+                
+                // Re-apply the changes to the fresh document
+                Object.assign(this, fresh.toObject());
+                this.isNew = false;
+                
+                retries++;
+                
+                // Add a small delay to reduce contention
+                await new Promise(resolve => setTimeout(resolve, 50 * retries));
+            } else {
+                throw error;
+            }
+        }
+    }
+    
+    throw new Error(`Failed to save UserSkillProgress after ${maxRetries} retries`);
 };
 
 // Private method to calculate performance trend

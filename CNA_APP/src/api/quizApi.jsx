@@ -3,7 +3,7 @@ import API_URL from '../config/apiConfig.js';
 
 /**
  * Generates 30 CNA certification quiz questions using Gemini API
- * @returns {Promise<Array>} - Array of question objects with options and correct answers
+ * @returns {Promise<Object>} - Quiz data object with questions and quizId
  */
 export const generateQuizQuestions = async () => {
   try {
@@ -15,7 +15,7 @@ export const generateQuizQuestions = async () => {
       timeout: 60000 // 60 second timeout for question generation
     });
     
-    return response.data.questions;
+    return response.data;
   } catch (error) {
     console.error('Error generating quiz questions:', error.response?.data?.message || error.message);
     throw error;
@@ -25,16 +25,16 @@ export const generateQuizQuestions = async () => {
 /**
  * Submits quiz results and gets detailed feedback
  * @param {Array} answers - Array of user's selected answers
- * @param {Array} questions - Array of question objects
+ * @param {String} quizId - Quiz ID for the current quiz
  * @param {Date} timeStarted - When the quiz was started
  * @param {String} originalQuizId - If this is a retake, the original quiz ID
  * @returns {Promise<Object>} - Detailed results and feedback
  */
-export const submitQuizResults = async (answers, questions, timeStarted = null, originalQuizId = null) => {
+export const submitQuizResults = async (answers, quizId, timeStarted = null, originalQuizId = null) => {
   try {
     const response = await axios.post(`${API_URL}/quiz/submit`, {
       answers,
-      questions,
+      quizId,
       timeStarted: timeStarted?.toISOString() || new Date().toISOString(),
       originalQuizId
     }, { 
