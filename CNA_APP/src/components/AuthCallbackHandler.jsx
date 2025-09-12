@@ -185,11 +185,21 @@ const AuthCallbackHandler = () => {
         // 🛡️ SECURITY: Clear timeout on error
         clearTimeout(securityTimeout);
         
+        // Enhanced error messaging for better user experience
+        let errorMessage = error.message;
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          errorMessage = 'Network connection failed. Please check your internet connection and try again.';
+        } else if (error.message.includes('CORS')) {
+          errorMessage = 'Authentication service temporarily unavailable. Please try again in a few moments.';
+        } else if (error.message.includes('timeout')) {
+          errorMessage = 'Authentication timed out. Please try logging in again.';
+        }
+        
         // Redirect to login after delay
         console.log('🔄 Redirecting to login in 3 seconds...');
         setTimeout(() => {
           navigate('/login', { 
-            state: { error: `Authentication failed: ${error.message}` }
+            state: { error: `Authentication failed: ${errorMessage}` }
           });
         }, 3000);
       }

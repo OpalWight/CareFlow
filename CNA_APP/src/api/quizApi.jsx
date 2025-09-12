@@ -2,22 +2,69 @@ import axios from 'axios';
 import API_URL from '../config/apiConfig.js';
 
 /**
- * Generates 30 CNA certification quiz questions using Gemini API
- * @returns {Promise<Object>} - Quiz data object with questions and quizId
+ * Generates CNA certification quiz questions using the new session-based system
+ * @param {Object} config - Quiz configuration options
+ * @returns {Promise<Object>} - Quiz session data
  */
-export const generateQuizQuestions = async () => {
+export const generateQuizQuestions = async (config = {}) => {
   try {
+    const {
+      questionCount = 30,
+      competencyRatios = {
+        physicalCareSkills: 64,
+        psychosocialCareSkills: 10,
+        roleOfNurseAide: 26
+      },
+      difficulty = 'intermediate'
+    } = config;
+
     const response = await axios.post(`${API_URL}/quiz/generate`, {
-      questionCount: 30,
-      topic: 'CNA_CERTIFICATION'
+      questionCount,
+      quizType: 'practice',
+      quizComposition: {
+        questionCount,
+        competencyRatios
+      },
+      difficultySettings: {
+        preferredDifficulty: difficulty
+      }
     }, { 
       withCredentials: true,
       timeout: 60000 // 60 second timeout for question generation
     });
     
-    return response.data;
+    // Convert session format to expected format for compatibility
+    const sessionData = response.data;
+    return {
+      sessionId: sessionData.sessionId,
+      questions: [], // Questions will be loaded one by one
+      quizId: sessionData.sessionId, // Use sessionId as quizId for compatibility
+      totalQuestions: sessionData.totalQuestions || 30,
+      currentQuestion: sessionData.currentQuestion
+    };
   } catch (error) {
     console.error('Error generating quiz questions:', error.response?.data?.message || error.message);
+    throw error;
+  }
+};
+
+/**
+ * Fetches a specific question by position for a quiz session
+ * @param {string} sessionId - Quiz session ID
+ * @param {number} position - Question position (0-indexed)
+ * @returns {Promise<Object>} - Question data
+ */
+export const getQuestionByPosition = async (sessionId, position) => {
+  try {
+    const response = await axios.get(`${API_URL}/quiz/session/${sessionId}/question`, {
+      params: { position },
+      withCredentials: true,
+      timeout: 10000
+    });
+    
+    return response.data.question;
+  } catch (error) {
+    console.error('Error fetching question by position:', error.response?.data?.message || error.message);
     throw error;
   }
 };

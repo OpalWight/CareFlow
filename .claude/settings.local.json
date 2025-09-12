@@ -9,7 +9,10 @@
       "Bash(cp:*)",
       "Bash(rm:*)",
       "Bash(npm start)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Read(/C:\\Users\\alber\\OneDrive\\Documents\\ECs\\SUMMER\\CNA-Summer-Project\\CNA_APP\\src\\pages/**)",
+      "Read(/C:\\Users\\alber\\OneDrive\\Documents\\ECs\\SUMMER\\CNA-Summer-Project\\backend\\controllers/**)",
+      "Bash(taskkill:*)"
     ],
     "deny": []
   }

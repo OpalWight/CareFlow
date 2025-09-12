@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../api/AuthContext';
 import Layout from '../components/Layout';
-import { generateQuizQuestions, submitQuizResults, getQuizHistory, retakeQuiz } from '../api/quizApi';
+import { generateQuizQuestions, submitQuizResults, getQuizHistory, retakeQuiz, getQuestionByPosition } from '../api/quizApi';
 import '../styles/QuizPage.css';
 
 const QuizPage = () => {
@@ -12,6 +12,8 @@ const QuizPage = () => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState({});
     const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingQuestion, setIsLoadingQuestion] = useState(false);
+    const [questionError, setQuestionError] = useState(null);
     const [showResults, setShowResults] = useState(false);
     const [score, setScore] = useState(0);
     const [quizStarted, setQuizStarted] = useState(false);
@@ -25,16 +27,30 @@ const QuizPage = () => {
     const [originalQuizId, setOriginalQuizId] = useState(null);
     const [resultData, setResultData] = useState(null);
     const [currentQuizId, setCurrentQuizId] = useState(null);
+    
+    // Quiz configuration state
+    const [showConfig, setShowConfig] = useState(false);
+    const [quizConfig, setQuizConfig] = useState({
+        questionCount: 30,
+        competencyRatios: {
+            physicalCareSkills: 64,
+            psychosocialCareSkills: 10,
+            roleOfNurseAide: 26
+        },
+        difficulty: 'intermediate'
+    });
 
     // Load quiz history on component mount
     useEffect(() => {
         const loadQuizHistory = async () => {
             try {
                 const historyData = await getQuizHistory(1, 10);
-                setQuizHistory(historyData.quizzes);
-                setUserStats(historyData.userStats);
+                setQuizHistory(historyData?.quizzes || []);
+                setUserStats(historyData?.userStats || null);
             } catch (error) {
                 console.error('Error loading quiz history:', error);
+                setQuizHistory([]);
+                setUserStats(null);
             }
         };
         
@@ -43,12 +59,92 @@ const QuizPage = () => {
         }
     }, [user]);
 
+    // Quiz configuration functions
+    const handleQuestionCountChange = (count) => {
+        setQuizConfig(prev => ({
+            ...prev,
+            questionCount: parseInt(count)
+        }));
+    };
+
+    const handleCompetencyRatioChange = (competency, value) => {
+        const newValue = parseInt(value);
+        setQuizConfig(prev => {
+            const newRatios = { ...prev.competencyRatios };
+            const oldValue = newRatios[competency];
+            const difference = newValue - oldValue;
+            
+            newRatios[competency] = newValue;
+            
+            // Auto-adjust other competencies to maintain 100% total
+            const otherKeys = Object.keys(newRatios).filter(key => key !== competency);
+            const remaining = 100 - newValue;
+            
+            if (remaining >= 0) {
+                // Distribute the remaining percentage proportionally
+                const otherTotal = otherKeys.reduce((sum, key) => sum + newRatios[key], 0);
+                
+                if (otherTotal > 0) {
+                    otherKeys.forEach(key => {
+                        const proportion = newRatios[key] / otherTotal;
+                        newRatios[key] = Math.round(remaining * proportion);
+                    });
+                } else {
+                    // If other values are 0, distribute equally
+                    const equalShare = Math.floor(remaining / otherKeys.length);
+                    otherKeys.forEach((key, index) => {
+                        newRatios[key] = index === otherKeys.length - 1 ? 
+                            remaining - (equalShare * (otherKeys.length - 1)) : equalShare;
+                    });
+                }
+            }
+            
+            // Ensure minimum values and total adds to 100
+            const total = Object.values(newRatios).reduce((sum, val) => sum + val, 0);
+            if (total !== 100) {
+                const adjustment = 100 - total;
+                newRatios[otherKeys[0]] = Math.max(0, newRatios[otherKeys[0]] + adjustment);
+            }
+            
+            return {
+                ...prev,
+                competencyRatios: newRatios
+            };
+        });
+    };
+
+    const handleDifficultyChange = (difficulty) => {
+        setQuizConfig(prev => ({
+            ...prev,
+            difficulty
+        }));
+    };
+
+    const getQuestionDistribution = () => {
+        const { questionCount, competencyRatios } = quizConfig;
+        return {
+            physicalCare: Math.round((competencyRatios.physicalCareSkills / 100) * questionCount),
+            psychosocialCare: Math.round((competencyRatios.psychosocialCareSkills / 100) * questionCount),
+            roleOfAide: Math.round((competencyRatios.roleOfNurseAide / 100) * questionCount)
+        };
+    };
+
     const startQuiz = async () => {
         setIsLoading(true);
         try {
-            const quizData = await generateQuizQuestions();
-            setQuestions(quizData.questions);
-            setCurrentQuizId(quizData.quizId);
+            const quizData = await generateQuizQuestions(quizConfig);
+            // Handle new session-based API format
+            setCurrentQuizId(quizData.sessionId || quizData.quizId);
+            
+            // Build questions array with first question
+            if (quizData.currentQuestion) {
+                const questionsArray = new Array(quizData.totalQuestions);
+                questionsArray[0] = quizData.currentQuestion;
+                setQuestions(questionsArray);
+            } else {
+                setQuestions(quizData.questions || []);
+            }
+            
             setQuizStarted(true);
             setTimeStarted(new Date());
             setIsRetake(false);
@@ -83,15 +179,57 @@ const QuizPage = () => {
         }));
     };
 
-    const goToNextQuestion = () => {
-        if (currentQuestionIndex < questions.length - 1) {
-            setCurrentQuestionIndex(currentQuestionIndex + 1);
+    // Function to load a question at a specific index
+    const loadQuestion = async (index) => {
+        if (questions[index] || !currentQuizId) return; // Question already loaded or no session
+        
+        setIsLoadingQuestion(true);
+        setQuestionError(null);
+        try {
+            const questionData = await getQuestionByPosition(currentQuizId, index);
+            setQuestions(prev => {
+                const updated = [...prev];
+                updated[index] = questionData;
+                return updated;
+            });
+        } catch (error) {
+            console.error(`Error loading question at index ${index}:`, error);
+            setQuestionError(`Failed to load question ${index + 1}. Please try again.`);
+        } finally {
+            setIsLoadingQuestion(false);
         }
     };
 
-    const goToPreviousQuestion = () => {
-        if (currentQuestionIndex > 0) {
-            setCurrentQuestionIndex(currentQuestionIndex - 1);
+    // Function to retry loading current question
+    const retryLoadQuestion = () => {
+        setQuestionError(null);
+        loadQuestion(currentQuestionIndex);
+    };
+
+    const goToNextQuestion = async () => {
+        const nextIndex = currentQuestionIndex + 1;
+        if (nextIndex < questions.length) {
+            // Load the next question if it doesn't exist
+            if (!questions[nextIndex]) {
+                await loadQuestion(nextIndex);
+            }
+            setCurrentQuestionIndex(nextIndex);
+            
+            // Pre-fetch the question after next for smoother UX
+            if (nextIndex + 1 < questions.length && !questions[nextIndex + 1]) {
+                loadQuestion(nextIndex + 1); // Don't await - run in background
+            }
+        }
+    };
+
+    const goToPreviousQuestion = async () => {
+        const prevIndex = currentQuestionIndex - 1;
+        if (prevIndex >= 0) {
+            // Load the previous question if it doesn't exist (shouldn't happen normally)
+            if (!questions[prevIndex]) {
+                await loadQuestion(prevIndex);
+            }
+            setCurrentQuestionIndex(prevIndex);
         }
     };
 
@@ -113,8 +251,8 @@ const QuizPage = () => {
             
             // Refresh quiz history
             const updatedHistory = await getQuizHistory(1, 10);
-            setQuizHistory(updatedHistory.quizzes);
-            setUserStats(updatedHistory.userStats);
+            setQuizHistory(updatedHistory?.quizzes || []);
+            setUserStats(updatedHistory?.userStats || null);
             
         } catch (error) {
             console.error('Error submitting quiz:', error);
@@ -174,7 +312,7 @@ const QuizPage = () => {
                         <div className="quiz-intro">
                             <h1>CNA Certification Practice Quiz</h1>
                             <div className="quiz-info">
-                                <p>This quiz contains 30 questions based on the national standards of CNA certification.</p>
+                                <p>This quiz contains {quizConfig.questionCount} questions based on the national standards of CNA certification.</p>
                                 <ul>
                                     <li>Multiple choice format (A, B, C, D)</li>
                                     <li>Questions cover all essential CNA competencies</li>
@@ -182,20 +320,146 @@ const QuizPage = () => {
                                     <li>Complete all questions to see your results</li>
                                 </ul>
                             </div>
+
+                            {showConfig && (
+                                <div className="quiz-configuration">
+                                    <h3>🎛️ Quiz Settings</h3>
+                                    
+                                    {/* Question Count Slider */}
+                                    <div className="setting-group">
+                                        <label htmlFor="questionCount">
+                                            Quiz Length: <strong>{quizConfig.questionCount} questions</strong>
+                                        </label>
+                                        <input 
+                                            id="questionCount"
+                                            type="range" 
+                                            min="10" 
+                                            max="50" 
+                                            value={quizConfig.questionCount}
+                                            onChange={(e) => handleQuestionCountChange(e.target.value)}
+                                            className="slider question-count-slider"
+                                        />
+                                        <div className="slider-labels">
+                                            <span>10</span>
+                                            <span>30</span>
+                                            <span>50</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Content Focus Sliders */}
+                                    <div className="setting-group">
+                                        <label>📚 Content Focus</label>
+                                        <div className="competency-sliders">
+                                            <div className="competency-item">
+                                                <div className="competency-header">
+                                                    <span>Physical Care Skills</span>
+                                                    <strong>{quizConfig.competencyRatios.physicalCareSkills}%</strong>
+                                                </div>
+                                                <input 
+                                                    type="range" 
+                                                    min="0" 
+                                                    max="100" 
+                                                    value={quizConfig.competencyRatios.physicalCareSkills}
+                                                    onChange={(e) => handleCompetencyRatioChange('physicalCareSkills', e.target.value)}
+                                                    className="slider competency-slider physical-care"
+                                                />
+                                            </div>
+                                            
+                                            <div className="competency-item">
+                                                <div className="competency-header">
+                                                    <span>Psychosocial Care Skills</span>
+                                                    <strong>{quizConfig.competencyRatios.psychosocialCareSkills}%</strong>
+                                                </div>
+                                                <input 
+                                                    type="range" 
+                                                    min="0" 
+                                                    max="100" 
+                                                    value={quizConfig.competencyRatios.psychosocialCareSkills}
+                                                    onChange={(e) => handleCompetencyRatioChange('psychosocialCareSkills', e.target.value)}
+                                                    className="slider competency-slider psychosocial-care"
+                                                />
+                                            </div>
+                                            
+                                            <div className="competency-item">
+                                                <div className="competency-header">
+                                                    <span>Role of the Nurse Aide</span>
+                                                    <strong>{quizConfig.competencyRatios.roleOfNurseAide}%</strong>
+                                                </div>
+                                                <input 
+                                                    type="range" 
+                                                    min="0" 
+                                                    max="100" 
+                                                    value={quizConfig.competencyRatios.roleOfNurseAide}
+                                                    onChange={(e) => handleCompetencyRatioChange('roleOfNurseAide', e.target.value)}
+                                                    className="slider competency-slider nurse-aide"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Difficulty Level */}
+                                    <div className="setting-group">
+                                        <label htmlFor="difficulty">🎯 Difficulty Level</label>
+                                        <select 
+                                            id="difficulty"
+                                            value={quizConfig.difficulty}
+                                            onChange={(e) => handleDifficultyChange(e.target.value)}
+                                            className="difficulty-select"
+                                        >
+                                            <option value="beginner">🟢 Beginner</option>
+                                            <option value="intermediate">🟡 Intermediate</option>
+                                            <option value="advanced">🔴 Advanced</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Question Distribution Preview */}
+                                    <div className="setting-group">
+                                        <label>📊 Question Distribution Preview</label>
+                                        <div className="distribution-preview">
+                                            {(() => {
+                                                const distribution = getQuestionDistribution();
+                                                return (
+                                                    <>
+                                                        <div className="distribution-item">
+                                                            <span className="distribution-color physical-care"></span>
+                                                            <span>Physical Care: {distribution.physicalCare} questions</span>
+                                                        </div>
+                                                        <div className="distribution-item">
+                                                            <span className="distribution-color psychosocial-care"></span>
+                                                            <span>Psychosocial Care: {distribution.psychosocialCare} questions</span>
+                                                        </div>
+                                                        <div className="distribution-item">
+                                                            <span className="distribution-color nurse-aide"></span>
+                                                            <span>Role of Nurse Aide: {distribution.roleOfAide} questions</span>
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="quiz-actions">
                                 <button 
                                     onClick={startQuiz} 
                                     className="start-quiz-btn"
                                     disabled={isLoading}
                                 >
-                                    {isLoading ? 'Generating Questions...' : 'Start New Quiz'}
+                                    {isLoading ? 'Generating Questions...' : 'Start Quiz'}
                                 </button>
-                                {quizHistory.length > 0 && (
+                                <button 
+                                    onClick={() => setShowConfig(!showConfig)} 
+                                    className="customize-quiz-btn"
+                                >
+                                    {showConfig ? '🔙 Hide Settings' : '⚙️ Customize Quiz'}
+                                </button>
+                                {quizHistory && quizHistory.length > 0 && (
                                     <button 
                                         onClick={() => setShowHistory(true)} 
                                         className="view-history-btn"
                                     >
-                                        View Quiz History ({quizHistory.length})
+                                        View Quiz History ({quizHistory?.length || 0})
                                     </button>
                                 )}
                             </div>
@@ -232,7 +496,7 @@ const QuizPage = () => {
                             <button onClick={() => setShowHistory(false)} className="back-btn">← Back</button>
                         </div>
                         <div className="history-list">
-                            {quizHistory.map((quiz, index) => (
+                            {quizHistory?.map((quiz, index) => (
                                 <div key={quiz.id} className="history-item">
                                     <div className="history-main">
                                         <div className="history-score">
@@ -240,7 +504,7 @@ const QuizPage = () => {
                                             <span className="percentage">({quiz.percentage}%)</span>
                                         </div>
                                         <div className="history-details">
-                                            <div className="attempt-number">Attempt #{quizHistory.length - index}</div>
+                                            <div className="attempt-number">Attempt #{(quizHistory?.length || 0) - index}</div>
                                             <div className="date">{new Date(quiz.date).toLocaleDateString()}</div>
                                             <div className="duration">{quiz.durationMinutes}min</div>
                                             {quiz.isRetake && <span className="retake-badge">Retake</span>}
@@ -395,7 +659,19 @@ const QuizPage = () => {
                             </div>
                         </div>
 
-                        {currentQuestion && (
+                        {isLoadingQuestion ? (
+                            <div className="question-loading">
+                                <div className="loading-spinner"></div>
+                                <p>Loading question...</p>
+                            </div>
+                        ) : questionError ? (
+                            <div className="question-error">
+                                <p>⚠️ {questionError}</p>
+                                <button onClick={retryLoadQuestion} className="retry-btn">
+                                    🔄 Retry
+                                </button>
+                            </div>
+                        ) : currentQuestion ? (
                             <div className="question-container">
                                 <h3 className="question-text">{currentQuestion.question}</h3>
                                 <div className="options-container">
@@ -410,6 +686,7 @@ const QuizPage = () => {
                                                 value={option}
                                                 checked={selectedAnswers[currentQuestionIndex] === option}
                                                 onChange={() => handleAnswerSelect(currentQuestionIndex, option)}
+                                                disabled={isLoadingQuestion}
                                             />
                                             <span className="option-letter">{option}</span>
                                             <span className="option-text">{currentQuestion.options[option]}</span>
@@ -417,28 +694,36 @@ const QuizPage = () => {
                                     ))}
                                 </div>
                             </div>
+                        ) : (
+                            <div className="question-error">
+                                <p>⚠️ Question not available. Please try navigating to another question.</p>
+                            </div>
                         )}
 
                         <div className="quiz-navigation">
                             <button 
                                 onClick={goToPreviousQuestion}
-                                disabled={currentQuestionIndex === 0}
+                                disabled={currentQuestionIndex === 0 || isLoadingQuestion}
                                 className="nav-btn prev-btn"
                             >
-                                Previous
+                                {isLoadingQuestion ? 'Loading...' : 'Previous'}
                             </button>
                             
                             {isLastQuestion && allQuestionsAnswered ? (
-                                <button onClick={submitQuiz} className="submit-btn">
+                                <button 
+                                    onClick={submitQuiz} 
+                                    disabled={isLoadingQuestion}
+                                    className="submit-btn"
+                                >
                                     Submit Quiz
                                 </button>
                             ) : (
                                 <button 
                                     onClick={goToNextQuestion}
-                                    disabled={isLastQuestion}
+                                    disabled={isLastQuestion || isLoadingQuestion}
                                     className="nav-btn next-btn"
                                 >
-                                    Next
+                                    {isLoadingQuestion ? 'Loading...' : 'Next'}
                                 </button>
                             )}
                         </div>

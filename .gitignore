@@ -389,3 +389,8 @@ tramp
 *.swo
 *.orig
 *.rej
+
+# Development utility scripts
+kill-ports.bat
+stop-servers.bat
+restart-dev.bat

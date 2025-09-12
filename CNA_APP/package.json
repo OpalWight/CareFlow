@@ -6,10 +6,10 @@
   "scripts": {
     "dev": "vite --mode development",
     "dev:local": "vite",
-    "build": "node scripts/log-env.js && vite build --mode production",
-    "build:dev": "node scripts/log-env.js && vite build --mode development",
-    "build:debug": "NODE_ENV=production node scripts/log-env.js && vite build --mode production",
-    "build:test-prod": "cross-env NODE_ENV=production VITE_API_URL=https://careflow-ssas.onrender.com VITE_ENV=production node scripts/log-env.js && vite build --mode production",
+    "build": "vite build --mode production",
+    "build:dev": "vite build --mode development",
+    "build:debug": "vite build --mode production",
+    "build:test-prod": "cross-env NODE_ENV=production VITE_API_URL=https://careflow-ssas.onrender.com VITE_ENV=production vite build --mode production",
     "lint": "eslint .",
     "preview": "vite preview",
     "preview:prod": "npm run build:test-prod && vite preview"

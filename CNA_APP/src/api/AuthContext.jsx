@@ -118,7 +118,18 @@ export const AuthProvider = ({ children }) => {
         } catch (err) {
             console.error('❌ Auth check error:', err);
             setUser(null);
-            setError(`Network error: ${err.message}`);
+            
+            // Enhanced error messaging for better user experience
+            let errorMessage = err.message;
+            if (err.name === 'TypeError' && err.message.includes('fetch')) {
+                errorMessage = 'Unable to connect to authentication service. Please check your internet connection.';
+            } else if (err.message.includes('CORS') || err.message.includes('Cross-Origin')) {
+                errorMessage = 'Authentication service temporarily unavailable. Please try again later.';
+            } else if (err.message.includes('timeout')) {
+                errorMessage = 'Authentication check timed out. Please try again.';
+            }
+            
+            setError(`Network error: ${errorMessage}`);
             return false;
         } finally {
             if (!skipLoadingState) {

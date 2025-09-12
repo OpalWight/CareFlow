@@ -43,6 +43,7 @@ const getAllowedOrigins = () => {
     'http://localhost:5173',
     'http://localhost:3000',
     'https://care-flow-ten.vercel.app', // Production Vercel URL
+    'https://careflowlearn.org', // Production careflow domain
     process.env.FRONTEND_URL
   ];
 
@@ -77,8 +78,12 @@ const corsOptions = {
     const isVercelUrl = origin.includes('.vercel.app') && 
                        (origin.includes('care-flow') || origin.includes('albert-vos-projects'));
     
-    if (isVercelUrl) {
-      console.log('✅ CORS: Allowed Vercel pattern:', origin);
+    // Check for careflow domains
+    const isCareflowDomain = origin.includes('careflowlearn.org') || 
+                            origin.includes('careflow-ssas.onrender.com');
+    
+    if (isVercelUrl || isCareflowDomain) {
+      console.log('✅ CORS: Allowed pattern origin:', origin);
       return callback(null, true);
     }
     
