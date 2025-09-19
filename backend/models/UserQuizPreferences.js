@@ -6,8 +6,7 @@ const UserQuizPreferencesSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
-        unique: true,
-        index: true
+        unique: true
     },
     
     // Quiz composition preferences
