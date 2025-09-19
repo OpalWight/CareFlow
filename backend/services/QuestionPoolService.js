@@ -633,8 +633,11 @@ Generate exactly ${count} questions. Return ONLY the JSON array, no other text.`
                     throw new Error('No valid questions returned from AI');
                 }
                 
+                // Fix question structure (move fields out of options object)
+                const structureFixedQuestions = validatedQuestions.map(question => this._fixQuestionStructure(question));
+                
                 // Validate and fix enum values
-                const finalQuestions = validatedQuestions.map(question => this._validateAndFixEnumValues(question));
+                const finalQuestions = structureFixedQuestions.map(question => this._validateAndFixEnumValues(question));
                 
                 console.log(`✅ Successfully generated ${finalQuestions.length} questions on attempt ${attempt}`);
                 return finalQuestions;
@@ -732,6 +735,32 @@ Generate exactly ${count} questions. Return ONLY the JSON array, no other text.`
             console.error(`🔍 Final cleaned text: ${progressivelyCleaned}`);
             throw new Error(`Unable to repair JSON: ${finalError.message}`);
         }
+    }
+
+    /**
+     * Fix question structure by moving fields out of options object if they were misplaced
+     */
+    _fixQuestionStructure(question) {
+        // If the AI put fields inside the options object, move them to the root level
+        if (question.options && typeof question.options === 'object') {
+            const fieldsToMove = ['correctAnswer', 'explanation', 'competencyArea', 'skillCategory', 'skillTopic', 'testSubject', 'difficulty'];
+            
+            fieldsToMove.forEach(field => {
+                if (question.options[field] !== undefined && question[field] === undefined) {
+                    console.log(`🔧 Moving ${field} from options to root level`);
+                    question[field] = question.options[field];
+                    delete question.options[field];
+                }
+            });
+        }
+        
+        // Ensure required fields exist
+        if (!question.explanation) {
+            console.warn(`⚠️ Missing explanation field, adding default`);
+            question.explanation = 'Please review this question for explanation completeness.';
+        }
+        
+        return question;
     }
 
     /**
