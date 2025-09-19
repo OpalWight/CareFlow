@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../api/AuthContext';
 import Layout from '../components/Layout';
-import { generateQuizQuestions, submitQuizResults, getQuizHistory, retakeQuiz, getQuestionByPosition, submitInstantAnswer, getUserPreferences } from '../api/quizApi';
+import { generateQuizQuestions, submitQuizResults, getQuizHistory, retakeQuiz, getQuestionByPosition, submitInstantAnswer, getUserPreferences, updateUserPreferences } from '../api/quizApi';
 import '../styles/QuizPage.css';
 
 const QuizPage = () => {
@@ -43,7 +43,8 @@ const QuizPage = () => {
             psychosocialCareSkills: 10,
             roleOfNurseAide: 26
         },
-        difficulty: 'intermediate'
+        difficulty: 'intermediate',
+        instantGrading: false
     });
 
     // Load quiz history and user preferences on component mount
@@ -64,7 +65,14 @@ const QuizPage = () => {
             try {
                 const prefsData = await getUserPreferences();
                 setUserPreferences(prefsData.preferences);
-                setInstantGradingEnabled(prefsData.preferences?.uiPreferences?.instantGrading || false);
+                const instantGradingPref = prefsData.preferences?.uiPreferences?.instantGrading || false;
+                setInstantGradingEnabled(instantGradingPref);
+                
+                // Update quiz config with saved preference
+                setQuizConfig(prev => ({
+                    ...prev,
+                    instantGrading: instantGradingPref
+                }));
             } catch (error) {
                 console.error('Error loading user preferences:', error);
                 setInstantGradingEnabled(false);
@@ -143,6 +151,25 @@ const QuizPage = () => {
             ...prev,
             difficulty
         }));
+    };
+
+    const handleInstantGradingChange = async (enabled) => {
+        setQuizConfig(prev => ({
+            ...prev,
+            instantGrading: enabled
+        }));
+        setInstantGradingEnabled(enabled);
+
+        // Save preference to backend
+        try {
+            await updateUserPreferences({
+                uiPreferences: {
+                    instantGrading: enabled
+                }
+            });
+        } catch (error) {
+            console.error('Error saving instant grading preference:', error);
+        }
     };
 
     const getQuestionDistribution = () => {
@@ -458,6 +485,29 @@ const QuizPage = () => {
                                             <option value="intermediate">🟡 Intermediate</option>
                                             <option value="advanced">🔴 Advanced</option>
                                         </select>
+                                    </div>
+
+                                    {/* Instant Grading Toggle */}
+                                    <div className="setting-group">
+                                        <div className="instant-grading-setting">
+                                            <div className="setting-info">
+                                                <label htmlFor="instant-grading-quiz">🔄 Instant Grading</label>
+                                                <p className="setting-description">
+                                                    Get immediate feedback after each question
+                                                </p>
+                                            </div>
+                                            <div className="setting-control">
+                                                <label className="quiz-toggle-switch">
+                                                    <input
+                                                        id="instant-grading-quiz"
+                                                        type="checkbox"
+                                                        checked={quizConfig.instantGrading}
+                                                        onChange={(e) => handleInstantGradingChange(e.target.checked)}
+                                                    />
+                                                    <span className="quiz-toggle-slider"></span>
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {/* Question Distribution Preview */}

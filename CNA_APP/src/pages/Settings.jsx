@@ -133,26 +133,6 @@ function Settings() {
           <div className="settings-section">
             <h2>Quiz Experience</h2>
             
-            <div className="setting-item">
-              <div className="setting-info">
-                <label htmlFor="instant-grading">Instant Grading</label>
-                <p className="setting-description">
-                  Show immediate feedback after each question instead of waiting until the end of the quiz.
-                </p>
-              </div>
-              <div className="setting-control">
-                <label className="toggle-switch">
-                  <input
-                    id="instant-grading"
-                    type="checkbox"
-                    checked={preferences.uiPreferences?.instantGrading || false}
-                    onChange={(e) => handleToggleChange('uiPreferences.instantGrading', e.target.checked)}
-                    disabled={saving}
-                  />
-                  <span className="toggle-slider"></span>
-                </label>
-              </div>
-            </div>
 
             <div className="setting-item">
               <div className="setting-info">

@@ -258,16 +258,3 @@ input:disabled + .toggle-slider {
   }
 }
 
-/* Highlight instant grading setting */
-.setting-item:has(#instant-grading) {
-  background-color: #f8fbff;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin: 0.5rem 0;
-  border: 2px solid #e6f3ff;
-}
-
-.setting-item:has(#instant-grading) .setting-info label {
-  color: #1a365d;
-  font-weight: 600;
-}
