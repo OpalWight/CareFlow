@@ -132,7 +132,7 @@ No formal test suite detected. Verify functionality through:
 
 1. Add all modified files to staging: `git add .`
 2. Create a commit with a descriptive message (do NOT include any references to Claude or AI assistance)
-3. Push changes to the current branch: `git push origin $(git branch --show-current)`
+3. Push changes to the development branch: `git push origin development`
 
 This ensures all code changes are immediately saved and backed up to the remote repository. Never leave code changes uncommitted after completing a task.
 
