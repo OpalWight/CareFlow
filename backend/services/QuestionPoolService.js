@@ -50,23 +50,31 @@ class QuestionPoolService {
      */
     async createQuizSession(userId, preferences = null) {
         try {
-            console.log(`🎯 Creating quiz session for user ${userId}`);
+            console.log(`[QUIZ-DEBUG] 🎯 Creating quiz session for user ${userId}`);
             
             // Get user preferences with proper error handling
             let userPrefs = preferences;
             if (!userPrefs) {
-                console.log(`🔍 Fetching user preferences for user ${userId}...`);
+                console.log(`[QUIZ-DEBUG] 🔍 Fetching user preferences for user ${userId}...`);
                 userPrefs = await UserQuizPreferences.findOrCreateForUser(userId);
-                console.log(`📋 User preferences retrieved:`, {
+                console.log(`[QUIZ-DEBUG] 📋 User preferences retrieved:`, {
                     hasCalculateMethod: typeof userPrefs.calculateQuestionDistribution === 'function',
                     isMongooseDoc: userPrefs.constructor.name,
-                    questionCount: userPrefs.quizComposition?.questionCount
+                    questionCount: userPrefs.quizComposition?.questionCount,
+                    difficulty: userPrefs.difficultySettings?.preferredDifficulty,
+                    userId: userId
+                });
+            } else {
+                console.log(`[QUIZ-DEBUG] 📋 Using custom preferences for user ${userId}:`, {
+                    questionCount: userPrefs.quizComposition?.questionCount,
+                    difficulty: userPrefs.difficultySettings?.preferredDifficulty,
+                    hasCompetencyRatios: !!userPrefs.quizComposition?.competencyRatios
                 });
             }
             
             // Ensure userPrefs has the calculateQuestionDistribution method
             if (!userPrefs.calculateQuestionDistribution || typeof userPrefs.calculateQuestionDistribution !== 'function') {
-                console.warn('⚠️ UserPrefs missing calculateQuestionDistribution method, using default distribution');
+                console.warn(`[QUIZ-DEBUG] ⚠️ UserPrefs missing calculateQuestionDistribution method for user ${userId}, using default distribution`);
                 // Fallback to manual calculation
                 const questionCount = userPrefs.quizComposition?.questionCount || 30;
                 const ratios = userPrefs.quizComposition?.competencyRatios || {
@@ -407,21 +415,38 @@ class QuestionPoolService {
      * Select questions for a quiz based on user preferences and performance
      */
     async _selectQuestions(userId, userPrefs, distribution) {
+        console.log(`[QUIZ-DEBUG] 🔍 Selecting questions for user ${userId}`);
+        console.log(`[QUIZ-DEBUG] 📊 Question distribution requested:`, distribution);
+        
         const selectedQuestions = [];
         let position = 1;
         
         // Get user's question progress for intelligent selection
+        const startTime = Date.now();
         const userProgress = await UserQuestionProgress.find({ userId });
         const userProgressMap = new Map(userProgress.map(p => [p.questionId, p]));
+        console.log(`[QUIZ-DEBUG] 📈 User progress loaded: ${userProgress.length} questions in ${Date.now() - startTime}ms`);
         
         // Get questions due for spaced repetition
         const dueQuestions = await UserQuestionProgress.findDueForReview(userId, 10);
+        console.log(`[QUIZ-DEBUG] 🔄 Questions due for review: ${dueQuestions.length}`);
         
         // Select questions for each competency area
+        let totalRequested = 0;
+        let totalSelected = 0;
+        
         for (const [competencyArea, count] of Object.entries(distribution)) {
-            if (count === 0) continue;
+            if (count === 0) {
+                console.log(`[QUIZ-DEBUG] ⏭️ Skipping ${competencyArea} (0 questions requested)`);
+                continue;
+            }
+            
+            totalRequested += count;
+            console.log(`[QUIZ-DEBUG] 🎯 Selecting ${count} questions for ${competencyArea}`);
             
             const competencyKey = this._mapCompetencyKey(competencyArea);
+            const selectionStart = Date.now();
+            
             const questions = await this._selectQuestionsForCompetency(
                 userId,
                 competencyKey,
@@ -430,6 +455,15 @@ class QuestionPoolService {
                 userProgressMap,
                 dueQuestions
             );
+            
+            const selectionTime = Date.now() - selectionStart;
+            console.log(`[QUIZ-DEBUG] ✅ Selected ${questions.length}/${count} questions for ${competencyArea} in ${selectionTime}ms`);
+            
+            if (questions.length < count) {
+                console.warn(`[QUIZ-DEBUG] ⚠️ Question shortage for ${competencyArea}: got ${questions.length}, needed ${count}`);
+            }
+            
+            totalSelected += questions.length;
             
             // Add questions with metadata
             questions.forEach(question => {
@@ -449,14 +483,31 @@ class QuestionPoolService {
             });
         }
         
+        console.log(`[QUIZ-DEBUG] 📋 Selection summary for user ${userId}:`, {
+            totalRequested,
+            totalSelected,
+            shortfall: totalRequested - totalSelected,
+            shortfallPercentage: Math.round(((totalRequested - totalSelected) / totalRequested) * 100),
+            finalCount: selectedQuestions.length
+        });
+        
+        if (totalSelected < totalRequested) {
+            console.error(`[QUIZ-DEBUG] ❌ Insufficient questions: requested ${totalRequested}, got ${totalSelected}`);
+        }
+        
         // Shuffle questions to avoid predictable patterns
-        return this._shuffleArray(selectedQuestions);
+        const shuffledQuestions = this._shuffleArray(selectedQuestions);
+        console.log(`[QUIZ-DEBUG] 🔀 Questions shuffled, returning ${shuffledQuestions.length} questions`);
+        
+        return shuffledQuestions;
     }
 
     /**
      * Select questions for a specific competency area
      */
     async _selectQuestionsForCompetency(userId, competencyArea, count, userPrefs, userProgressMap, dueQuestions) {
+        console.log(`[QUIZ-DEBUG] 🔍 Selecting questions for competency: ${competencyArea}`);
+        
         const criteria = {
             competencyArea,
             minQuality: 60,
@@ -470,13 +521,47 @@ class QuestionPoolService {
             criteria.difficulty = userPrefs.difficultySettings.preferredDifficulty;
         }
         
+        console.log(`[QUIZ-DEBUG] 📋 Query criteria for ${competencyArea}:`, {
+            competencyArea: criteria.competencyArea,
+            minQuality: criteria.minQuality,
+            difficulty: criteria.difficulty || 'any',
+            excludeRecent: criteria.excludeRecent,
+            recentTimeframeDays: Math.round(criteria.recentTimeframe / (24 * 60 * 60 * 1000)),
+            limit: criteria.limit,
+            requestedCount: count
+        });
+        
+        const queryStart = Date.now();
         const availableQuestions = await QuestionBank.findByCriteria(criteria);
+        const queryTime = Date.now() - queryStart;
+        
+        console.log(`[QUIZ-DEBUG] 🔍 Database query for ${competencyArea} completed in ${queryTime}ms:`, {
+            found: availableQuestions.length,
+            requested: count,
+            criteria: criteria
+        });
         
         if (availableQuestions.length === 0) {
-            console.warn(`⚠️ No questions found for ${competencyArea}, generating new questions`);
-            await this.generateQuestions({ competencyArea, count: Math.max(count, 10) });
-            // Retry selection after generation
-            return await QuestionBank.findByCriteria({ ...criteria, limit: count });
+            console.warn(`[QUIZ-DEBUG] ⚠️ No questions found for ${competencyArea}, attempting to generate new questions`);
+            
+            try {
+                const generationStart = Date.now();
+                await this.generateQuestions({ competencyArea, count: Math.max(count, 10) });
+                const generationTime = Date.now() - generationStart;
+                
+                console.log(`[QUIZ-DEBUG] ✅ Generated questions for ${competencyArea} in ${generationTime}ms`);
+                
+                // Retry selection after generation
+                const retryStart = Date.now();
+                const retryQuestions = await QuestionBank.findByCriteria({ ...criteria, limit: count });
+                const retryTime = Date.now() - retryStart;
+                
+                console.log(`[QUIZ-DEBUG] 🔄 Retry query for ${competencyArea} found ${retryQuestions.length} questions in ${retryTime}ms`);
+                return retryQuestions;
+            } catch (generationError) {
+                console.error(`[QUIZ-DEBUG] ❌ Question generation failed for ${competencyArea}:`, generationError.message);
+                return [];
+            }
         }
         
         // Intelligent question selection
