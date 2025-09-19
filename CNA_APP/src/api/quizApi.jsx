@@ -168,3 +168,65 @@ export const getQuizResults = async (quizId) => {
     throw error;
   }
 };
+
+/**
+ * Submits a single answer and gets immediate feedback (for instant grading)
+ * @param {string} sessionId - Quiz session ID
+ * @param {string} questionId - Question ID
+ * @param {string} selectedAnswer - Selected answer (A, B, C, or D)
+ * @param {number} timeSpent - Time spent on question in seconds
+ * @returns {Promise<Object>} - Immediate feedback including correctness and explanation
+ */
+export const submitInstantAnswer = async (sessionId, questionId, selectedAnswer, timeSpent = 0) => {
+  try {
+    const response = await axios.post(`${API_URL}/quiz/session/answer`, {
+      sessionId,
+      questionId,
+      selectedAnswer,
+      timeSpent
+    }, { 
+      withCredentials: true,
+      timeout: 10000
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error submitting instant answer:', error.response?.data?.message || error.message);
+    throw error;
+  }
+};
+
+/**
+ * Gets user's quiz preferences
+ * @returns {Promise<Object>} - User preferences including instant grading setting
+ */
+export const getUserPreferences = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/quiz/preferences`, {
+      withCredentials: true
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error getting user preferences:', error.response?.data?.message || error.message);
+    throw error;
+  }
+};
+
+/**
+ * Updates user's quiz preferences
+ * @param {Object} preferences - Preference updates to apply
+ * @returns {Promise<Object>} - Updated preferences
+ */
+export const updateUserPreferences = async (preferences) => {
+  try {
+    const response = await axios.put(`${API_URL}/quiz/preferences`, preferences, {
+      withCredentials: true
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error updating user preferences:', error.response?.data?.message || error.message);
+    throw error;
+  }
+};

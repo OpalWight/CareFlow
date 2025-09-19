@@ -312,6 +312,13 @@ const UserQuizPreferencesSchema = new mongoose.Schema({
             type: String,
             enum: ['light', 'dark', 'auto'],
             default: 'auto'
+        },
+        
+        // Instant grading preference
+        instantGrading: {
+            type: Boolean,
+            default: false,
+            description: 'Show immediate feedback after each question'
         }
     },
     

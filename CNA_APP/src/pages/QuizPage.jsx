@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../api/AuthContext';
 import Layout from '../components/Layout';
-import { generateQuizQuestions, submitQuizResults, getQuizHistory, retakeQuiz, getQuestionByPosition } from '../api/quizApi';
+import { generateQuizQuestions, submitQuizResults, getQuizHistory, retakeQuiz, getQuestionByPosition, submitInstantAnswer, getUserPreferences } from '../api/quizApi';
 import '../styles/QuizPage.css';
 
 const QuizPage = () => {
@@ -28,6 +28,12 @@ const QuizPage = () => {
     const [resultData, setResultData] = useState(null);
     const [currentQuizId, setCurrentQuizId] = useState(null);
     
+    // Instant grading state
+    const [userPreferences, setUserPreferences] = useState(null);
+    const [instantGradingEnabled, setInstantGradingEnabled] = useState(false);
+    const [instantFeedback, setInstantFeedback] = useState({});
+    const [questionStartTime, setQuestionStartTime] = useState(null);
+    
     // Quiz configuration state
     const [showConfig, setShowConfig] = useState(false);
     const [quizConfig, setQuizConfig] = useState({
@@ -40,7 +46,7 @@ const QuizPage = () => {
         difficulty: 'intermediate'
     });
 
-    // Load quiz history on component mount
+    // Load quiz history and user preferences on component mount
     useEffect(() => {
         const loadQuizHistory = async () => {
             try {
@@ -54,10 +60,29 @@ const QuizPage = () => {
             }
         };
         
+        const loadUserPreferences = async () => {
+            try {
+                const prefsData = await getUserPreferences();
+                setUserPreferences(prefsData.preferences);
+                setInstantGradingEnabled(prefsData.preferences?.uiPreferences?.instantGrading || false);
+            } catch (error) {
+                console.error('Error loading user preferences:', error);
+                setInstantGradingEnabled(false);
+            }
+        };
+        
         if (user) {
             loadQuizHistory();
+            loadUserPreferences();
         }
     }, [user]);
+
+    // Set question start time when question changes
+    useEffect(() => {
+        if (quizStarted && questions[currentQuestionIndex]) {
+            setQuestionStartTime(Date.now());
+        }
+    }, [currentQuestionIndex, quizStarted, questions]);
 
     // Quiz configuration functions
     const handleQuestionCountChange = (count) => {
@@ -172,11 +197,34 @@ const QuizPage = () => {
         setIsLoading(false);
     };
 
-    const handleAnswerSelect = (questionIndex, selectedOption) => {
+    const handleAnswerSelect = async (questionIndex, selectedOption) => {
+        // Update selected answers
         setSelectedAnswers(prev => ({
             ...prev,
             [questionIndex]: selectedOption
         }));
+
+        // Handle instant grading if enabled
+        if (instantGradingEnabled && currentQuizId && questions[questionIndex]) {
+            try {
+                const timeSpent = questionStartTime ? Math.round((Date.now() - questionStartTime) / 1000) : 0;
+                const feedback = await submitInstantAnswer(
+                    currentQuizId,
+                    questions[questionIndex].questionId,
+                    selectedOption,
+                    timeSpent
+                );
+                
+                // Store feedback for this question
+                setInstantFeedback(prev => ({
+                    ...prev,
+                    [questionIndex]: feedback
+                }));
+            } catch (error) {
+                console.error('Error getting instant feedback:', error);
+                // Continue without feedback if there's an error
+            }
+        }
     };
 
     // Function to load a question at a specific index
@@ -693,6 +741,35 @@ const QuizPage = () => {
                                         </label>
                                     ))}
                                 </div>
+                                
+                                {/* Instant Feedback Display */}
+                                {instantGradingEnabled && instantFeedback[currentQuestionIndex] && selectedAnswers[currentQuestionIndex] && (
+                                    <div className={`instant-feedback ${instantFeedback[currentQuestionIndex].isCorrect ? 'correct' : 'incorrect'}`}>
+                                        <div className="feedback-header">
+                                            <span className="feedback-icon">
+                                                {instantFeedback[currentQuestionIndex].isCorrect ? '✅' : '❌'}
+                                            </span>
+                                            <span className="feedback-result">
+                                                {instantFeedback[currentQuestionIndex].isCorrect ? 'Correct!' : 'Incorrect'}
+                                            </span>
+                                            {!instantFeedback[currentQuestionIndex].isCorrect && (
+                                                <span className="correct-answer">
+                                                    Correct answer: {instantFeedback[currentQuestionIndex].correctAnswer}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {instantFeedback[currentQuestionIndex].explanation && (
+                                            <div className="feedback-explanation">
+                                                <strong>Explanation:</strong> {instantFeedback[currentQuestionIndex].explanation}
+                                            </div>
+                                        )}
+                                        {instantFeedback[currentQuestionIndex].currentScore && (
+                                            <div className="feedback-score">
+                                                Current Score: {instantFeedback[currentQuestionIndex].currentScore.correct}/{instantFeedback[currentQuestionIndex].currentScore.total} ({instantFeedback[currentQuestionIndex].currentScore.percentage}%)
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="question-error">

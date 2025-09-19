@@ -1079,3 +1079,122 @@
     max-width: 300px;
   }
 }
+
+/* Instant Feedback Styles */
+.instant-feedback {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 2px solid;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeInSlide 0.3s ease-out;
+}
+
+.instant-feedback.correct {
+  border-color: #22c55e;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.instant-feedback.incorrect {
+  border-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.feedback-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.feedback-icon {
+  font-size: 1.5rem;
+}
+
+.feedback-result {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.instant-feedback.correct .feedback-result {
+  color: #16a34a;
+}
+
+.instant-feedback.incorrect .feedback-result {
+  color: #dc2626;
+}
+
+.correct-answer {
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  font-size: 0.9rem;
+}
+
+.feedback-explanation {
+  background: rgba(255, 255, 255, 0.7);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border-left: 4px solid #3b82f6;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.feedback-explanation strong {
+  color: #1f2937;
+}
+
+.feedback-score {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  color: #1d4ed8;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Highlight selected option with instant feedback */
+.instant-feedback.correct ~ .options-container .option-label.selected {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #22c55e;
+}
+
+.instant-feedback.incorrect ~ .options-container .option-label.selected {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #ef4444;
+}
+
+/* Responsive instant feedback */
+@media (max-width: 768px) {
+  .instant-feedback {
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .feedback-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .feedback-explanation {
+    padding: 0.75rem;
+  }
+}
