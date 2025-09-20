@@ -441,13 +441,20 @@ router.post('/exchange-token', async (req, res) => {
     const cookieExpiration = new Date();
     cookieExpiration.setTime(cookieExpiration.getTime() + (60 * 60 * 1000)); // 1 hour
     
-    res.cookie('authToken', longLivedToken, {
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Cross-site cookies for production
       expires: cookieExpiration,
       path: '/'
-    });
+    };
+    
+    console.log(`🍪 Setting auth cookie with options:`, cookieOptions);
+    console.log(`🌐 Request origin:`, req.get('origin'));
+    console.log(`🔗 Request referer:`, req.get('referer'));
+    console.log(`⚙️ Environment:`, process.env.NODE_ENV);
+    
+    res.cookie('authToken', longLivedToken, cookieOptions);
     
     // Return user data (don't include the token in response)
     res.json({
