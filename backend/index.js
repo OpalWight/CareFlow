@@ -4,9 +4,7 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
 // ✅ Load environment variables based on NODE_ENV
-console.log('🔍 DEBUG: NODE_ENV =', process.env.NODE_ENV);
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
-console.log('🔍 DEBUG: Loading env file:', envFile);
 dotenv.config({ path: envFile });
 
 // Fallback to default .env if specific env file doesn't exist
@@ -54,10 +52,6 @@ const getAllowedOrigins = () => {
     'https://careflow-*.vercel.app'
   ];
 
-  console.log('🔍 DEBUG: CORS Origins Configuration:');
-  console.log('  Base origins:', baseOrigins.filter(Boolean));
-  console.log('  Vercel patterns:', vercelPatterns);
-
   return [...baseOrigins.filter(Boolean), ...vercelPatterns];
 };
 
@@ -70,7 +64,6 @@ const corsOptions = {
     
     // Check exact matches first
     if (allowedOrigins.includes(origin)) {
-      console.log('✅ CORS: Allowed exact origin:', origin);
       return callback(null, true);
     }
     
@@ -83,11 +76,9 @@ const corsOptions = {
                             origin.includes('careflow-ssas.onrender.com');
     
     if (isVercelUrl || isCareflowDomain) {
-      console.log('✅ CORS: Allowed pattern origin:', origin);
       return callback(null, true);
     }
     
-    console.log('❌ CORS: Blocked origin:', origin);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true
@@ -104,30 +95,6 @@ app.use('/api/rag', ragRoutes);
 app.use('/quiz', quizRoutes);
 app.use('/api/skill-progress', skillProgressRoutes);
 
-
-// 🍪 COOKIE TEST ENDPOINT
-app.get('/test-cookie', (req, res) => {
-  console.log('🧪 COOKIE TEST ENDPOINT CALLED');
-  console.log('  - Request origin:', req.get('origin') || 'No origin header');
-  console.log('  - All cookies received:', req.cookies);
-  console.log('  - Raw cookie header:', req.get('cookie'));
-  console.log('  - authToken present:', !!req.cookies.authToken);
-  console.log('  - authToken value:', req.cookies.authToken ? 'Present (length: ' + req.cookies.authToken.length + ')' : 'Missing');
-
-  res.json({
-    success: true,
-    message: 'Cookie test endpoint',
-    cookies: req.cookies,
-    rawCookieHeader: req.get('cookie'),
-    authToken: {
-      present: !!req.cookies.authToken,
-      length: req.cookies.authToken ? req.cookies.authToken.length : 0
-    },
-    origin: req.get('origin'),
-    timestamp: new Date().toISOString()
-  });
-});
-
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Backend server is running!',
@@ -142,12 +109,6 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log('🔍 DEBUG: Environment Detection:');
-  console.log('  - NODE_ENV:', process.env.NODE_ENV);
-  console.log('  - Is Production?', process.env.NODE_ENV === 'production');
-  console.log('  - FRONTEND_URL:', process.env.FRONTEND_URL);
-  console.log('  - PORT:', PORT);
   console.log(`🚀 Server is listening on http://localhost:${PORT}`);
   console.log(`📱 Frontend URL: http://localhost:5173`);
-  console.log(`🔑 Google Client ID: ${process.env.CLIENT_ID ? 'Set ✅' : 'Missing ❌'}`);
 });

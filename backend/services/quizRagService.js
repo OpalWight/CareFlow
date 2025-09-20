@@ -242,6 +242,44 @@ class QuizRAGService {
   }
 
   /**
+   * Get content for a specific domain (competency area)
+   * @param {string} competencyArea - The competency area to get content for
+   * @param {number} topK - Number of results to return
+   * @returns {string} Formatted content for the domain
+   */
+  async getContentForDomain(competencyArea, topK = 15) {
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    try {
+      let contentChunks = [];
+      
+      // Map competency areas to appropriate content retrieval methods
+      switch (competencyArea) {
+        case 'Physical Care Skills':
+          contentChunks = await this.getPhysicalCareContent(topK);
+          break;
+        case 'Psychosocial Care Skills':
+          contentChunks = await this.getPsychosocialContent(topK);
+          break;
+        case 'Role of the Nurse Aide':
+          contentChunks = await this.getRoleOfNurseAideContent(topK);
+          break;
+        default:
+          console.warn(`Unknown competency area: ${competencyArea}, using general search`);
+          contentChunks = await this.searchQuizContent(competencyArea, topK);
+      }
+
+      // Format content for prompt generation
+      return this.formatContentForPrompt(contentChunks);
+    } catch (error) {
+      console.error(`Error getting content for domain ${competencyArea}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Get health check status
    * @returns {Object} Service status
    */

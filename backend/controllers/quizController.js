@@ -31,26 +31,69 @@ exports.generateQuizQuestions = async (req, res) => {
         const userId = req.user.id;
         const customPreferences = req.body; // Optional custom preferences for this quiz
         
-        console.log(`🎯 Generating quiz for user ${userId}`);
+        console.log(`[QUIZ-DEBUG] 🎯 Generating quiz for user ${userId}`);
+        console.log(`[QUIZ-DEBUG] 📋 Custom preferences:`, JSON.stringify(customPreferences, null, 2));
         
         // Initialize services
         const services = await initializeServices();
         
         if (!services.questionPoolService) {
+            console.error(`[QUIZ-DEBUG] ❌ Question Pool Service not available for user ${userId}`);
             return res.status(500).json({
                 message: 'Question Pool Service not available',
                 error: 'SERVICE_UNAVAILABLE'
             });
         }
         
+        console.log(`[QUIZ-DEBUG] ✅ Question Pool Service ready for user ${userId}`);
+        
+        // Get current pool statistics before session creation
+        try {
+            const poolStats = await QuestionBank.getPoolStats();
+            console.log(`[QUIZ-DEBUG] 📊 Current pool statistics:`, {
+                totalActiveQuestions: poolStats.totalActiveQuestions,
+                competencyDistribution: poolStats.competencyDistribution,
+                userId: userId
+            });
+        } catch (statsError) {
+            console.warn(`[QUIZ-DEBUG] ⚠️ Could not get pool stats:`, statsError.message);
+        }
+        
         // Create quiz session with selected questions
+        const startTime = Date.now();
+        console.log(`[QUIZ-DEBUG] 🏗️ Creating quiz session for user ${userId}...`);
+        
         const quizSession = await services.questionPoolService.createQuizSession(
             userId, 
             customPreferences
         );
         
+        const sessionCreationTime = Date.now() - startTime;
+        console.log(`[QUIZ-DEBUG] ✅ Quiz session created in ${sessionCreationTime}ms for user ${userId}`);
+        
+        console.log(`[QUIZ-DEBUG] 📈 Session configuration:`, {
+            sessionId: quizSession.sessionId,
+            questionCount: quizSession.configuration.questionCount,
+            competencyDistribution: quizSession.configuration.competencyDistribution,
+            difficulty: quizSession.configuration.difficulty,
+            selectedQuestions: quizSession.questions?.length || 0,
+            userId: userId
+        });
+        
         // Get the first question to start the quiz
+        console.log(`[QUIZ-DEBUG] 🔍 Getting first question for session ${quizSession.sessionId}`);
         const firstQuestion = await _getQuestionForUser(quizSession.sessionId, 0);
+        
+        if (firstQuestion) {
+            console.log(`[QUIZ-DEBUG] ✅ First question loaded:`, {
+                questionId: firstQuestion.questionId,
+                competencyArea: firstQuestion.competencyArea,
+                difficulty: firstQuestion.difficulty,
+                sessionId: quizSession.sessionId
+            });
+        } else {
+            console.error(`[QUIZ-DEBUG] ❌ No first question available for session ${quizSession.sessionId}`);
+        }
         
         // Store quiz session info for later validation
         req.session = req.session || {};
@@ -59,7 +102,7 @@ exports.generateQuizQuestions = async (req, res) => {
             startTime: new Date()
         };
         
-        res.json({
+        const responseData = {
             sessionId: quizSession.sessionId,
             totalQuestions: quizSession.configuration.questionCount,
             currentQuestion: firstQuestion,
@@ -72,10 +115,24 @@ exports.generateQuizQuestions = async (req, res) => {
                 gradingMode: quizSession.configuration.gradingMode
             },
             generatedAt: new Date().toISOString()
+        };
+        
+        console.log(`[QUIZ-DEBUG] 📤 Sending response for user ${userId}:`, {
+            sessionId: responseData.sessionId,
+            totalQuestions: responseData.totalQuestions,
+            hasFirstQuestion: !!responseData.currentQuestion,
+            progressComplete: responseData.progress.completed,
+            progressTotal: responseData.progress.total
         });
         
+        res.json(responseData);
+        
     } catch (error) {
-        console.error('❌ Error generating quiz:', error);
+        console.error(`[QUIZ-DEBUG] ❌ Error generating quiz for user ${userId}:`, {
+            error: error.message,
+            stack: error.stack,
+            customPreferences: customPreferences
+        });
         res.status(500).json({
             message: 'Error generating quiz',
             error: 'QUIZ_GENERATION_FAILED',

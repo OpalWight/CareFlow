@@ -109,16 +109,10 @@ const AuthCallbackHandler = () => {
         const responseTime = Date.now() - requestTime;
         console.log('🔍 Token exchange response:', response.status, `(took ${responseTime}ms)`);
         
-        // Check for cookies after response
-        console.log('🍪 Cookies after token exchange:');
-        console.log('🍪 document.cookie:', document.cookie);
-        console.log('🍪 Response headers:', [...response.headers.entries()]);
-        
+
         const setCookieHeader = response.headers.get('set-cookie');
         if (setCookieHeader) {
-          console.log('🍪 Set-Cookie header from response:', setCookieHeader);
         } else {
-          console.log('⚠️ No Set-Cookie header in response');
         }
 
         if (response.ok) {
@@ -139,7 +133,6 @@ const AuthCallbackHandler = () => {
           // tempToken = null; // Variable is const, so it will be garbage collected
           
           console.log('🛡️ SECURITY: Token exchange complete, temporary token no longer needed');
-          console.log('🔒 SECURITY: Authentication now secured via httpOnly cookie only');
 
           // Show success message based on type
           let successMessage = 'Login successful!';

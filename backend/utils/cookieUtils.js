@@ -24,7 +24,6 @@ const setAuthCookie = (res, token) => {
  * @param {object} res - The Express response object.
  */
 const clearAuthCookie = (res) => {
-    console.log('🗑️ Attempting to clear authentication cookie...');
     
     // Clear the cookie with the exact same options used when setting it
     res.clearCookie('authToken', {
@@ -53,7 +52,6 @@ const clearAuthCookie = (res) => {
         expires: new Date(0) // Set to expire immediately
     });
     
-    console.log('🍪 Authentication cookie clearing attempted with multiple methods');
 };
 
 module.exports = { setAuthCookie, clearAuthCookie };

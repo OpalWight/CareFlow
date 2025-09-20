@@ -22,7 +22,6 @@ export const AuthProvider = ({ children }) => {
 
     // ✅ Set user from OAuth navigation data (secure, temporary) - STABILIZED WITH useCallback
     const setUserFromOAuth = useCallback((userData) => {
-        console.log('✅ setUserFromOAuth called!');
         
         // Validate user data
         if (!userData) {
@@ -39,19 +38,11 @@ export const AuthProvider = ({ children }) => {
             return;
         }
         
-        console.log('👤 Valid user data to set:', {
-            email: userData.email,
-            name: userData.name,
-            id: userData._id,
-            authMethod: userData.authMethod
-        });
         
         setUser(userData);
         setError(null);
         setLoading(false);
         
-        console.log('📊 Auth state updated - user set, loading false, error cleared');
-        console.log('✅ OAuth user set successfully - stable authentication achieved');
     }, []); // Empty dependency array since this should be stable
 
     // ✅ Check if user is authenticated by verifying cookie with backend
@@ -60,27 +51,7 @@ export const AuthProvider = ({ children }) => {
             if (!skipLoadingState) {
                 setLoading(true);
             }
-            console.log('🔍 Checking authentication status...');
             
-            console.log('🔍 DEBUG: Frontend environment detection:');
-            console.log('  - VITE_API_URL:', import.meta.env.VITE_API_URL);
-            console.log('  - VITE_ENV:', import.meta.env.VITE_ENV);
-            console.log('  - MODE:', import.meta.env.MODE);
-            console.log('  - PROD:', import.meta.env.PROD);
-            console.log('  - DEV:', import.meta.env.DEV);
-            
-            console.log('🔍 DEBUG: Using API URL:', API_URL);
-            
-            // 🍪 COOKIE DEBUGGING: Check all cookies before making request
-            console.log('🍪 DEBUG: All document cookies:', document.cookie);
-            console.log('🍪 DEBUG: Cookie count:', document.cookie.split(';').length);
-            console.log('🍪 DEBUG: Individual cookies:');
-            document.cookie.split(';').forEach((cookie, index) => {
-                const [name, value] = cookie.trim().split('=');
-                console.log(`  Cookie ${index + 1}: ${name} = ${value ? value.substring(0, 50) + '...' : 'empty'}`);
-            });
-            
-            console.log('🔍 DEBUG: Making request to verify endpoint...');
             const response = await fetch(`${API_URL}/oauth/verify`, {
                 method: 'GET',
                 credentials: 'include', // ✅ This sends HTTP-only cookies automatically
@@ -90,8 +61,6 @@ export const AuthProvider = ({ children }) => {
                 // ❌ NO Authorization header needed - cookies handle this!
             });
 
-            console.log('🔍 DEBUG: Response status:', response.status);
-            console.log('🔍 DEBUG: Response headers:', [...response.headers.entries()]);
             
             if (response.ok) {
                 const data = await response.json();
@@ -105,7 +74,6 @@ export const AuthProvider = ({ children }) => {
                 // We log it but don't set a user-facing error unless they were previously logged in.
                 if (response.status === 401 || response.status === 403) {
                     console.log('❌ Authentication failed (invalid/expired token), clearing session.');
-                    console.log('❌ DEBUG: Response body:', await response.text());
                     if (user) { // Only show error if a user was already logged in.
                         setError('Session expired. Please log in again.');
                     }
@@ -143,7 +111,6 @@ export const AuthProvider = ({ children }) => {
         try {
             setLoading(true);
             setError(null);
-            console.log('🔐 Attempting email/password login...');
 
             const response = await fetch(`${API_URL}/auth/login`, {
                 method: 'POST',
@@ -158,7 +125,6 @@ export const AuthProvider = ({ children }) => {
 
             if (response.ok) {
                 setUser(data.user);
-                console.log('✅ Email login successful:', data.user.email);
                 return { success: true, user: data.user };
             } else {
                 const errorMessage = data.message || 'Login failed';
@@ -180,7 +146,6 @@ export const AuthProvider = ({ children }) => {
         try {
             setLoading(true);
             setError(null);
-            console.log('📝 Attempting email registration...');
 
             const response = await fetch(`${API_URL}/auth/register`, {
                 method: 'POST',
@@ -195,7 +160,6 @@ export const AuthProvider = ({ children }) => {
 
             if (response.ok) {
                 setUser(data.user);
-                console.log('✅ Registration successful:', data.user.email);
                 return { success: true, user: data.user };
             } else {
                 const errorMessage = data.message || 'Registration failed';
@@ -214,13 +178,11 @@ export const AuthProvider = ({ children }) => {
 
     // ✅ Login with Google OAuth: Redirect to Google OAuth (backend handles cookie setting)
     const loginWithGoogle = () => {
-        console.log('🚀 Initiating Google OAuth login...');
         // Redirect to your backend OAuth endpoint
         // After successful OAuth, backend will:
         // 1. Set HTTP-only cookie with JWT
         // 2. Redirect back to your frontend
         const requestUrl = `${API_URL}/request`;
-        console.log('🔍 DEBUG: Redirecting to OAuth request URL:', requestUrl);
         window.location.href = requestUrl;
     };
 
@@ -230,7 +192,6 @@ export const AuthProvider = ({ children }) => {
     // ✅ Logout: Call backend to clear cookie, then redirect
     const logout = async () => {
         try {
-            console.log('🚪 Logging out user...');
             
             // First, try the auth logout endpoint
             let response = await fetch(`${API_URL}/auth/logout`, {
@@ -255,7 +216,6 @@ export const AuthProvider = ({ children }) => {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log('✅ Logged out successfully - cookie cleared by backend:', data.message);
             } else {
                 console.warn('⚠️ Both logout endpoints failed, but proceeding with local cleanup');
             }
@@ -266,7 +226,6 @@ export const AuthProvider = ({ children }) => {
             // Always clear local state and redirect
             setUser(null);
             setError(null);
-            console.log('🔄 Redirecting to login page...');
             window.location.href = '/login';
         }
     };
