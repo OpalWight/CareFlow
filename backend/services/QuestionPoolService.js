@@ -95,10 +95,18 @@ class QuestionPoolService {
                 await this._ensureSufficientQuestions(distribution, userPrefs);
                 
                 // Select questions for the quiz
+                console.log(`🔍 DEBUG: Selecting questions with distribution: ${JSON.stringify(distribution)}`);
                 const selectedQuestions = await this._selectQuestions(userId, userPrefs, distribution);
+                
+                console.log(`🔍 DEBUG: Selected ${selectedQuestions.length} questions, expected: ${questionCount}`);
+                console.log(`🔍 DEBUG: Selected question positions: [${selectedQuestions.map(q => q.position).join(', ')}]`);
                 
                 if (selectedQuestions.length === 0) {
                     throw new Error('No suitable questions found for quiz generation');
+                }
+                
+                if (selectedQuestions.length !== questionCount) {
+                    console.warn(`🔍 DEBUG: ⚠️ MISMATCH: Selected ${selectedQuestions.length} questions but expected ${questionCount}`);
                 }
                 
                 // Create new quiz session with manual distribution
@@ -111,6 +119,7 @@ class QuestionPoolService {
                         competencyDistribution: distribution,
                         difficulty: userPrefs.difficultySettings?.preferredDifficulty || 'intermediate',
                         quizType: 'practice',
+                        gradingMode: userPrefs.gradingMode || 'immediate',
                         settings: {
                             includeReviewQuestions: userPrefs.learningPreferences?.includeReviewQuestions || true,
                             avoidRecentQuestions: userPrefs.learningPreferences?.avoidRecentQuestions || true,
@@ -150,10 +159,19 @@ class QuestionPoolService {
             await this._ensureSufficientQuestions(distribution, userPrefs);
             
             // Select questions for the quiz
+            console.log(`🔍 DEBUG: Selecting questions with distribution: ${JSON.stringify(distribution)}`);
             const selectedQuestions = await this._selectQuestions(userId, userPrefs, distribution);
+            
+            console.log(`🔍 DEBUG: Selected ${selectedQuestions.length} questions, expected: ${userPrefs.quizComposition?.questionCount || 30}`);
+            console.log(`🔍 DEBUG: Selected question positions: [${selectedQuestions.map(q => q.position).join(', ')}]`);
             
             if (selectedQuestions.length === 0) {
                 throw new Error('No suitable questions found for quiz generation');
+            }
+            
+            const expectedCount = userPrefs.quizComposition?.questionCount || 30;
+            if (selectedQuestions.length !== expectedCount) {
+                console.warn(`🔍 DEBUG: ⚠️ MISMATCH: Selected ${selectedQuestions.length} questions but expected ${expectedCount}`);
             }
             
             // Create new quiz session
@@ -166,6 +184,7 @@ class QuestionPoolService {
                     competencyDistribution: distribution,
                     difficulty: userPrefs.difficultySettings?.preferredDifficulty || 'intermediate',
                     quizType: 'practice',
+                    gradingMode: userPrefs.gradingMode || 'immediate',
                     settings: {
                         includeReviewQuestions: userPrefs.learningPreferences?.includeReviewQuestions || true,
                         avoidRecentQuestions: userPrefs.learningPreferences?.avoidRecentQuestions || true,
@@ -245,7 +264,21 @@ class QuestionPoolService {
             
             console.log(`✅ Recorded answer for question ${questionId}: ${isCorrect ? 'correct' : 'incorrect'}`);
             
-            // Return answer feedback
+            // Check grading mode - only return feedback for immediate mode
+            const gradingMode = session.configuration.gradingMode || 'immediate';
+            
+            if (gradingMode === 'complete') {
+                console.log(`📋 Complete mode: Answer stored without feedback for question ${questionId}`);
+                // Return minimal response without grading feedback
+                return {
+                    questionComplete: true,
+                    answerRecorded: true,
+                    message: 'Answer recorded for final grading'
+                };
+            }
+            
+            // Return full answer feedback for immediate mode
+            console.log(`⚡ Immediate mode: Returning feedback for question ${questionId}`);
             return {
                 isCorrect,
                 correctAnswer: question.correctAnswer,
@@ -524,6 +557,8 @@ class QuestionPoolService {
             totalRequested += count;
             console.log(`[QUIZ-DEBUG] 🎯 Selecting ${count} questions for ${competencyArea}`);
             
+            console.log(`🔍 DEBUG: Selecting ${count} questions for competency: ${competencyArea}`);
+            
             const competencyKey = this._mapCompetencyKey(competencyArea);
             const selectionStart = Date.now();
             
@@ -536,6 +571,7 @@ class QuestionPoolService {
                 dueQuestions
             );
             
+
             const selectionTime = Date.now() - selectionStart;
             console.log(`[QUIZ-DEBUG] ✅ Selected ${questions.length}/${count} questions for ${competencyArea} in ${selectionTime}ms`);
             
@@ -544,6 +580,7 @@ class QuestionPoolService {
             }
             
             totalSelected += questions.length;
+
             
             // Add questions with metadata
             questions.forEach(question => {
@@ -563,6 +600,7 @@ class QuestionPoolService {
             });
         }
         
+
         console.log(`[QUIZ-DEBUG] 📋 Selection summary for user ${userId}:`, {
             totalRequested,
             totalSelected,
@@ -573,11 +611,14 @@ class QuestionPoolService {
         
         if (totalSelected < totalRequested) {
             console.error(`[QUIZ-DEBUG] ❌ Insufficient questions: requested ${totalRequested}, got ${totalSelected}`);
+
         }
         
         // Shuffle questions to avoid predictable patterns
         const shuffledQuestions = this._shuffleArray(selectedQuestions);
+
         console.log(`[QUIZ-DEBUG] 🔀 Questions shuffled, returning ${shuffledQuestions.length} questions`);
+
         
         return shuffledQuestions;
     }
@@ -601,6 +642,7 @@ class QuestionPoolService {
             criteria.difficulty = userPrefs.difficultySettings.preferredDifficulty;
         }
         
+
         console.log(`[QUIZ-DEBUG] 📋 Query criteria for ${competencyArea}:`, {
             competencyArea: criteria.competencyArea,
             minQuality: criteria.minQuality,
@@ -664,6 +706,7 @@ class QuestionPoolService {
                 console.error(`[QUIZ-DEBUG] ❌ Question generation failed for ${competencyArea}:`, generationError.message);
                 console.warn(`[QUIZ-DEBUG] 🔄 Proceeding with ${availableQuestions.length} available questions`);
             }
+
         }
         
         // Intelligent question selection
@@ -697,7 +740,13 @@ class QuestionPoolService {
         
         // Sort by score and take the top questions
         scoredQuestions.sort((a, b) => b.score - a.score);
-        return scoredQuestions.slice(0, count).map(sq => sq.question);
+        
+        // Ensure we return exactly the requested number of questions
+        const selectedQuestions = scoredQuestions.slice(0, Math.min(count, scoredQuestions.length)).map(sq => sq.question);
+        
+        console.log(`🔍 DEBUG: Competency ${competencyArea} - requested: ${count}, available: ${availableQuestions.length}, selected: ${selectedQuestions.length}`);
+        
+        return selectedQuestions;
     }
 
     /**
@@ -706,13 +755,21 @@ class QuestionPoolService {
     async _generateQuestionsWithRAG(criteria) {
         const { competencyArea, skillCategory, count = 10, difficulty = 'intermediate' } = criteria;
         
-        // Check if the required method exists
-        if (!this.quizRAGService.getContentForDomain || typeof this.quizRAGService.getContentForDomain !== 'function') {
-            throw new Error('RAG service method getContentForDomain is not available');
+        // Get relevant content from RAG service based on competency area
+        let domainContent;
+        switch (competencyArea) {
+            case 'Physical Care Skills':
+                domainContent = await this.quizRAGService.getPhysicalCareContent();
+                break;
+            case 'Psychosocial Care Skills':
+                domainContent = await this.quizRAGService.getPsychosocialContent();
+                break;
+            case 'Role of the Nurse Aide':
+                domainContent = await this.quizRAGService.getRoleOfNurseAideContent();
+                break;
+            default:
+                throw new Error(`Unknown competency area: ${competencyArea}`);
         }
-        
-        // Get relevant content from RAG service
-        const domainContent = await this.quizRAGService.getContentForDomain(competencyArea);
         
         if (!domainContent || domainContent.length === 0) {
             throw new Error('No content available for RAG generation');

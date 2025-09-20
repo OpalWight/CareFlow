@@ -107,10 +107,12 @@ exports.generateQuizQuestions = async (req, res) => {
             totalQuestions: quizSession.configuration.questionCount,
             currentQuestion: firstQuestion,
             progress: quizSession.progress,
+            gradingMode: quizSession.configuration.gradingMode,
             configuration: {
                 competencyDistribution: quizSession.configuration.competencyDistribution,
                 difficulty: quizSession.configuration.difficulty,
-                quizType: quizSession.configuration.quizType
+                quizType: quizSession.configuration.quizType,
+                gradingMode: quizSession.configuration.gradingMode
             },
             generatedAt: new Date().toISOString()
         };
@@ -261,20 +263,47 @@ exports.submitAnswer = async (req, res) => {
                 analytics: finalResults.analytics
             });
         } else {
-            // Get next question
-            const nextQuestion = await _getQuestionForUser(sessionId, updatedSession.progress.currentPosition);
+            // Check grading mode to determine response format
+            const gradingMode = updatedSession.configuration.gradingMode || 'immediate';
             
-            res.json({
-                ...result,
-                quizComplete: false,
-                nextQuestion,
-                progress: {
-                    currentPosition: updatedSession.progress.currentPosition,
-                    totalQuestions: updatedSession.configuration.questionCount,
-                    completionPercentage: updatedSession.completionPercentage,
-                    currentScore: updatedSession.progress.currentScore
+            if (gradingMode === 'immediate') {
+                // Immediate mode: include next question for navigation
+                console.log(`🔍 DEBUG: Immediate mode - getting next question at position ${updatedSession.progress.currentPosition}`);
+                console.log(`🔍 DEBUG: Session progress: ${updatedSession.progress.currentPosition}/${updatedSession.configuration.questionCount}`);
+                
+                const nextQuestion = await _getQuestionForUser(sessionId, updatedSession.progress.currentPosition);
+                
+                console.log(`🔍 DEBUG: nextQuestion result: ${nextQuestion ? 'SUCCESS' : 'NULL'}`);
+                if (nextQuestion) {
+                    console.log(`🔍 DEBUG: nextQuestion details: ${JSON.stringify({questionId: nextQuestion.questionId, position: nextQuestion.position})}`);
+                } else {
+                    console.error(`🔍 DEBUG: ❌ CRITICAL: nextQuestion is NULL at position ${updatedSession.progress.currentPosition}`);
                 }
-            });
+                
+                res.json({
+                    ...result,
+                    quizComplete: false,
+                    nextQuestion,
+                    progress: {
+                        currentPosition: updatedSession.progress.currentPosition,
+                        totalQuestions: updatedSession.configuration.questionCount,
+                        completionPercentage: updatedSession.completionPercentage,
+                        currentScore: updatedSession.progress.currentScore
+                    }
+                });
+            } else {
+                // Complete mode: minimal response without next question
+                console.log(`📋 Complete mode: Answer submitted without next question for session ${sessionId}`);
+                res.json({
+                    ...result,
+                    quizComplete: false,
+                    progress: {
+                        currentPosition: updatedSession.progress.currentPosition,
+                        totalQuestions: updatedSession.configuration.questionCount,
+                        completionPercentage: updatedSession.completionPercentage
+                    }
+                });
+            }
         }
         
     } catch (error) {
@@ -528,10 +557,22 @@ exports.abandonQuizSession = async (req, res) => {
 async function _getQuestionForUser(sessionId, position) {
     try {
         const session = await QuizSession.findOne({ sessionId });
-        if (!session) return null;
+        if (!session) {
+            console.error(`🔍 DEBUG: Session not found for sessionId: ${sessionId}`);
+            return null;
+        }
+        
+        console.log(`🔍 DEBUG: _getQuestionForUser called - sessionId: ${sessionId}, position: ${position}`);
+        console.log(`🔍 DEBUG: Session has ${session.questions.length} questions, expected: ${session.configuration.questionCount}`);
+        console.log(`🔍 DEBUG: Looking for question with position: ${position + 1}`);
+        console.log(`🔍 DEBUG: Available positions: [${session.questions.map(q => q.position).join(', ')}]`);
         
         const sessionQuestion = session.questions.find(q => q.position === position + 1);
-        if (!sessionQuestion) return null;
+        if (!sessionQuestion) {
+            console.error(`🔍 DEBUG: ❌ Question not found at position ${position + 1}`);
+            console.error(`🔍 DEBUG: Available questions positions: ${JSON.stringify(session.questions.map(q => ({id: q.questionId, pos: q.position})))}`);
+            return null;
+        }
         
         const question = await QuestionBank.findOne({ questionId: sessionQuestion.questionId });
         if (!question) return null;
@@ -660,6 +701,207 @@ async function _getUserQuizStats(userId) {
     }
 }
 
+/**
+ * Get all questions for a quiz session (for complete-then-grade mode)
+ */
+exports.getAllQuestions = async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        const userId = req.user.id;
+        
+        console.log(`📝 Getting all questions for session ${sessionId}`);
+        
+        // Verify session belongs to user
+        const session = await QuizSession.findOne({ sessionId, userId });
+        if (!session) {
+            return res.status(404).json({
+                message: 'Quiz session not found',
+                error: 'SESSION_NOT_FOUND'
+            });
+        }
+        
+        if (session.status !== 'active') {
+            return res.status(400).json({
+                message: 'Quiz session is not active',
+                error: 'SESSION_INACTIVE',
+                status: session.status
+            });
+        }
+        
+        // Get all questions for the session
+        const questions = [];
+        for (let i = 0; i < session.questions.length; i++) {
+            const question = await _getQuestionForUser(sessionId, i);
+            if (question) {
+                questions.push(question);
+            }
+        }
+        
+        res.json({
+            sessionId,
+            questions,
+            totalQuestions: session.configuration.questionCount,
+            configuration: {
+                gradingMode: session.configuration.gradingMode,
+                competencyDistribution: session.configuration.competencyDistribution,
+                difficulty: session.configuration.difficulty,
+                quizType: session.configuration.quizType
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Error getting all questions:', error);
+        res.status(500).json({
+            message: 'Error getting questions',
+            error: 'QUESTIONS_FETCH_FAILED',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+/**
+ * Submit all answers for batch grading (complete-then-grade mode)
+ */
+exports.submitAllAnswers = async (req, res) => {
+    try {
+        const { sessionId, answers } = req.body;
+        const userId = req.user.id;
+        
+        console.log(`📋 Submitting all answers for session ${sessionId}`);
+        
+        // Verify session belongs to user
+        const session = await QuizSession.findOne({ sessionId, userId });
+        if (!session) {
+            return res.status(404).json({
+                message: 'Quiz session not found',
+                error: 'SESSION_NOT_FOUND'
+            });
+        }
+        
+        if (session.status !== 'active') {
+            return res.status(400).json({
+                message: 'Quiz session is not active',
+                error: 'SESSION_INACTIVE',
+                status: session.status
+            });
+        }
+        
+        // Validate answers format
+        if (!Array.isArray(answers) || answers.length === 0) {
+            return res.status(400).json({
+                message: 'Invalid answers format',
+                error: 'INVALID_ANSWERS'
+            });
+        }
+        
+        // Initialize services
+        const services = await initializeServices();
+        
+        // Grade all answers at once
+        const results = [];
+        let correctCount = 0;
+        
+        for (const answer of answers) {
+            const { questionId, selectedAnswer, timeSpent = 0, position } = answer;
+            
+            // Get the correct answer from QuestionBank
+            const questionData = await QuestionBank.findOne({ questionId });
+            if (!questionData) {
+                throw new Error(`Question ${questionId} not found`);
+            }
+            
+            const isCorrect = questionData.correctAnswer === selectedAnswer;
+            if (isCorrect) correctCount++;
+            
+            // Store individual result
+            const result = {
+                questionId,
+                position: position || results.length + 1,
+                question: questionData.question,
+                options: questionData.options,
+                selectedAnswer,
+                correctAnswer: questionData.correctAnswer,
+                isCorrect,
+                explanation: questionData.explanation,
+                timeSpent,
+                competencyArea: questionData.competencyArea,
+                skillCategory: questionData.skillCategory,
+                skillTopic: questionData.skillTopic,
+                testSubject: questionData.testSubject
+            };
+            
+            results.push(result);
+            
+            // Add to answered questions
+            session.progress.answeredQuestions.push({
+                questionId,
+                position: result.position,
+                selectedAnswer,
+                isCorrect,
+                timeSpent,
+                answeredAt: new Date()
+            });
+            
+            // Update user question progress if services available
+            if (services.questionPoolService) {
+                try {
+                    await services.questionPoolService.updateUserQuestionProgress(
+                        userId,
+                        questionId,
+                        isCorrect,
+                        timeSpent
+                    );
+                } catch (progressError) {
+                    console.warn('Failed to update question progress:', progressError.message);
+                }
+            }
+        }
+        
+        // Update session results
+        const finalScore = {
+            correct: correctCount,
+            total: answers.length,
+            percentage: Math.round((correctCount / answers.length) * 100)
+        };
+        
+        session.results = {
+            finalScore,
+            questionResults: results,
+            gradedAt: new Date()
+        };
+        
+        session.progress.currentScore = finalScore;
+        session.status = 'completed';
+        session.timing.endTime = new Date();
+        
+        // Calculate total duration
+        if (session.timing.startTime) {
+            session.timing.totalDuration = Math.round((session.timing.endTime - session.timing.startTime) / 1000);
+        }
+        
+        await session.save();
+        
+        // Update user skill progress
+        await _updateUserSkillProgress(userId, session);
+        
+        res.json({
+            sessionId,
+            results,
+            finalScore,
+            gradedAt: new Date(),
+            message: 'Quiz completed and graded successfully'
+        });
+        
+    } catch (error) {
+        console.error('❌ Error submitting all answers:', error);
+        res.status(500).json({
+            message: 'Error grading quiz',
+            error: 'QUIZ_GRADING_FAILED',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
 module.exports = {
     generateQuizQuestions: exports.generateQuizQuestions,
     getNextQuestion: exports.getNextQuestion,
@@ -668,5 +910,7 @@ module.exports = {
     getQuizHistory: exports.getQuizHistory,
     getQuizResults: exports.getQuizResults,
     getCurrentSession: exports.getCurrentSession,
-    abandonQuizSession: exports.abandonQuizSession
+    abandonQuizSession: exports.abandonQuizSession,
+    getAllQuestions: exports.getAllQuestions,
+    submitAllAnswers: exports.submitAllAnswers
 };

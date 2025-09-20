@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../api/AuthContext';
 import Layout from '../components/Layout';
-import { generateQuizQuestions, submitQuizResults, getQuizHistory, retakeQuiz, getQuestionByPosition, submitInstantAnswer, getUserPreferences, updateUserPreferences } from '../api/quizApi';
+import { generateQuizQuestions, submitAnswer, getQuizHistory, retakeQuiz, getQuestionByPosition, getQuizResults } from '../api/quizApi';
 import '../styles/QuizPage.css';
 
 const QuizPage = () => {
@@ -10,29 +10,20 @@ const QuizPage = () => {
     const navigate = useNavigate();
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [selectedAnswers, setSelectedAnswers] = useState({});
+    const [currentAnswer, setCurrentAnswer] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [isLoadingQuestion, setIsLoadingQuestion] = useState(false);
     const [questionError, setQuestionError] = useState(null);
     const [showResults, setShowResults] = useState(false);
-    const [score, setScore] = useState(0);
     const [quizStarted, setQuizStarted] = useState(false);
-    const [timeStarted, setTimeStarted] = useState(null);
     const [quizHistory, setQuizHistory] = useState([]);
     const [userStats, setUserStats] = useState(null);
     const [showHistory, setShowHistory] = useState(false);
-    const [comparison, setComparison] = useState(null);
-    const [competencyInsights, setCompetencyInsights] = useState(null);
-    const [isRetake, setIsRetake] = useState(false);
-    const [originalQuizId, setOriginalQuizId] = useState(null);
     const [resultData, setResultData] = useState(null);
     const [currentQuizId, setCurrentQuizId] = useState(null);
-    
-    // Instant grading state
-    const [userPreferences, setUserPreferences] = useState(null);
-    const [instantGradingEnabled, setInstantGradingEnabled] = useState(false);
-    const [instantFeedback, setInstantFeedback] = useState({});
-    const [questionStartTime, setQuestionStartTime] = useState(null);
+    const [totalQuestions, setTotalQuestions] = useState(0);
+    const [progress, setProgress] = useState({ correct: 0, incorrect: 0 });
+    const [lastAnswerFeedback, setLastAnswerFeedback] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     
     // Quiz configuration state
     const [showConfig, setShowConfig] = useState(false);
@@ -43,11 +34,10 @@ const QuizPage = () => {
             psychosocialCareSkills: 10,
             roleOfNurseAide: 26
         },
-        difficulty: 'intermediate',
-        instantGrading: false
+        difficulty: 'intermediate'
     });
 
-    // Load quiz history and user preferences on component mount
+    // Load quiz history on component mount
     useEffect(() => {
         const loadQuizHistory = async () => {
             try {
@@ -61,47 +51,10 @@ const QuizPage = () => {
             }
         };
         
-        const loadUserPreferences = async () => {
-            try {
-                const prefsData = await getUserPreferences();
-                setUserPreferences(prefsData.preferences);
-                const instantGradingPref = prefsData.preferences?.uiPreferences?.instantGrading || false;
-                setInstantGradingEnabled(instantGradingPref);
-                
-                // Update quiz config with saved preference
-                setQuizConfig(prev => ({
-                    ...prev,
-                    instantGrading: instantGradingPref
-                }));
-            } catch (error) {
-                console.error('Error loading user preferences:', error);
-                setInstantGradingEnabled(false);
-            }
-        };
-        
         if (user) {
             loadQuizHistory();
-            loadUserPreferences();
-
         }
-      } else {
-        throw new Error('Invalid quiz response format');
-      }
-    } catch (error) {
-      console.error('Error starting quiz:', error);
-      setQuestionError('Failed to start quiz. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-
-    // Set question start time when question changes
-    useEffect(() => {
-        if (quizStarted && questions[currentQuestionIndex]) {
-            setQuestionStartTime(Date.now());
-        }
-    }, [currentQuestionIndex, quizStarted, questions]);
+    }, [user]);
 
     // Quiz configuration functions
     const handleQuestionCountChange = (count) => {
@@ -154,43 +107,14 @@ const QuizPage = () => {
                 ...prev,
                 competencyRatios: newRatios
             };
-
         });
-        return newAnswers;
-      });
-      setCurrentAnswer(selectedOption);
-      console.log('✅ Answer stored locally for complete mode - NO GRADING');
-    } else {
-      // Immediate mode: only allow if no feedback yet
-      if (!lastAnswerFeedback) {
-        setCurrentAnswer(selectedOption);
-        console.log('✅ Answer set for immediate mode');
-      } else {
-        console.log('⏸️ Answer selection blocked - feedback already shown');
-      }
-    }
-  };
+    };
 
-  const handleSubmitAnswer = async () => {
-    if (!currentAnswer || !currentQuizId || !currentQuestion) return;
-
-    const handleInstantGradingChange = async (enabled) => {
+    const handleDifficultyChange = (difficulty) => {
         setQuizConfig(prev => ({
             ...prev,
-            instantGrading: enabled
+            difficulty
         }));
-        setInstantGradingEnabled(enabled);
-
-        // Save preference to backend
-        try {
-            await updateUserPreferences({
-                uiPreferences: {
-                    instantGrading: enabled
-                }
-            });
-        } catch (error) {
-            console.error('Error saving instant grading preference:', error);
-        }
     };
 
     const getQuestionDistribution = () => {
@@ -204,313 +128,117 @@ const QuizPage = () => {
 
     const startQuiz = async () => {
         setIsLoading(true);
-        console.log(`[QUIZ-DEBUG] 🎯 Starting quiz with config:`, quizConfig);
-        
+        setLastAnswerFeedback(null);
+        setQuizStarted(true);
         try {
-            const startTime = Date.now();
             const quizData = await generateQuizQuestions(quizConfig);
-            const loadTime = Date.now() - startTime;
-            
-            console.log(`[QUIZ-DEBUG] ✅ Quiz data received in ${loadTime}ms:`, {
-                sessionId: quizData.sessionId,
-                totalQuestions: quizData.totalQuestions,
-                hasFirstQuestion: !!quizData.currentQuestion,
-                hasQuestions: !!quizData.questions,
-                questionsLength: quizData.questions?.length || 0,
-                configuration: quizData.configuration
-            });
-            
-            // Handle new session-based API format
-            setCurrentQuizId(quizData.sessionId || quizData.quizId);
-            
-            // Build questions array with first question
+            setCurrentQuizId(quizData.sessionId);
+            setTotalQuestions(quizData.totalQuestions);
             if (quizData.currentQuestion) {
-                const questionsArray = new Array(quizData.totalQuestions);
-                questionsArray[0] = quizData.currentQuestion;
-                setQuestions(questionsArray);
-                console.log(`[QUIZ-DEBUG] 📝 Questions array initialized with ${quizData.totalQuestions} slots, first question loaded`);
-            } else if (quizData.questions && quizData.questions.length > 0) {
-                setQuestions(quizData.questions);
-                console.log(`[QUIZ-DEBUG] 📝 Direct questions array loaded with ${quizData.questions.length} questions`);
+                setQuestions([quizData.currentQuestion]);
+                setCurrentQuestionIndex(0);
             } else {
-                console.error(`[QUIZ-DEBUG] ❌ No questions available in quiz data`);
-                throw new Error('No questions available for quiz');
+                setQuestions([]);
+                setQuestionError("Failed to load the first question.");
             }
-            
-            setQuizStarted(true);
-            setTimeStarted(new Date());
-            setIsRetake(false);
-            setOriginalQuizId(null);
         } catch (error) {
-            console.error(`[QUIZ-DEBUG] ❌ Error generating quiz questions:`, {
-                error: error.message,
-                config: quizConfig,
-                stack: error.stack
-            });
+            console.error('Error generating quiz questions:', error);
+            setQuestionError("Failed to start the quiz. Please try again.");
+            setQuizStarted(false);
         }
         setIsLoading(false);
     };
 
-    const startRetake = async (quizId) => {
-        setIsLoading(true);
-        try {
-            const retakeData = await retakeQuiz(quizId);
-            setQuestions(retakeData.questions);
-            setCurrentQuizId(`retake_${quizId}_${Date.now()}`);
-            setQuizStarted(true);
-            setTimeStarted(new Date());
-            setIsRetake(true);
-            setOriginalQuizId(quizId);
-            setShowHistory(false);
-        } catch (error) {
-            console.error('Error setting up quiz retake:', error);
-        }
-        setIsLoading(false);
+    const handleAnswerSelect = (selectedOption) => {
+        if (lastAnswerFeedback) return;
+        setCurrentAnswer(selectedOption);
     };
 
-    const handleAnswerSelect = async (questionIndex, selectedOption) => {
-        // Update selected answers
-        setSelectedAnswers(prev => ({
-            ...prev,
-            [questionIndex]: selectedOption
-        }));
-
-        // Handle instant grading if enabled
-        if (instantGradingEnabled && currentQuizId && questions[questionIndex]) {
-            try {
-                const timeSpent = questionStartTime ? Math.round((Date.now() - questionStartTime) / 1000) : 0;
-                const feedback = await submitInstantAnswer(
-                    currentQuizId,
-                    questions[questionIndex].questionId,
-                    selectedOption,
-                    timeSpent
-                );
-                
-                // Store feedback for this question
-                setInstantFeedback(prev => ({
-                    ...prev,
-                    [questionIndex]: feedback
-                }));
-            } catch (error) {
-                console.error('Error getting instant feedback:', error);
-                // Continue without feedback if there's an error
-            }
-        }
-    };
-
-
-    // Function to load a question at a specific index
-    const loadQuestion = async (index) => {
-        if (questions[index] || !currentQuizId) {
-            console.log(`[QUIZ-DEBUG] ⏭️ Skipping question load for index ${index}: already loaded or no session`);
+    const handleSubmitAnswer = async () => {
+        if (currentAnswer === null) {
+            setQuestionError("Please select an answer.");
             return;
         }
-        
-        console.log(`[QUIZ-DEBUG] 🔄 Loading question at index ${index} for session ${currentQuizId}`);
-        setIsLoadingQuestion(true);
+
+        setIsSubmitting(true);
         setQuestionError(null);
-        
+
+        const currentQuestion = questions[currentQuestionIndex];
+
         try {
-            const startTime = Date.now();
-            const questionData = await getQuestionByPosition(currentQuizId, index);
-            const loadTime = Date.now() - startTime;
-            
-            console.log(`[QUIZ-DEBUG] ✅ Question ${index} loaded in ${loadTime}ms:`, {
-                questionId: questionData?.questionId,
-                hasQuestion: !!questionData?.question,
-                hasOptions: !!questionData?.options,
-                competencyArea: questionData?.competencyArea
+            const result = await submitAnswer(
+                currentQuizId,
+                currentQuestion.questionId,
+                currentAnswer,
+                10 // Placeholder for timeSpent
+            );
+
+            setLastAnswerFeedback({
+                isCorrect: result.isCorrect,
+                correctAnswer: result.correctAnswer,
+                explanation: result.explanation,
+                question: currentQuestion.question
             });
-            
-            setQuestions(prev => {
-                const updated = [...prev];
-                updated[index] = questionData;
-                return updated;
-            });
+
+            setProgress(prev => ({
+                correct: prev.correct + (result.isCorrect ? 1 : 0),
+                incorrect: prev.incorrect + (result.isCorrect ? 0 : 1)
+            }));
+
+            if (result.quizComplete) {
+                const finalResults = await getQuizResults(currentQuizId);
+                setResultData(finalResults);
+                setShowResults(true);
+            } else {
+                setQuestions(prev => [...prev, result.nextQuestion]);
+            }
         } catch (error) {
-            console.error(`[QUIZ-DEBUG] ❌ Error loading question at index ${index}:`, {
-                error: error.message,
-                sessionId: currentQuizId,
-                index: index,
-                stack: error.stack
-            });
-            setQuestionError(`Failed to load question ${index + 1}. Please try again.`);
+            console.error('Error submitting answer:', error);
+            setQuestionError("Failed to submit answer. Please try again.");
         } finally {
-            setIsLoadingQuestion(false);
-
+            setIsSubmitting(false);
         }
-      }
-    } catch (error) {
-      console.error('Error submitting answer:', error);
-      setQuestionError("Failed to submit answer. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    };
 
-  const goToNextQuestion = () => {
-    if (activeGradingMode === 'complete') {
-      // Complete-then-grade mode: navigate without feedback
-      const nextIndex = currentQuestionIndex + 1;
-      if (nextIndex < totalQuestions) {
-        // Record time spent on current question
-        const currentTime = Date.now();
-        const startTime = questionStartTimes[currentQuestionIndex];
-        
-        // Set start time for next question
-        setQuestionStartTimes(prev => ({
-          ...prev,
-          [nextIndex]: currentTime
-        }));
-        
-        setCurrentQuestionIndex(nextIndex);
-        setCurrentAnswer(userAnswers[nextIndex] || null);
-        
-        // Ensure no feedback shows in complete mode
+    const goToNextQuestion = () => {
         setLastAnswerFeedback(null);
-      }
-    } else {
-      // Immediate mode: clear feedback and move to next
-      setLastAnswerFeedback(null);
-      setCurrentAnswer(null);
-      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+        setCurrentAnswer(null);
+        setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+    };
+
+    const resetQuiz = () => {
+        setQuestions([]);
+        setCurrentQuestionIndex(0);
+        setCurrentAnswer(null);
+        setShowResults(false);
+        setQuizStarted(false);
+        setResultData(null);
+        setCurrentQuizId(null);
+        setTotalQuestions(0);
+        setProgress({ correct: 0, incorrect: 0 });
+        setLastAnswerFeedback(null);
+        setShowHistory(false);
+    };
+
+    const currentQuestion = questions[currentQuestionIndex];
+    const isLastQuestion = currentQuestionIndex === questions.length - 1;
+    const allQuestionsAnswered = Object.keys(selectedAnswers).length === questions.length;
+
+    if (!user) {
+        return (
+            <Layout className="quiz-page">
+                <div className="error-container">
+                    <h2>Please Log In</h2>
+                    <p>You must be logged in to take the CNA certification quiz.</p>
+                    <button onClick={() => window.location.href = '/login'} className="login-btn">
+                        Go to Login
+                    </button>
+                </div>
+            </Layout>
+        );
     }
-  };
 
-  const goToPreviousQuestion = () => {
-    if (activeGradingMode === 'complete' && currentQuestionIndex > 0) {
-      const prevIndex = currentQuestionIndex - 1;
-      setCurrentQuestionIndex(prevIndex);
-      setCurrentAnswer(userAnswers[prevIndex] || null);
-      
-      // Set start time for previous question if returning to it
-      setQuestionStartTimes(prev => ({
-        ...prev,
-        [prevIndex]: Date.now()
-      }));
-      
-      // Ensure no feedback shows in complete mode
-      setLastAnswerFeedback(null);
-    }
-  };
-
-  const submitFinalQuiz = async () => {
-    console.log('🏁 Attempting final quiz submission:', {
-      totalAnswers: Object.keys(userAnswers).length,
-      totalQuestions,
-      activeGradingMode,
-      allAnswered: Object.keys(userAnswers).length === totalQuestions
-    });
-    
-    if (Object.keys(userAnswers).length !== totalQuestions) {
-      setQuestionError('Please answer all questions before submitting.');
-      return;
-    }
-    
-    setIsSubmittingFinal(true);
-    setQuestionError(null);
-    
-    try {
-      const currentTime = Date.now();
-      
-      // Format answers for submission
-      const formattedAnswers = allQuestions.map((question, index) => {
-        const startTime = questionStartTimes[index] || currentTime;
-        const endTime = index === currentQuestionIndex ? currentTime : (questionStartTimes[index + 1] || currentTime);
-        
-        return {
-          questionId: question.questionId,
-          selectedAnswer: userAnswers[index],
-          timeSpent: Math.max(1, Math.round((endTime - startTime) / 1000)),
-          position: index + 1
-        };
-      });
-      
-      const results = await submitAllAnswers(currentQuizId, formattedAnswers);
-      
-      // Set results and show results page
-      setResultData(results);
-      setShowResults(true);
-      
-    } catch (error) {
-      console.error('Error submitting final quiz:', error);
-      setQuestionError('Failed to submit quiz. Please try again.');
-    } finally {
-      setIsSubmittingFinal(false);
-    }
-  };
-
-  const resetQuiz = () => {
-    setQuestions([]);
-    setAllQuestions([]);
-    setCurrentQuestionIndex(0);
-    setCurrentAnswer(null);
-    setShowResults(false);
-    setQuizStarted(false);
-    setResultData(null);
-    setCurrentQuizId(null);
-    setTotalQuestions(0);
-    setProgress({ correct: 0, incorrect: 0 });
-    setLastAnswerFeedback(null);
-    setShowHistory(false);
-    setUserAnswers({});
-    setQuestionStartTimes({});
-    setIsSubmittingFinal(false);
-    setActiveGradingMode('immediate'); // Reset to default
-    console.log('🔄 Quiz reset, grading mode reset to immediate');
-  };
-
-  const handleQuestionCountChange = (value) => {
-    const newQuestionCount = parseInt(value);
-    setQuizConfig(prev => ({
-      ...prev,
-      questionCount: newQuestionCount
-    }));
-  };
-
-  const handleCompetencyWeightChange = (competency, value) => {
-    const newWeight = parseInt(value);
-    setQuizConfig(prev => ({
-      ...prev,
-      competencyWeights: {
-        ...prev.competencyWeights,
-        [competency]: newWeight
-      }
-    }));
-  };
-
-  const handleGradingModeChange = (mode) => {
-    setQuizConfig(prev => ({
-      ...prev,
-      gradingMode: mode
-    }));
-  };
-
-  // Get current question based on mode
-  const currentQuestion = activeGradingMode === 'complete' 
-    ? allQuestions[currentQuestionIndex] 
-    : questions[currentQuestionIndex];
-    
-  // Debug current question state
-  if (!currentQuestion && quizStarted) {
-    console.error('🔍 DEBUG: ❌ currentQuestion is undefined!', {
-      activeGradingMode,
-      currentQuestionIndex,
-      totalQuestions,
-      questionsLength: questions.length,
-      allQuestionsLength: allQuestions.length,
-      isComplete: activeGradingMode === 'complete'
-    });
-  }
-    
-  const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
-  const answeredQuestionsCount = activeGradingMode === 'complete' 
-    ? Object.keys(userAnswers).length 
-    : currentQuestionIndex;
-
-  if (!user) {
     return (
-
         <Layout className="quiz-page">
             <div className="quiz-container">
                 {!quizStarted && !showHistory ? (
@@ -616,29 +344,6 @@ const QuizPage = () => {
                                             <option value="intermediate">🟡 Intermediate</option>
                                             <option value="advanced">🔴 Advanced</option>
                                         </select>
-                                    </div>
-
-                                    {/* Instant Grading Toggle */}
-                                    <div className="setting-group">
-                                        <div className="instant-grading-setting">
-                                            <div className="setting-info">
-                                                <label htmlFor="instant-grading-quiz">🔄 Instant Grading</label>
-                                                <p className="setting-description">
-                                                    Get immediate feedback after each question
-                                                </p>
-                                            </div>
-                                            <div className="setting-control">
-                                                <label className="quiz-toggle-switch">
-                                                    <input
-                                                        id="instant-grading-quiz"
-                                                        type="checkbox"
-                                                        checked={quizConfig.instantGrading}
-                                                        onChange={(e) => handleInstantGradingChange(e.target.checked)}
-                                                    />
-                                                    <span className="quiz-toggle-slider"></span>
-                                                </label>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     {/* Question Distribution Preview */}
@@ -871,10 +576,22 @@ const QuizPage = () => {
                                 View History
                             </button>
                         </div>
-
                     </div>
-                  </div>
-
+                ) : (
+                    <div className="quiz-content">
+                        <div className="quiz-header">
+                            <div className="quiz-progress">
+                                <span className="question-number">
+                                    Question {currentQuestionIndex + 1} of {questions.length}
+                                </span>
+                                <div className="progress-bar">
+                                    <div 
+                                        className="progress-fill" 
+                                        style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
 
                         {isLoadingQuestion ? (
                             <div className="question-loading">
@@ -910,35 +627,6 @@ const QuizPage = () => {
                                         </label>
                                     ))}
                                 </div>
-                                
-                                {/* Instant Feedback Display */}
-                                {instantGradingEnabled && instantFeedback[currentQuestionIndex] && selectedAnswers[currentQuestionIndex] && (
-                                    <div className={`instant-feedback ${instantFeedback[currentQuestionIndex].isCorrect ? 'correct' : 'incorrect'}`}>
-                                        <div className="feedback-header">
-                                            <span className="feedback-icon">
-                                                {instantFeedback[currentQuestionIndex].isCorrect ? '✅' : '❌'}
-                                            </span>
-                                            <span className="feedback-result">
-                                                {instantFeedback[currentQuestionIndex].isCorrect ? 'Correct!' : 'Incorrect'}
-                                            </span>
-                                            {!instantFeedback[currentQuestionIndex].isCorrect && (
-                                                <span className="correct-answer">
-                                                    Correct answer: {instantFeedback[currentQuestionIndex].correctAnswer}
-                                                </span>
-                                            )}
-                                        </div>
-                                        {instantFeedback[currentQuestionIndex].explanation && (
-                                            <div className="feedback-explanation">
-                                                <strong>Explanation:</strong> {instantFeedback[currentQuestionIndex].explanation}
-                                            </div>
-                                        )}
-                                        {instantFeedback[currentQuestionIndex].currentScore && (
-                                            <div className="feedback-score">
-                                                Current Score: {instantFeedback[currentQuestionIndex].currentScore.correct}/{instantFeedback[currentQuestionIndex].currentScore.total} ({instantFeedback[currentQuestionIndex].currentScore.percentage}%)
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
                             </div>
                         ) : (
                             <div className="question-error">
@@ -974,182 +662,14 @@ const QuizPage = () => {
                             )}
                         </div>
 
-
-                  <div className="setting-group">
-                    <label>📚 Content Focus</label>
-                    <div className="competency-sliders">
-                      {Object.entries(quizConfig.competencyWeights).map(([competency, weight]) => (
-                        <div key={competency} className="competency-slider">
-                          <label>{competency}: <strong>{weight}%</strong></label>
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            value={weight}
-                            onChange={(e) => handleCompetencyWeightChange(competency, e.target.value)}
-                            className="slider competency-weight-slider"
-                          />
+                        <div className="quiz-summary">
+                            <p>Answered: {Object.keys(selectedAnswers).length} / {questions.length}</p>
                         </div>
-                      ))}
                     </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="quiz-actions">
-                <button
-                  onClick={startQuiz}
-                  disabled={isLoading}
-                  className="start-quiz-btn"
-                >
-                  {isLoading ? 'Starting Quiz...' : 'Start Quiz'}
-                </button>
-                
-                <button
-                  onClick={() => setShowConfig(!showConfig)}
-                  className="config-btn"
-                >
-                  {showConfig ? '🔧 Hide Settings' : '🔧 Quiz Settings'}
-                </button>
-              </div>
-            </div>
-          </>
-        ) : showHistory ? (
-          <div>Quiz History Content Here</div>
-        ) : showResults ? (
-          <QuizResults 
-            resultData={resultData}
-            onRetakeQuiz={resetQuiz}
-            onViewHistory={() => {
-              setShowResults(false);
-              setShowHistory(true);
-            }}
-          />
-        ) : (
-          <div className="quiz-active">
-            <div className="quiz-header">
-              <div className="quiz-progress">
-                <span className="question-counter">
-                  Question {currentQuestionIndex + 1} of {totalQuestions}
-                </span>
-                <span className={`quiz-mode-indicator ${activeGradingMode}`}>
-                  {activeGradingMode === 'immediate' ? '📚 Study Mode' : '📝 Exam Mode'}
-                </span>
-                <div className="progress-bar">
-                  <div
-                    className="progress-fill"
-                    style={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-
-            {questionError && <div className="error-container">{questionError}</div>}
-
-            {currentQuestion ? (
-              <div className="question-container">
-                <h3 className="question-text">{currentQuestion.question}</h3>
-                <div className="options-container">
-                  {['A', 'B', 'C', 'D'].map((option) => (
-                    <label
-                      key={option}
-                      className={`option-label 
-                        ${currentAnswer === option ? 'selected' : ''}
-                        ${activeGradingMode === 'immediate' && lastAnswerFeedback && option === lastAnswerFeedback.correctAnswer ? 'correct' : ''}
-                        ${activeGradingMode === 'immediate' && lastAnswerFeedback && currentAnswer === option && !lastAnswerFeedback.isCorrect ? 'incorrect' : ''}`}
-                    >
-                      <input
-                        type="radio"
-                        name={`question-${currentQuestionIndex}`}
-                        value={option}
-                        checked={currentAnswer === option}
-                        onChange={() => handleAnswerSelect(option)}
-                        disabled={isSubmitting || (activeGradingMode === 'immediate' && lastAnswerFeedback)}
-                      />
-                      <span className="option-letter">{option}</span>
-                      <span className="option-text">{currentQuestion.options[option]}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="question-loading">
-                <div className="loading-spinner"></div>
-                <p>Loading question...</p>
-              </div>
-            )}
-
-            {activeGradingMode === 'immediate' && lastAnswerFeedback && (
-              <div className={`feedback-container ${lastAnswerFeedback.isCorrect ? 'correct' : 'incorrect'}`}>
-                <h4>{lastAnswerFeedback.isCorrect ? 'Correct!' : 'Incorrect'}</h4>
-                {!lastAnswerFeedback.isCorrect && <p><strong>Correct Answer: {lastAnswerFeedback.correctAnswer}</strong></p>}
-                <p>{lastAnswerFeedback.explanation}</p>
-              </div>
-            )}
-
-            {activeGradingMode === 'complete' && (
-              <div className="quiz-progress-summary">
-                <p>Progress: {answeredQuestionsCount} of {totalQuestions} questions answered</p>
-                {answeredQuestionsCount === totalQuestions && (
-                  <p className="ready-submit">✅ All questions answered! Ready to submit for grading.</p>
                 )}
-              </div>
-            )}
-
-            <div className="quiz-navigation">
-              {activeGradingMode === 'immediate' ? (
-                // Immediate mode navigation
-                lastAnswerFeedback ? (
-                  (isLastQuestion && lastAnswerFeedback) ? (
-                    <button onClick={() => navigate(`/quiz/results/${currentQuizId}`)} className="submit-btn">View Results</button>
-                  ) : (
-                    <button onClick={goToNextQuestion} className="nav-btn next-btn">Next Question</button>
-                  )
-                ) : (
-                  <button onClick={handleSubmitAnswer} disabled={isSubmitting || !currentAnswer} className="submit-btn">
-                    {isSubmitting ? 'Submitting...' : 'Submit Answer'}
-                  </button>
-                )
-              ) : (
-                // Complete-then-grade mode navigation
-                <div className="complete-mode-navigation">
-                  <div className="nav-buttons">
-                    {currentQuestionIndex > 0 && (
-                      <button onClick={goToPreviousQuestion} className="nav-btn prev-btn">
-                        ← Previous
-                      </button>
-                    )}
-                    
-                    {!isLastQuestion ? (
-                      <button 
-                        onClick={goToNextQuestion} 
-                        className="nav-btn next-btn"
-                        disabled={!currentAnswer}
-                      >
-                        Next →
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={submitFinalQuiz} 
-                        disabled={isSubmittingFinal || answeredQuestionsCount !== totalQuestions}
-                        className="submit-btn final-submit"
-                      >
-                        {isSubmittingFinal ? 'Submitting Quiz...' : 'Submit Quiz for Grading'}
-                      </button>
-                    )}
-                  </div>
-                  
-                  <div className="question-indicator">
-                    Question {currentQuestionIndex + 1} of {totalQuestions}
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
-        )}
-      </div>
-    </Layout>
-  );
+        </Layout>
+    );
 };
 
 export default QuizPage;
