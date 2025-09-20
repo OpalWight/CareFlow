@@ -5,16 +5,14 @@ const QuizSessionSchema = new mongoose.Schema({
     sessionId: {
         type: String,
         required: true,
-        unique: true,
-        index: true
+        unique: true
     },
     
     // User identification
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
-        index: true
+        required: true
     },
     
     // Session configuration
@@ -46,6 +44,13 @@ const QuizSessionSchema = new mongoose.Schema({
             type: String,
             enum: ['practice', 'exam_simulation', 'review', 'focused_practice', 'spaced_repetition'],
             default: 'practice'
+        },
+        
+        // Grading mode
+        gradingMode: {
+            type: String,
+            enum: ['immediate', 'complete'],
+            default: 'immediate'
         },
         
         // Focus areas for this session
@@ -138,6 +143,21 @@ const QuizSessionSchema = new mongoose.Schema({
             isCorrect: Boolean,
             timeSpent: Number, // in seconds
             answeredAt: {
+                type: Date,
+                default: Date.now
+            }
+        }],
+        
+        // Pending answers for complete-then-grade mode
+        pendingAnswers: [{
+            questionId: String,
+            position: Number,
+            selectedAnswer: {
+                type: String,
+                enum: ['A', 'B', 'C', 'D']
+            },
+            timeSpent: Number, // in seconds
+            submittedAt: {
                 type: Date,
                 default: Date.now
             }
@@ -350,7 +370,11 @@ QuizSessionSchema.methods.answerQuestion = function(questionId, selectedAnswer, 
     this.progress.answeredQuestions.push(answerRecord);
     
     // Update current position
+    const oldPosition = this.progress.currentPosition;
     this.progress.currentPosition++;
+    
+    console.log(`🔍 DEBUG: Position updated from ${oldPosition} to ${this.progress.currentPosition}`);
+    console.log(`🔍 DEBUG: Total questions in session: ${this.questions.length}, config count: ${this.configuration.questionCount}`);
     
     // Add timing record
     this.timing.questionTimings.push({

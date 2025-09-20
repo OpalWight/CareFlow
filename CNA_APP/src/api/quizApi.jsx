@@ -15,12 +15,14 @@ export const generateQuizQuestions = async (config = {}) => {
         psychosocialCareSkills: 10,
         roleOfNurseAide: 26
       },
-      difficulty = 'intermediate'
+      difficulty = 'intermediate',
+      gradingMode = 'immediate'
     } = config;
 
     const response = await axios.post(`${API_URL}/quiz/generate`, {
       questionCount,
       quizType: 'practice',
+      gradingMode,
       quizComposition: {
         questionCount,
         competencyRatios
@@ -40,7 +42,8 @@ export const generateQuizQuestions = async (config = {}) => {
       questions: [], // Questions will be loaded one by one
       quizId: sessionData.sessionId, // Use sessionId as quizId for compatibility
       totalQuestions: sessionData.totalQuestions || 30,
-      currentQuestion: sessionData.currentQuestion
+      firstQuestion: sessionData.currentQuestion,
+      gradingMode: sessionData.configuration?.gradingMode || gradingMode
     };
   } catch (error) {
     console.error('Error generating quiz questions:', error.response?.data?.message || error.message);
@@ -68,6 +71,33 @@ export const getQuestionByPosition = async (sessionId, position) => {
     throw error;
   }
 };
+
+/**
+ * Submits an answer for a single question in a quiz session
+ * @param {string} sessionId - The ID of the current quiz session
+ * @param {string} questionId - The ID of the question being answered
+ * @param {string} selectedAnswer - The answer selected by the user (e.g., 'A')
+ * @param {number} timeSpent - Time spent on the question in seconds
+ * @returns {Promise<Object>} - Feedback for the answer and the next question
+ */
+export const submitAnswer = async (sessionId, questionId, selectedAnswer, timeSpent) => {
+  try {
+    const response = await axios.post(`${API_URL}/quiz/session/answer`, {
+      sessionId,
+      questionId,
+      selectedAnswer,
+      timeSpent
+    }, {
+      withCredentials: true,
+      timeout: 15000
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error submitting answer:', error.response?.data?.message || error.message);
+    throw error;
+  }
+};""
 
 /**
  * Submits quiz results and gets detailed feedback
@@ -170,6 +200,7 @@ export const getQuizResults = async (quizId) => {
 };
 
 /**
+
  * Submits a single answer and gets immediate feedback (for instant grading)
  * @param {string} sessionId - Quiz session ID
  * @param {string} questionId - Question ID
@@ -187,16 +218,20 @@ export const submitInstantAnswer = async (sessionId, questionId, selectedAnswer,
     }, { 
       withCredentials: true,
       timeout: 10000
+
     });
     
     return response.data;
   } catch (error) {
+
     console.error('Error submitting instant answer:', error.response?.data?.message || error.message);
+
     throw error;
   }
 };
 
 /**
+
  * Gets user's quiz preferences
  * @returns {Promise<Object>} - User preferences including instant grading setting
  */
@@ -222,11 +257,14 @@ export const updateUserPreferences = async (preferences) => {
   try {
     const response = await axios.put(`${API_URL}/quiz/preferences`, preferences, {
       withCredentials: true
+
     });
     
     return response.data;
   } catch (error) {
+
     console.error('Error updating user preferences:', error.response?.data?.message || error.message);
+
     throw error;
   }
 };

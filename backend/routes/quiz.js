@@ -8,7 +8,9 @@ const auth = require('../middleware/authMiddleware.js');
 router.post('/generate', auth, quizController.generateQuizQuestions);
 router.get('/session/current', auth, quizController.getCurrentSession);
 router.get('/session/:sessionId/question', auth, quizController.getNextQuestion);
+router.get('/session/:sessionId/questions', auth, quizController.getAllQuestions);
 router.post('/session/answer', auth, quizController.submitAnswer);
+router.post('/session/answers', auth, quizController.submitAllAnswers);
 router.post('/session/:sessionId/complete', auth, quizController.completeQuizSession);
 router.post('/session/:sessionId/abandon', auth, quizController.abandonQuizSession);
 
