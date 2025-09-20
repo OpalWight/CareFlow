@@ -1,0 +1,41 @@
+.about-us-container {
+    padding: 20px;
+    margin: 20px;
+    position: relative;
+    min-height: 400px;
+}
+
+.about-us-title {
+    color: black;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.about-us-content {
+    width: 405px;
+    color: #C0C5C7;
+    font-family: Inter;
+    font-size: 21.835px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 130.88%;
+    letter-spacing: 0.437px;
+}
+
+.dotted-flower {
+    width: 60px;
+    height: 60px;
+    opacity: 0.7;
+}
+
+.dotted-flower-top {
+    position: absolute;
+    top: 80px;
+    right: 100px;
+}
+
+.dotted-flower-bottom {
+    position: absolute;
+    bottom: 120px;
+    left: 80px;
+}
