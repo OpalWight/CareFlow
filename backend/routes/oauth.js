@@ -444,7 +444,7 @@ router.post('/exchange-token', async (req, res) => {
     res.cookie('authToken', longLivedToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax', // Same-origin now, so 'lax' is fine
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Cross-site cookies for production
       expires: cookieExpiration,
       path: '/'
     });
