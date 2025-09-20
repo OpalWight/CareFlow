@@ -55,14 +55,6 @@ const getFrontendUrl = (req = null) => {
 // It should be stored securely (e.g., environment variable, secret management service).
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// Environment check
-console.log('🔍 Environment check:', {
-  CLIENT_ID: process.env.CLIENT_ID ? 'Set ✅' : 'Missing ❌',
-  CLIENT_SECRET: process.env.CLIENT_SECRET ? 'Set ✅' : 'Missing ❌',
-  JWT_SECRET: process.env.JWT_SECRET ? 'Set ✅' : 'Missing ❌ (CRITICAL for Production)',
-  MONGODB_URI: process.env.MONGODB_URI ? 'Set ✅' : 'Using default (check config)'
-});
-
 /**
  * Fetches user profile data from Google's OAuth2 API.
  * @param {string} access_token - The access token obtained from Google.
@@ -79,21 +71,6 @@ async function getUserData(access_token) {
 
     const data = await response.json();
     
-    // 🔍 DETAILED LOGGING: Log the complete raw data from Google
-    console.log('🔍 RAW Google user data received:');
-    console.log('📧 Email:', data.email);
-    console.log('👤 Name:', data.name);
-    console.log('🖼️ Picture:', data.picture);
-    console.log('🆔 Google ID (sub):', data.sub);
-    console.log('✅ Email verified:', data.email_verified);
-    console.log('🔍 FULL RAW DATA OBJECT:', JSON.stringify(data, null, 2));
-    
-    console.log('✅ User data received:', {
-      email: data.email,
-      name: data.name,
-      picture: data.picture ? 'Present' : 'Missing'
-    });
-
     return data;
   } catch (error) {
     console.error('❌ Error fetching user data from Google:', error);
@@ -132,7 +109,6 @@ router.get('/', async (req, res) => {
     
     // IMPORTANT: This redirectURL MUST EXACTLY MATCH the "Authorized redirect URIs" in your Google Cloud Console.
     const redirectURL = `${process.env.NODE_ENV === 'production' ? 'https://careflow-ssas.onrender.com' : 'http://localhost:3001'}/oauth`;
-    console.log('🔍 DEBUG: Using redirectURL:', redirectURL);
     const oAuth2Client = new OAuth2Client(
       process.env.CLIENT_ID,
       process.env.CLIENT_SECRET,
@@ -142,8 +118,6 @@ router.get('/', async (req, res) => {
     console.log('🔄 Exchanging authorization code for tokens...');
     const tokenResponse = await oAuth2Client.getToken(code);
     await oAuth2Client.setCredentials(tokenResponse.tokens);
-
-    console.log('🎫 Tokens received from Google');
 
     // Get user data from Google using the obtained access token
     const googleUserData = await getUserData(oAuth2Client.credentials.access_token);
@@ -259,8 +233,6 @@ router.get('/', async (req, res) => {
 
     const jwtToken = createToken(user);
 
-    console.log('🎫 Application JWT token created for user:', user.email);
-
     // ✅ SET JWT AS HTTP-ONLY COOKIE (ADDED)
     // Calculate cookie expiration to match JWT expiration (7 days)
     const cookieExpiration = new Date();
@@ -276,20 +248,9 @@ router.get('/', async (req, res) => {
       domain: process.env.NODE_ENV === 'production' ? undefined : undefined // Let browser handle domain
     });
 
-    console.log('🍪 JWT token set as HTTP-only cookie for user:', user.email);
-
-    // Verify the cookie header has been set
-    const setCookieHeader = res.getHeader('Set-Cookie');
-    if (setCookieHeader) {
-      console.log('👍 Cookie header prepared for client:', setCookieHeader);
-    } else {
-      console.log('🚫 Error: Set-Cookie header not found after attempting to set it.');
-    }
-
     // ✅ ALTERNATIVE APPROACH: Redirect with temporary token in URL
     // Since cross-origin cookies are unreliable, use a temporary token approach
     const frontendUrl = getFrontendUrl(req);
-    console.log('🔍 DEBUG: Using frontend URL for redirect:', frontendUrl);
     
     // Create a temporary token that expires in 30 seconds
     const tempToken = createToken(user, '30s');
@@ -303,7 +264,6 @@ router.get('/', async (req, res) => {
       redirectUrl += '&accountLinked=true';
     }
 
-    console.log('🔄 Redirecting to frontend with temp token:', redirectUrl);
     return res.redirect(redirectUrl);
 
   } catch (err) {
@@ -331,8 +291,6 @@ router.get('/', async (req, res) => {
 router.post('/logout', (req, res) => {
   // Clear the authentication cookie using the utility function
   cookieUtils.clearAuthCookie(res);
-
-  console.log('🚪 User logged out via OAuth route, authentication cookie cleared');
   
   res.json({ success: true, message: 'Logged out successfully' });
 });
@@ -431,7 +389,6 @@ router.delete('/account', authMiddleware, async (req, res) => {
     // Clear the authentication cookie
     try {
       cookieUtils.clearAuthCookie(res);
-      console.log('✅ Authentication cookie cleared for deleted user');
     } catch (cookieError) {
       console.error('⚠️ Cookie clearing failed, but user was deleted:', cookieError);
       // Continue anyway since user is deleted
@@ -461,8 +418,6 @@ router.delete('/account', authMiddleware, async (req, res) => {
  */
 router.post('/exchange-token', async (req, res) => {
   try {
-    console.log('🔄 Token exchange request received');
-    console.log('  - Request origin:', req.get('origin'));
     
     // Get temporary token from request body
     const { tempToken } = req.body;
@@ -479,8 +434,6 @@ router.post('/exchange-token', async (req, res) => {
     // Verify the temporary token
     const user = await verifyToken(tempToken);
     
-    console.log('✅ Temporary token valid for user:', user.email);
-    
     // Create a new long-lived token (1 hour)
     const longLivedToken = createToken(user, '1h');
     
@@ -495,9 +448,6 @@ router.post('/exchange-token', async (req, res) => {
       expires: cookieExpiration,
       path: '/'
     });
-    
-    console.log('🍪 HttpOnly cookie set for user:', user.email);
-    console.log('🍪 Cookie will be available for origin:', req.get('origin'));
     
     // Return user data (don't include the token in response)
     res.json({

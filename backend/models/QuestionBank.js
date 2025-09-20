@@ -299,6 +299,8 @@ QuestionBankSchema.statics.findByCriteria = async function(criteria = {}) {
         limit = 50
     } = criteria;
     
+    console.log(`[QUIZ-DEBUG] 🔍 QuestionBank.findByCriteria called with:`, criteria);
+    
     const query = { status: 'active' };
     
     if (competencyArea) query.competencyArea = competencyArea;
@@ -317,9 +319,37 @@ QuestionBankSchema.statics.findByCriteria = async function(criteria = {}) {
         ];
     }
     
-    return this.find(query)
+    console.log(`[QUIZ-DEBUG] 📋 MongoDB query:`, JSON.stringify(query, null, 2));
+    
+    // Get total count without filters first for debugging
+    const totalActiveCount = await this.countDocuments({ status: 'active' });
+    const competencyCount = competencyArea ? await this.countDocuments({ status: 'active', competencyArea }) : 0;
+    
+    console.log(`[QUIZ-DEBUG] 📊 Database stats:`, {
+        totalActiveQuestions: totalActiveCount,
+        competencyAreaQuestions: competencyCount,
+        competencyArea: competencyArea || 'all'
+    });
+    
+    const queryStart = Date.now();
+    const results = await this.find(query)
         .sort({ 'usageStats.lastUsed': 1, 'metadata.qualityScore': -1 })
         .limit(limit);
+    const queryTime = Date.now() - queryStart;
+    
+    console.log(`[QUIZ-DEBUG] ✅ Query completed in ${queryTime}ms:`, {
+        resultsFound: results.length,
+        requestedLimit: limit,
+        totalWithoutFilters: competencyCount,
+        competencyArea: competencyArea || 'all',
+        appliedFilters: {
+            difficulty: difficulty || 'any',
+            minQuality: minQuality,
+            excludeRecent: excludeRecent
+        }
+    });
+    
+    return results;
 };
 
 // Static method to get pool statistics

@@ -183,8 +183,22 @@ const QuizPage = () => {
 
     const startQuiz = async () => {
         setIsLoading(true);
+        console.log(`[QUIZ-DEBUG] 🎯 Starting quiz with config:`, quizConfig);
+        
         try {
+            const startTime = Date.now();
             const quizData = await generateQuizQuestions(quizConfig);
+            const loadTime = Date.now() - startTime;
+            
+            console.log(`[QUIZ-DEBUG] ✅ Quiz data received in ${loadTime}ms:`, {
+                sessionId: quizData.sessionId,
+                totalQuestions: quizData.totalQuestions,
+                hasFirstQuestion: !!quizData.currentQuestion,
+                hasQuestions: !!quizData.questions,
+                questionsLength: quizData.questions?.length || 0,
+                configuration: quizData.configuration
+            });
+            
             // Handle new session-based API format
             setCurrentQuizId(quizData.sessionId || quizData.quizId);
             
@@ -193,8 +207,13 @@ const QuizPage = () => {
                 const questionsArray = new Array(quizData.totalQuestions);
                 questionsArray[0] = quizData.currentQuestion;
                 setQuestions(questionsArray);
+                console.log(`[QUIZ-DEBUG] 📝 Questions array initialized with ${quizData.totalQuestions} slots, first question loaded`);
+            } else if (quizData.questions && quizData.questions.length > 0) {
+                setQuestions(quizData.questions);
+                console.log(`[QUIZ-DEBUG] 📝 Direct questions array loaded with ${quizData.questions.length} questions`);
             } else {
-                setQuestions(quizData.questions || []);
+                console.error(`[QUIZ-DEBUG] ❌ No questions available in quiz data`);
+                throw new Error('No questions available for quiz');
             }
             
             setQuizStarted(true);
@@ -202,7 +221,11 @@ const QuizPage = () => {
             setIsRetake(false);
             setOriginalQuizId(null);
         } catch (error) {
-            console.error('Error generating quiz questions:', error);
+            console.error(`[QUIZ-DEBUG] ❌ Error generating quiz questions:`, {
+                error: error.message,
+                config: quizConfig,
+                stack: error.stack
+            });
         }
         setIsLoading(false);
     };
@@ -256,19 +279,39 @@ const QuizPage = () => {
 
     // Function to load a question at a specific index
     const loadQuestion = async (index) => {
-        if (questions[index] || !currentQuizId) return; // Question already loaded or no session
+        if (questions[index] || !currentQuizId) {
+            console.log(`[QUIZ-DEBUG] ⏭️ Skipping question load for index ${index}: already loaded or no session`);
+            return;
+        }
         
+        console.log(`[QUIZ-DEBUG] 🔄 Loading question at index ${index} for session ${currentQuizId}`);
         setIsLoadingQuestion(true);
         setQuestionError(null);
+        
         try {
+            const startTime = Date.now();
             const questionData = await getQuestionByPosition(currentQuizId, index);
+            const loadTime = Date.now() - startTime;
+            
+            console.log(`[QUIZ-DEBUG] ✅ Question ${index} loaded in ${loadTime}ms:`, {
+                questionId: questionData?.questionId,
+                hasQuestion: !!questionData?.question,
+                hasOptions: !!questionData?.options,
+                competencyArea: questionData?.competencyArea
+            });
+            
             setQuestions(prev => {
                 const updated = [...prev];
                 updated[index] = questionData;
                 return updated;
             });
         } catch (error) {
-            console.error(`Error loading question at index ${index}:`, error);
+            console.error(`[QUIZ-DEBUG] ❌ Error loading question at index ${index}:`, {
+                error: error.message,
+                sessionId: currentQuizId,
+                index: index,
+                stack: error.stack
+            });
             setQuestionError(`Failed to load question ${index + 1}. Please try again.`);
         } finally {
             setIsLoadingQuestion(false);
