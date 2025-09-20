@@ -91,6 +91,9 @@ class QuestionPoolService {
                 
                 console.log(`[DEBUG] Manual question distribution:`, distribution);
                 
+                // Proactive shortage analysis and generation
+                await this._ensureSufficientQuestions(distribution, userPrefs);
+                
                 // Select questions for the quiz
                 const selectedQuestions = await this._selectQuestions(userId, userPrefs, distribution);
                 
@@ -142,6 +145,9 @@ class QuestionPoolService {
             console.log(`🧮 Calculating question distribution...`);
             const distribution = userPrefs.calculateQuestionDistribution();
             console.log(`[DEBUG] Question distribution:`, distribution);
+            
+            // Proactive shortage analysis and generation
+            await this._ensureSufficientQuestions(distribution, userPrefs);
             
             // Select questions for the quiz
             const selectedQuestions = await this._selectQuestions(userId, userPrefs, distribution);
@@ -412,6 +418,80 @@ class QuestionPoolService {
     // Private Methods
 
     /**
+     * Proactive shortage analysis and question generation
+     * Ensures sufficient questions exist before quiz session creation
+     */
+    async _ensureSufficientQuestions(distribution, userPrefs) {
+        console.log(`[QUIZ-DEBUG] 🔍 Analyzing question availability for distribution:`, distribution);
+        
+        const shortageAnalysis = [];
+        
+        // Check each competency area for potential shortages
+        for (const [competencyArea, requestedCount] of Object.entries(distribution)) {
+            if (requestedCount === 0) continue;
+            
+            const competencyKey = this._mapCompetencyKey(competencyArea);
+            
+            // Build criteria same as selection method
+            const criteria = {
+                competencyArea: competencyKey,
+                minQuality: 60,
+                excludeRecent: userPrefs.learningPreferences?.avoidRecentQuestions || true,
+                recentTimeframe: (userPrefs.learningPreferences?.recentQuestionTimeframe || 7) * 24 * 60 * 60 * 1000,
+                limit: requestedCount * 3 // Match the selection method criteria
+            };
+            
+            // Apply difficulty preference
+            if (userPrefs.difficultySettings?.preferredDifficulty && userPrefs.difficultySettings.preferredDifficulty !== 'adaptive') {
+                criteria.difficulty = userPrefs.difficultySettings.preferredDifficulty;
+            }
+            
+            // Check available questions
+            const availableQuestions = await QuestionBank.findByCriteria(criteria);
+            const shortage = Math.max(0, requestedCount - availableQuestions.length);
+            
+            console.log(`[QUIZ-DEBUG] 📊 ${competencyArea}: need ${requestedCount}, have ${availableQuestions.length}, shortage: ${shortage}`);
+            
+            if (shortage > 0) {
+                shortageAnalysis.push({
+                    competencyArea: competencyKey,
+                    requested: requestedCount,
+                    available: availableQuestions.length,
+                    shortage: shortage,
+                    generateCount: Math.max(shortage * 2, 10), // Generate extra for buffer
+                    difficulty: criteria.difficulty || 'intermediate'
+                });
+            }
+        }
+        
+        // Generate questions for areas with shortages
+        if (shortageAnalysis.length > 0) {
+            console.log(`[QUIZ-DEBUG] 🚨 Found ${shortageAnalysis.length} competency areas with question shortages`);
+            
+            for (const analysis of shortageAnalysis) {
+                try {
+                    console.log(`[QUIZ-DEBUG] 🔄 Preemptively generating ${analysis.generateCount} questions for ${analysis.competencyArea}`);
+                    
+                    const generationStart = Date.now();
+                    await this.generateQuestions({
+                        competencyArea: analysis.competencyArea,
+                        count: analysis.generateCount,
+                        difficulty: analysis.difficulty
+                    });
+                    const generationTime = Date.now() - generationStart;
+                    
+                    console.log(`[QUIZ-DEBUG] ✅ Preemptive generation completed for ${analysis.competencyArea} in ${generationTime}ms`);
+                } catch (generationError) {
+                    console.error(`[QUIZ-DEBUG] ❌ Preemptive generation failed for ${analysis.competencyArea}:`, generationError.message);
+                    // Continue with other areas
+                }
+            }
+        } else {
+            console.log(`[QUIZ-DEBUG] ✅ All competency areas have sufficient questions available`);
+        }
+    }
+
+    /**
      * Select questions for a quiz based on user preferences and performance
      */
     async _selectQuestions(userId, userPrefs, distribution) {
@@ -532,7 +612,7 @@ class QuestionPoolService {
         });
         
         const queryStart = Date.now();
-        const availableQuestions = await QuestionBank.findByCriteria(criteria);
+        let availableQuestions = await QuestionBank.findByCriteria(criteria);
         const queryTime = Date.now() - queryStart;
         
         console.log(`[QUIZ-DEBUG] 🔍 Database query for ${competencyArea} completed in ${queryTime}ms:`, {
@@ -541,26 +621,48 @@ class QuestionPoolService {
             criteria: criteria
         });
         
-        if (availableQuestions.length === 0) {
-            console.warn(`[QUIZ-DEBUG] ⚠️ No questions found for ${competencyArea}, attempting to generate new questions`);
+        // Check if we have insufficient questions and generate more if needed
+        if (availableQuestions.length < count) {
+            const shortage = count - availableQuestions.length;
+            const generationCount = Math.max(shortage * 2, 10); // Generate extra for buffer
+            
+            if (availableQuestions.length === 0) {
+                console.warn(`[QUIZ-DEBUG] ⚠️ No questions found for ${competencyArea}, attempting to generate ${generationCount} new questions`);
+            } else {
+                console.warn(`[QUIZ-DEBUG] ⚠️ Insufficient questions for ${competencyArea}: found ${availableQuestions.length}, need ${count}, generating ${generationCount} questions`);
+            }
             
             try {
                 const generationStart = Date.now();
-                await this.generateQuestions({ competencyArea, count: Math.max(count, 10) });
+                await this.generateQuestions({ 
+                    competencyArea, 
+                    count: generationCount,
+                    difficulty: criteria.difficulty || 'intermediate'
+                });
                 const generationTime = Date.now() - generationStart;
                 
-                console.log(`[QUIZ-DEBUG] ✅ Generated questions for ${competencyArea} in ${generationTime}ms`);
+                console.log(`[QUIZ-DEBUG] ✅ Generated ${generationCount} questions for ${competencyArea} in ${generationTime}ms`);
                 
-                // Retry selection after generation
+                // Retry selection after generation with increased limit to get fresh questions
                 const retryStart = Date.now();
-                const retryQuestions = await QuestionBank.findByCriteria({ ...criteria, limit: count });
+                const retryQuestions = await QuestionBank.findByCriteria({ 
+                    ...criteria, 
+                    limit: count * 4 // Increased limit to get more variety after generation
+                });
                 const retryTime = Date.now() - retryStart;
                 
                 console.log(`[QUIZ-DEBUG] 🔄 Retry query for ${competencyArea} found ${retryQuestions.length} questions in ${retryTime}ms`);
-                return retryQuestions;
+                
+                // If we still don't have enough after generation, use what we have
+                if (retryQuestions.length < count) {
+                    console.warn(`[QUIZ-DEBUG] ⚠️ Still insufficient questions after generation for ${competencyArea}: got ${retryQuestions.length}, needed ${count}`);
+                    availableQuestions = retryQuestions; // Use the updated list for scoring
+                } else {
+                    availableQuestions = retryQuestions;
+                }
             } catch (generationError) {
                 console.error(`[QUIZ-DEBUG] ❌ Question generation failed for ${competencyArea}:`, generationError.message);
-                return [];
+                console.warn(`[QUIZ-DEBUG] 🔄 Proceeding with ${availableQuestions.length} available questions`);
             }
         }
         
