@@ -200,43 +200,71 @@ export const getQuizResults = async (quizId) => {
 };
 
 /**
- * Gets all questions for a quiz session (for complete-then-grade mode)
+
+ * Submits a single answer and gets immediate feedback (for instant grading)
  * @param {string} sessionId - Quiz session ID
- * @returns {Promise<Object>} - All questions for the session
+ * @param {string} questionId - Question ID
+ * @param {string} selectedAnswer - Selected answer (A, B, C, or D)
+ * @param {number} timeSpent - Time spent on question in seconds
+ * @returns {Promise<Object>} - Immediate feedback including correctness and explanation
  */
-export const getAllQuestions = async (sessionId) => {
+export const submitInstantAnswer = async (sessionId, questionId, selectedAnswer, timeSpent = 0) => {
   try {
-    const response = await axios.get(`${API_URL}/quiz/session/${sessionId}/questions`, {
+    const response = await axios.post(`${API_URL}/quiz/session/answer`, {
+      sessionId,
+      questionId,
+      selectedAnswer,
+      timeSpent
+    }, { 
       withCredentials: true,
-      timeout: 30000
+      timeout: 10000
+
     });
     
     return response.data;
   } catch (error) {
-    console.error('Error getting all questions:', error.response?.data?.message || error.message);
+
+    console.error('Error submitting instant answer:', error.response?.data?.message || error.message);
+
     throw error;
   }
 };
 
 /**
- * Submits all answers at once for batch grading (complete-then-grade mode)
- * @param {string} sessionId - Quiz session ID
- * @param {Array} answers - Array of answer objects with questionId, selectedAnswer, timeSpent, position
- * @returns {Promise<Object>} - Graded results
+
+ * Gets user's quiz preferences
+ * @returns {Promise<Object>} - User preferences including instant grading setting
  */
-export const submitAllAnswers = async (sessionId, answers) => {
+export const getUserPreferences = async () => {
   try {
-    const response = await axios.post(`${API_URL}/quiz/session/answers`, {
-      sessionId,
-      answers
-    }, {
-      withCredentials: true,
-      timeout: 60000 // Longer timeout for batch grading
+    const response = await axios.get(`${API_URL}/quiz/preferences`, {
+      withCredentials: true
     });
     
     return response.data;
   } catch (error) {
-    console.error('Error submitting all answers:', error.response?.data?.message || error.message);
+    console.error('Error getting user preferences:', error.response?.data?.message || error.message);
+    throw error;
+  }
+};
+
+/**
+ * Updates user's quiz preferences
+ * @param {Object} preferences - Preference updates to apply
+ * @returns {Promise<Object>} - Updated preferences
+ */
+export const updateUserPreferences = async (preferences) => {
+  try {
+    const response = await axios.put(`${API_URL}/quiz/preferences`, preferences, {
+      withCredentials: true
+
+    });
+    
+    return response.data;
+  } catch (error) {
+
+    console.error('Error updating user preferences:', error.response?.data?.message || error.message);
+
     throw error;
   }
 };
