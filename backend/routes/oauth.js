@@ -19,32 +19,32 @@ const getFrontendUrl = (req = null) => {
   if (process.env.FRONTEND_URL && process.env.FRONTEND_URL.startsWith('http')) {
     return process.env.FRONTEND_URL;
   }
-  
-  // 2. Try to detect from request origin (for dynamic Vercel URLs)
+
+  // 2. Try to detect from request origin
   if (req && req.get('origin')) {
     const origin = req.get('origin');
-    if (origin.includes('vercel.app') && origin.includes('care-flow')) {
+    if (origin.includes('careflowlearn.org') || (origin.includes('vercel.app') && origin.includes('care-flow'))) {
       console.log('🔍 Detected frontend URL from origin:', origin);
       return origin;
     }
   }
-  
+
   // 3. Try to detect from referer header
   if (req && req.get('referer')) {
     const referer = req.get('referer');
-    if (referer.includes('vercel.app') && referer.includes('care-flow')) {
+    if (referer.includes('careflowlearn.org') || (referer.includes('vercel.app') && referer.includes('care-flow'))) {
       const url = new URL(referer);
       const detected = `${url.protocol}//${url.host}`;
       console.log('🔍 Detected frontend URL from referer:', detected);
       return detected;
     }
   }
-  
+
   // 4. Use production mode detection (fallback)
   if (process.env.NODE_ENV === 'production') {
-    return 'https://care-flow-ten.vercel.app';
+    return 'https://careflowlearn.org'; // Default to new domain
   }
-  
+
   // 5. Fallback to development
   return 'http://localhost:5173';
 };
